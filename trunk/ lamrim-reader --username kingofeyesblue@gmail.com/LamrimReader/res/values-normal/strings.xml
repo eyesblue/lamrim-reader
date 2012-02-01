@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bookFontSize">課文字型大小</string>
+    <string name="subtitleFontSize">字幕字型大小</string>
+    <string name="subtitleLineCount">字幕顯示行數</string>
+    <string name="readingMode">上課模式</string>
+    <string name="listenMode">自學模式</string>
+    <string name="showCtrlPanel">設定</string><string name="searchMode">查詢模式</string>
+    
+    <string name="showAbout">關於</string>
+</resources>
