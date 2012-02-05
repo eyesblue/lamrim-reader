@@ -92,17 +92,17 @@ public class FileSysManager {
 		
 		if(is==null){
 			Log.d(logTag,"There is no valid remote site for download this file");
-			downloadFailListener.downloadFail(fileName[targetFileIndex]);
+			downloadFailListener.downloadFail(targetFileIndex);
 		}
 
 		Log.d(logTag,"Create thread for download file");
 		DownloadThread dt=new DownloadThread(is,fileName[targetFileIndex],bufLen,downloadFinishListener, new DownloadFailListener(){
-			public void downloadFail(String name){
-				Log.d(logTag,"Download "+name+" fail, Try to download from other site");
+			public void downloadFail(int index){
+				Log.d(logTag,"Download "+fileName[index]+" fail, Try to download from other site");
 				if(remoteSite.length<=1){
 					Log.d(logTag,"There is no remote site for download file, recovery site list and return fail to Activate");
 					remoteSite=context.getResources().getStringArray(R.array.remoteSite);
-					downloadFailListener.downloadFail(name);
+					downloadFailListener.downloadFail(index);
 				}
 				
 				ArrayList<String> al=new ArrayList<String>();
@@ -249,7 +249,7 @@ public class FileSysManager {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				Log.d(logTag,"IOException happen while download media.");
-				downloadFailListener.downloadFail(fileName);
+				downloadFailListener.downloadFail(targetFileIndex);
 			}
     		Log.d(logTag,"Download finish, notify downloadFinishListener");
     		downloadFinishListener.downloadFinish(targetFileIndex);
