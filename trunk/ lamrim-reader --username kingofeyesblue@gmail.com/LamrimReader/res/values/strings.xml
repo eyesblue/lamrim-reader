@@ -16,10 +16,8 @@
     <string name="optionFile">options</string>
     <integer name="defSubtitleLineCount">2</integer>
     <integer name="defSubtitleFontSize">1</integer>
+    <integer name="subtitleMonInterval">100</integer>
     <integer name="defBookFontSize">1</integer>
-    <string name="isDisplayBook">是否顯示課文</string>
-    <string name="isDisplaySubtitle">是否顯示字幕</string>
-    <string name="isPlayAudio">是否播放語音</string>
     <string name="setupFontSizeStr">設定字型大小</string>
     <string name="appModeKey">AppMode</string>
     <integer name="defAppMode">0</integer>
@@ -41,11 +39,12 @@
         <item>56</item>
         <item>64</item>
     </integer-array>
-    <string name="section1">　　初中分三思惟死主決定當來此復無緣能令卻退者謂任受生何等之身定皆有死\n無常集云「若佛若獨覺若諸佛聲聞尚須捨此身何況諸庸夫」任住何境其死定至者\n，即彼中云：「住於何處死不入，如是方所定非有，空中非有海中無，亦非可住諸山間。」前\n後時中諸有情類，終為死摧等無差別，即如彼云：「盡其已生及當生，悉捨此身而他往，智\n者達此悉滅壞，當住正法決定行。」於其死主逃不能脫，非以咒等而能退止，如《教授勝光\n大王經》云：「譬如若有四大山王，堅硬隱固成就堅實，不壞不裂無諸隕損，至極堅強純一\n實密。觸天磨地從四方來，研磨一切草木本幹及諸枝葉，並研一切有情有命諸有生者，非\n是速走易得逃脫，或以力退，或以財退，或以諸物及咒藥等易於退卻。大王，如是此四極大\n怖畏來時，亦非於此速走能逃，或以力退或以財退或以諸物及咒藥等易於退卻。何等為\n四，謂老病死衰。大王，老壞強壯，病壞無疾，衰壞一切圓滿豐饒，死壞命根。從此等中，非是速\n走易得逃脫，或以力退或以財退，或以諸物及咒藥等易於靜息。」迦摩巴云：「現須畏死\n，臨終則須無所恐懼。我等反此，現在無畏，至臨終時，用爪抓胸。」</string>
     <string-array name="remoteSite">
         <item>https://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/</item>
     </string-array>
     <string name="appExtMemDirName">Lamrim</string>
+    <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
+    <string name="downloadingDesc">資源下載中，請稍候...</string>
     
     
 </resources>

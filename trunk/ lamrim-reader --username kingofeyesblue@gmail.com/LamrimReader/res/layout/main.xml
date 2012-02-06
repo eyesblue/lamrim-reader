@@ -13,18 +13,17 @@
         android:layout_height="match_parent"
         android:layout_gravity="fill"
         android:layout_weight="3" >
-
+
         <LinearLayout
             android:id="@+id/linearLayout1"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical" >
-
+
             <TextView
-                android:id="@+id/textView1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/section1"
+                android:id="@+id/bookView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
         </LinearLayout>
