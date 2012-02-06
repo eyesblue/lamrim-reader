@@ -44,7 +44,7 @@
     </string-array>
     <string name="appExtMemDirName">Lamrim</string>
     <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
-    <string name="downloadingDesc">資源下載中，請稍候...</string>
+    <string name="downloadingDesc">資源下載中，請稍候</string>
     
     
 </resources>
