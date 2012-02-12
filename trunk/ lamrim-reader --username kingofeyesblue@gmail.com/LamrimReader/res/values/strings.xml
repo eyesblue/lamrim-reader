@@ -10,14 +10,15 @@
     <string name="subtitleLineCount">字幕顯示行數</string>
     <string name="readingMode">上課模式</string>
     <string name="listenMode">自學模式</string>
-    <string name="showCtrlPanel">設定</string><string name="searchMode">查詢模式</string>
+    <string name="showCtrlPanel">設定</string>
+    <string name="searchMode">查詢模式</string>
     <string name="showAbout">關於</string>
     <string name="runtimeStateFile">runtime</string>
     <string name="optionFile">options</string>
-    <integer name="defSubtitleLineCount">2</integer>
+    <integer name="defSubtitleLineCount">1</integer>
+	<integer name="defBookFontSize">1</integer>
     <integer name="defSubtitleFontSize">1</integer>
     <integer name="subtitleMonInterval">100</integer>
-    <integer name="defBookFontSize">1</integer>
     <string name="setupFontSizeStr">設定字型大小</string>
     <string name="appModeKey">AppMode</string>
     <integer name="defAppMode">0</integer>
@@ -45,6 +46,10 @@
     <string name="appExtMemDirName">Lamrim</string>
     <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
     <string name="downloadingDesc">資源下載中，請稍候</string>
-    
+    <integer name="downloadBufferSize">16384</integer>
+    <string name="tmpFileSaveLocationKey">0</string>
+    <string name="audioDirName">Audio</string>
+    <string name="subtitleDirName">Subtitle</string>
+    <string name="theoryDirName">Theory</string>
     
 </resources>
