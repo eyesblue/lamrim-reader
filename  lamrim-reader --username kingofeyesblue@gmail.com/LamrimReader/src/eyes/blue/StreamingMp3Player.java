@@ -44,7 +44,7 @@ public class StreamingMp3Player {
 		buffer=new byte[100*1024];
 	}
 	
-	public InputStream downloadFile(URL url) throws IOException, InterruptedException{
+	public InputStream downloadFile() throws IOException, InterruptedException{
 		InputStream is=url.openConnection().getInputStream();
 		tempFile=new File(context.getCacheDir(),"downloadingMedia_" + ".dat");
 		DownloadThread dt=new DownloadThread(is,tempFile,4000,buffer.length);
@@ -56,74 +56,46 @@ public class StreamingMp3Player {
 		return new FileInputStream(tempFile);
 	}
 	
-	public void play(final String path) throws IOException, InterruptedException{
+	public void play() throws IOException, InterruptedException{
 		decoder=new Decoder();
 		
 //		progBar.setString("Decode the media file ...");
 		
 		Thread playThread=new Thread(){
 			Bitstream bitstream;
-			int frameCount=0;
-			int msPerFrame=-1;
-			int waveFreq=-1;
-			int waveCountPerFrame=-1;
-			boolean initial=true;
+			
 			public void run(){
-				URL url=null;
 				InputStream is=null;
 				try {
-					url = new URL(path);
-				} catch (MalformedURLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				try {
+					//is=downloadFile();
 					is=url.openConnection().getInputStream();
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
-		audioTrack=new AudioTrack(AudioManager.STREAM_MUSIC, 11025, AudioFormat.CHANNEL_CONFIGURATION_MONO,AudioFormat.ENCODING_PCM_16BIT, 4000, AudioTrack.MODE_STATIC);
-		int iMinBufferSize=AudioTrack.getMinBufferSize(11025, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT);
-		audioTrack.play();
+				} 
+				
+				audioTrack=new AudioTrack(AudioManager.STREAM_MUSIC, 11025, AudioFormat.CHANNEL_CONFIGURATION_MONO,AudioFormat.ENCODING_PCM_16BIT, 4000, AudioTrack.MODE_STATIC);
+				int iMinBufferSize=AudioTrack.getMinBufferSize(11025, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT);
 		
-		
-		Log.d("LamrimReader","Min buffer size of AudioTracker: "+iMinBufferSize);
-		try {
+				Log.d("LamrimReader","Min buffer size of AudioTracker: "+iMinBufferSize);
+				try {
 			//				bitstream = new Bitstream(downloadFile(url));
-			bitstream = new Bitstream(is);
+					bitstream = new Bitstream(is);
 
-			Header h;
-			int wlen=0;
+					Header h;
+					String stemp="";
 
-				while((h = bitstream.readFrame())!=null){
+					while((h = bitstream.readFrame())!=null){
 			// sample buffer set when decoder constructed
-					frameCount++;
-					SampleBuffer output = (SampleBuffer)decoder.decodeFrame(h, bitstream);
-					if(initial){
-						msPerFrame=(int) (h.ms_per_frame());
-						waveFreq=output.getSampleFrequency();
-						waveCountPerFrame=output.getBufferLength();
-						initial=false;
+						SampleBuffer output = (SampleBuffer)decoder.decodeFrame(h, bitstream);
+						for(int i=0;i<output.getBufferLength();i++)
+							stemp+=output.getBuffer()[i]+", ";
+						int len=audioTrack.write(output.getBuffer(), 0, output.getBufferLength());
+						Log.d("LamrimReader","Write "+len+" of Data"+stemp);
+						stemp="";
+						audioTrack.play();
+						bitstream.closeFrame();
 					}
-					
-//					wlen=audioTrack.write(output.getBuffer(), 0, output.getBufferLength());
-//					Log.d("LamrimReader","Write "+wlen+" of buffer length"+output.getBufferLength());
-					
-//					System.out.println("SampleBuffer length: "+ output.getBufferLength()+" Channels: " +decoder.getOutputChannels()+" ,Freq: "+decoder.getOutputFrequency()+" ,sample freq:"+output.getSampleFrequency()+"Total ms: "+h.total_ms(output.getBufferLength())+" MS per frame: "+h.	ms_per_frame() );
-					int offset=0;
-					int writelen=0;
-					while(offset < buffer.length)
-					{
-					writelen = audioTrack.write(buffer, offset, iMinBufferSize);
-//					  if(writelen  > 0)
-//						  audioTrack.play();
-					  offset += writelen ;  
-					  if(writelen < iMinBufferSize)
-					     break;
-					}
-					bitstream.closeFrame();
-			}
 		}
 		 catch (BitstreamException e) {
 			// TODO Auto-generated catch block
@@ -164,7 +136,7 @@ public class StreamingMp3Player {
 //					Log.d("LamrimReader", "Content: "+new String(buffer));
 					counter+=itemp;
 					fos.write(buffer);
-					Log.d("LamrimReader", "Saved file length: "+counter);
+//					Log.d("LamrimReader", "Saved file length: "+counter);
 					if(!start){
 						// Do something that been interrupt!
 						break;
@@ -194,6 +166,136 @@ public class StreamingMp3Player {
 		
 		public void stopThread(){
 			start=false;
+		}
+	}
+	
+	class BufferObject{
+		private byte[] buffer=null;
+		private int prodIndex=0;
+		private int conIndex=0;
+		int validLength=0;
+		
+		public int getValidLength(){return validLength;}
+		public void writeLength(int length){validLength+=length;}
+		public void cleanLength(int length){validLength-=length;}
+		
+		public int getReadBondIndex(){
+			if(validLength==0)return -1;
+			return (conIndex<prodIndex)? prodIndex:buffer.length-1;
+
+		}
+		public int getWriteBondIndex(){
+			if(validLength==0)return -1;
+			return (prodIndex>conIndex)?buffer.length-1:conIndex;
+		}
+	}
+	
+	class Producer extends StopableThread{
+		int downloadID=-1;
+		URL url=null;
+		BufferObject bo=null;
+		DownloadFailListener dfl=null;
+		
+		public Producer(URL url,BufferObject bo,int downloadID ){
+			this.url=url;
+			this.bo=bo;
+			this.downloadID=downloadID;
+		}
+		
+		public void setDownloadFailListener(DownloadFailListener dfl){
+			this.dfl=dfl;
+		}
+		
+		@Override
+		public void run(){
+			
+			InputStream is=null;
+			try {
+				is=url.openStream();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				Log.e(context.getString(R.string.app_name),this.getName()+" Thread: Connecting to "+url.toString()+" fail.");
+				dfl.downloadFail(downloadID);
+				e.printStackTrace();
+			}
+			
+			int bond=-1;
+			int readLen=-1;
+			int counter=0;
+			try {
+				while(true){
+					synchronized(bo){
+						// while producer index equal consumer index, it mean the data has been clear by consumer.
+						while(true){
+							if(super.stopThread)break;
+							if(bo.prodIndex==bo.conIndex-1){bo.notify();bo.wait();}
+							if(bo.prodIndex==bo.buffer.length-1)bo.prodIndex=0;
+							if(bo.conIndex<=bo.prodIndex)bond=bo.buffer.length-1-bo.prodIndex;
+							else bond=bo.conIndex-bo.prodIndex-1;
+							if((readLen=is.read(bo.buffer,bo.prodIndex+1,bond))==-1)break;
+							bo.prodIndex+=readLen;
+							counter+=readLen;
+						}
+					}
+					is.close();
+				}
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				Log.e(context.getString(R.string.app_name),this.getName()+" Thread: I/O Exception happen while Download "+url.toString()+" at "+counter+" byte.");
+				dfl.downloadFail(downloadID);
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	class Cumsumer extends StopableThread{
+		int downloadID=-1;
+		URL url=null;
+		BufferObject bo=null;
+		DownloadFailListener dfl=null;
+		
+		public Cumsumer(URL url,BufferObject bo,int downloadID ){
+			this.url=url;
+			this.bo=bo;
+			this.downloadID=downloadID;
+		}
+		
+		public void setDownloadFailListener(DownloadFailListener dfl){
+			this.dfl=dfl;
+		}
+		
+		@Override
+		public void run(){
+			int bond=-1;
+			int readLen=-1;
+			int counter=0;
+			
+			while(true){
+				synchronized(bo){
+					if(bo.conIndex==bo.prodIndex){
+						bo.notify();
+						try {
+							// Empty
+							bo.wait();
+						} catch (InterruptedException e) {e.printStackTrace();}
+					}
+					// Buffer bond reached.
+					if(bo.conIndex==bo.buffer.length-1)bo.conIndex=0;
+					
+					if(bo.conIndex<bo.prodIndex)bond=bo.prodIndex-bo.conIndex;
+					else bond=bo.buffer.length-1;
+					// while producer index equal consumer index, it mean the data has been clear by consumer.
+					while(true){
+						if(super.stopThread)break;
+						
+						}
+					}
+				}
+			
 		}
 	}
 }
