@@ -51,5 +51,7 @@
     <string name="audioDirName">Audio</string>
     <string name="subtitleDirName">Subtitle</string>
     <string name="theoryDirName">Theory</string>
-    
+    <string name="searchingType">searchingTyep</string>
+    <integer name="PLAY_FROM_MEDIA">0</integer>
+    <integer name="PLAY_FROM_THEORY">1</integer>
 </resources>

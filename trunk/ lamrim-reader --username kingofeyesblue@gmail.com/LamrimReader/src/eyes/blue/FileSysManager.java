@@ -21,42 +21,42 @@ import android.util.Log;
 public class FileSysManager {
         public static String[] fileName=null;
         public static int[] fileSize=null;
-        int targetFileIndex=-1;
-        String logTag=null;
+        static int targetFileIndex=-1;
+        static String logTag=null;
         static int NO_CACHE=0;
         static int EXTERNAL_MEMORY=1;
         static int INTERNAL_MEMORY=2;
         
-        SharedPreferences options=null;
+        static SharedPreferences options=null;
         static StatFs[] statFs=null;
         static Context context=null;
-        public static int defLocate =0;
-        String[] remoteSite=null;
-        DownloadFailListener downloadFailListener=null;
-        DiskSpaceFullListener diskFullListener=null;
-        DownloadFinishListener downloadFinishListener=null;
-        DownloadProgressListener downloadProgressListener=null;
-        FileOperationFailListener fileOperationFailListener =null;
-        int downloadFromSite=-1;
-        int bufLen=16384;
+        static String[] remoteSite=null;
+        static DownloadFailListener downloadFailListener=null;
+        static DiskSpaceFullListener diskFullListener=null;
+        static DownloadFinishListener downloadFinishListener=null;
+        static DownloadProgressListener downloadProgressListener=null;
+        static FileOperationFailListener fileOperationFailListener =null;
+        static int downloadFromSite=-1;
+        static int bufLen=16384;
         
-        public FileSysManager(Context context,int defLocate,String[] remoteSite){
-                FileSysManager.defLocate=defLocate;
+        public FileSysManager(Context context){
 //              statFs[0]=new StatFs(Environment.getRootDirectory().getAbsolutePath());
 //              statFs[1]=new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
-                this.remoteSite=remoteSite;
+                this.remoteSite=context.getResources().getStringArray(R.array.remoteSite);
                 this.logTag=context.getString(R.string.app_name);
                 FileSysManager.fileName=context.getResources().getStringArray(R.array.fileName);
                 FileSysManager.fileSize=context.getResources().getIntArray(R.array.fileSize);
-                this.context=context;
+                FileSysManager.context=context;
                 options = context.getSharedPreferences(context.getString(R.string.optionFile), 0);
+                checkFileStructure();
         }
+        
         
         public void setFileOperationFailListener(FileOperationFailListener listener){
         	this.fileOperationFailListener=listener;
         } 
         
-        public void downloadFileFromRemote(int fileIndex){
+        public static void downloadFileFromRemote(int fileIndex){
                 Log.d(logTag,"Download file from remote "+fileName[fileIndex]);
                 
                 InputStream is=null;
@@ -90,7 +90,8 @@ public class FileSysManager {
                 }
 
                 Log.d(logTag,"Create thread for download file");
-                DownloadThread dt=new DownloadThread(is,fileName[targetFileIndex],bufLen,downloadFinishListener, new DownloadFailListener(){
+
+                DownloadThread dt=new DownloadThread(context,is,targetFileIndex,bufLen,downloadFinishListener,downloadProgressListener, new DownloadFailListener(){
                         public void downloadFail(int index){
                                 Log.d(logTag,"Download "+fileName[index]+" fail, Try to download from other site");
                                 if(remoteSite.length<=1){
@@ -124,11 +125,11 @@ public class FileSysManager {
         	if(extWritable)appRoot=context.getExternalFilesDir(context.getString(R.string.app_name));
         	else appRoot=context.getFileStreamPath(context.getString(R.string.app_name));
         	
-        	File subDir=new File(appRoot+context.getString(R.string.audioDirName));
+        	File subDir=new File(appRoot+File.separator+context.getString(R.string.audioDirName));
         	if(!subDir.exists())subDir.mkdirs();
-        	subDir=new File(appRoot+context.getString(R.string.subtitleDirName));
+        	subDir=new File(appRoot+File.separator+context.getString(R.string.subtitleDirName));
         	if(!subDir.exists())subDir.mkdirs();
-        	subDir=new File(appRoot+context.getString(R.string.theoryDirName));
+        	subDir=new File(appRoot+File.separator+context.getString(R.string.theoryDirName));
         	if(!subDir.exists())subDir.mkdirs();
         }
         
@@ -136,8 +137,27 @@ public class FileSysManager {
          * The location of media file is [PackageDir]\[AppName](LamrimReader)\Audio
          * */
         public static File getLocalMediaFile(int i){
-        	if(isExtMemWritable())return new File(context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName));
-        	else return new File(context.getFileStreamPath(context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName));
+        	if(isExtMemWritable())return new File(context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName)+File.separator+fileName[i]);
+        	else return new File(context.getFileStreamPath(context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName)+File.separator+fileName[i]);
+        }
+        
+        public static boolean isFileValid(int i){
+        	Log.d(logTag,"Check the existed file");
+        	File file=getLocalMediaFile(i);
+        	if(!file.exists()){
+        		Log.d(logTag,"The file"+file.getAbsolutePath()+" is not exist");
+        		return false;
+        	}
+        	
+        	int size=context.getResources().getIntArray(R.array.fileSize)[i];
+        	
+        	if(file.length()!=size){
+        		Log.d(logTag,"The size of file is not corrent, should be "+size+", but "+file.length());
+        		return false;
+        	}
+        	
+        	// !!!!!!!!!!!! There should check the file more condition.
+        	return true;
         }
         
         public int getRecommandStoreLocate(){
@@ -181,113 +201,6 @@ public class FileSysManager {
         {
         	return (statFs[locate].getAvailableBlocks() * statFs[locate].getBlockSize()) >>> 20;
         }
-    
-    class CheckRemoteThread extends Thread{
-        boolean start=true;
-        Object lockKey=null;
-        String sitePath=null;
-        boolean reached=false;
-        InputStream is=null;
-        int index=-1;
-        
-        public CheckRemoteThread(String sitePath,Object lockKey,int index){
-                this.lockKey=lockKey;
-                this.sitePath=sitePath;
-                this.index=index;
-        }
-        
-        public void run(){
-                URL conn=null;
-                try {
-                                conn=new URL(sitePath);
-                        } catch (MalformedURLException e) {
-                                // TODO Auto-generated catch block
-                                Log.d("Lamrim Reader","Program error: The remote URL format is unvalid.");
-                                e.printStackTrace();
-                        }
-                if(!start)return;
-                try {
-                                is=conn.openStream();
-                        } catch (IOException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                        }
-                reached=true;
-                synchronized(lockKey){
-                        lockKey.notify();
-                }
-        }
-        public void stopThread(){start=false;}
-        public boolean isReached(){return reached;}
-        public InputStream getInputStream(){return is;}
-        public int getFromSite(){return index;}
-    }
-    
-    class DownloadThread extends Thread{
-        InputStream is=null;
-        int bufLen=-1;
-        DownloadFinishListener downloadFinishListener=null;
-        DownloadFailListener downloadFailListener=null;
-        String fileName=null;
-        
-        public DownloadThread(InputStream is,String name,int bufLen,DownloadFinishListener downloadFinishListener,DownloadFailListener downloadFailListener){
-                this.is=is;
-                this.fileName=name;
-                this.bufLen=bufLen;
-                this.downloadFinishListener=downloadFinishListener;
-                this.downloadFailListener=downloadFailListener;
-        }
-        public void run(){
-                Log.d(logTag,"Download Thread started");
-                byte[] buf=new byte[bufLen];
-                
-                FileOutputStream fos=null;
-                if(context==null)Log.d(logTag,"The context is NULL");
-                try {
-                        if(defLocate==INTERNAL_MEMORY)
-                                fos=context.openFileOutput(fileName, Context.MODE_PRIVATE);
-                        if(defLocate==EXTERNAL_MEMORY)
-                                fos=new FileOutputStream(context.getString(R.string.appExtMemDirName)+fileName);
-                        } catch (FileNotFoundException e1) {
-                                // TODO Auto-generated catch block
-                                e1.printStackTrace();
-                        }
-                
-                try {
-                        int percent=fileSize[targetFileIndex]/100;
-                        int percentArray[]=new int[100];
-                        int percentIndex=0;
-                        int readLen=-1;
-                        int counter=0;
-                        Log.d(logTag,"One percent is "+percent);
-                        for(int i=0;i<100;i++){
-                                percentArray[i]=(i+1)*percent;
-                                Log.d(logTag,"Set array["+i+"] = "+percentArray[i]);
-                        }
-                        
-                        Log.d(logTag,"Start read stream from remote site");
-                                while((readLen=is.read(buf))!=-1){
-                                        counter+=readLen;
-                                        fos.write(buf,0,readLen);
-                                        Log.d(logTag,"Read length: "+counter+", index="+percentIndex);
-                                        if(percentIndex<=99&&counter>=percentArray[percentIndex]){
-                                                downloadProgressListener.setDownloadProgress(++percentIndex);
-                                                Log.d(logTag,"Add one percent");
-                                        }
-                                }
-                                is.close();
-                                fos.flush();
-                        fos.close();
-                        } catch (IOException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                                Log.d(logTag,"IOException happen while download media.");
-                                downloadFailListener.downloadFail(targetFileIndex);
-                        }
-                Log.d(logTag,"Download finish, notify downloadFinishListener");
-                downloadFinishListener.downloadFinish(targetFileIndex);
-        }
-    }
 
     class DiskSpaceFullListener{
         public void diskSpaceFull(){}
