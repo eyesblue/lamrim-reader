@@ -86,18 +86,18 @@ public class FileSysManager {
                 
                 if(is==null){
                         Log.d(logTag,"There is no valid remote site for download this file");
-                        downloadFailListener.downloadFail(targetFileIndex);
+                        downloadFailListener.downloadMediaFail(targetFileIndex);
                 }
 
                 Log.d(logTag,"Create thread for download file");
 
                 DownloadThread dt=new DownloadThread(context,is,targetFileIndex,bufLen,downloadFinishListener,downloadProgressListener, new DownloadFailListener(){
-                        public void downloadFail(int index){
+                        public void downloadMediaFail(int index){
                                 Log.d(logTag,"Download "+fileName[index]+" fail, Try to download from other site");
                                 if(remoteSite.length<=1){
                                         Log.d(logTag,"There is no remote site for download file, recovery site list and return fail to Activate");
                                         remoteSite=context.getResources().getStringArray(R.array.remoteSite);
-                                        downloadFailListener.downloadFail(index);
+                                        downloadFailListener.downloadMediaFail(index);
                                 }
                                 
                                 ArrayList<String> al=new ArrayList<String>();
@@ -139,6 +139,17 @@ public class FileSysManager {
         public static File getLocalMediaFile(int i){
         	if(isExtMemWritable())return new File(context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName)+File.separator+fileName[i]);
         	else return new File(context.getFileStreamPath(context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.audioDirName)+File.separator+fileName[i]);
+        }
+        
+        // NOT test yet
+        public static File getLocalSubtitleFile(int i){
+        	if(isExtMemWritable())return new File(context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.subtitleDirName)+File.separator+fileName[i]);
+        	else return new File(context.getFileStreamPath(context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.subtitleDirName)+File.separator+fileName[i]);
+        }
+        // NOT test yet
+        public static File getLocalTheoryFile(int i){
+        	if(isExtMemWritable())return new File(context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.theoryDirName)+File.separator+fileName[i]);
+        	else return new File(context.getFileStreamPath(context.getString(R.string.app_name)).getAbsoluteFile()+File.separator+context.getString(R.string.theoryDirName)+File.separator+fileName[i]);
         }
         
         public static boolean isFileValid(int i){

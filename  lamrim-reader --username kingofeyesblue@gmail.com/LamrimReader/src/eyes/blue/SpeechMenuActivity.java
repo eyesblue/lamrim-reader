@@ -39,7 +39,7 @@ public class SpeechMenuActivity extends ListActivity {
 	 String[] speechTitle=getResources().getStringArray(R.array.fileName);
 //	 String[] speechDesc=getResources().getStringArray(R.array.speechDesc);
 
-/*	 for(String value:speechTitle){
+	 for(String value:speechTitle){
 		 HashMap<String,String> item = new HashMap<String,String>();
 		 item.put( "food", null);
 		 item.put( "place",null );
@@ -47,17 +47,8 @@ public class SpeechMenuActivity extends ListActivity {
 		 item.put("desc", "Descript here");
 		 list.add( item );
 		 }
-*/
-//		for demo
-	 HashMap<String,String> item = new HashMap<String,String>();
-	 item.put("title", "001A.MP3");
-	 item.put("desc", "Descript here");
-	 list.add( item );
-	 item = new HashMap<String,String>();
-	 item.put("title", "038A.MP3");
-	 item.put("desc", "Descript here");
-	 list.add( item );
-	 
+
+
 	 //新增SimpleAdapter
 	 adapter = new SimpleAdapter(this, list, R.layout.speech_row, new String[] { "title","desc" },
 			 new int[] { R.id.speechTitle, R.id.speechDesc } );
@@ -70,16 +61,8 @@ public class SpeechMenuActivity extends ListActivity {
 	
 	public void onListItemClick(ListView l, View v, int position, long id){
 		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
-/*		playWindow.putExtra(this.getResources().getString(R.string.searchingType), this.getResources().getInteger(R.integer.PLAY_FROM_MEDIA));
-		playWindow.putExtra("index", position);
-		this.startActivity(playWindow);
-*/
-//		For Demo
 		playWindow.putExtra(this.getResources().getString(R.string.searchingType), this.getResources().getInteger(R.integer.PLAY_FROM_MEDIA));
-		if(position==0)
-		playWindow.putExtra("index",0);
-		if(position==1)
-			playWindow.putExtra("index",74);
+		playWindow.putExtra("index", position);
 		this.startActivity(playWindow);
 	}
 }

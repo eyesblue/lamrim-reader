@@ -215,7 +215,7 @@ public class StreamingMp3Player {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				Log.e(context.getString(R.string.app_name),this.getName()+" Thread: Connecting to "+url.toString()+" fail.");
-				dfl.downloadFail(downloadID);
+				dfl.downloadMediaFail(downloadID);
 				e.printStackTrace();
 			}
 			
@@ -243,7 +243,7 @@ public class StreamingMp3Player {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				Log.e(context.getString(R.string.app_name),this.getName()+" Thread: I/O Exception happen while Download "+url.toString()+" at "+counter+" byte.");
-				dfl.downloadFail(downloadID);
+				dfl.downloadMediaFail(downloadID);
 				e.printStackTrace();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

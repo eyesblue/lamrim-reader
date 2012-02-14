@@ -76,9 +76,9 @@ public class DownloadThread extends Thread{
             } catch (IOException e) {
             	e.printStackTrace();
             	Log.d(logTag,"IOException happen while download media.");
-            	downloadFailListener.downloadFail(fileIndex);
+            	downloadFailListener.downloadMediaFail(fileIndex);
             }
             Log.d(logTag,"Download finish, notify downloadFinishListener");
-            downloadFinishListener.downloadFinish(fileIndex);
+            downloadFinishListener.downloadMediaFinish(fileIndex);
     }
 }
