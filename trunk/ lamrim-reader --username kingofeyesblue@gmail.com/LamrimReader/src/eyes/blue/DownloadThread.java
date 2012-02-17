@@ -29,10 +29,11 @@ public class DownloadThread extends Thread{
             this.downloadFailListener=downloadFailListener;
             this.downloadProgressListener=downloadProgressListener;
             fileList=context.getResources().getStringArray(R.array.fileName);
-            fileSize=context.getResources().getIntArray(R.array.fileSize);
+            fileSize=context.getResources().getIntArray(R.array.mediaFileSize);
             this.fileIndex=fileIndex;
             logTag=context.getResources().getString(R.string.app_name);
     }
+    
     public void run(){
             Log.d(logTag,"Download Thread started");
             
