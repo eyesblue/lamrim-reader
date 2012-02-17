@@ -1,5 +1,7 @@
 package eyes.blue;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -9,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.LogPrinter;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -24,6 +27,17 @@ public class SpeechMenuActivity extends ListActivity {
 	 public void onCreate(Bundle savedInstanceState) {
 		
 	 super.onCreate(savedInstanceState);
+	 try {
+		LogRepoter.setRecever("http://10.0.200.156:8080/cylog/api/interface","Eyes Blue","Log");
+	} catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (URISyntaxException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	 LogRepoter.reportMachineType();
+	 
 	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);	//將螢幕轉成横式
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -61,6 +75,9 @@ public class SpeechMenuActivity extends ListActivity {
 	
 	public void onListItemClick(ListView l, View v, int position, long id){
 		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
+		
+		list=null;
+		
 		playWindow.putExtra(this.getResources().getString(R.string.searchingType), this.getResources().getInteger(R.integer.PLAY_FROM_MEDIA));
 		playWindow.putExtra("index", position);
 		this.startActivity(playWindow);

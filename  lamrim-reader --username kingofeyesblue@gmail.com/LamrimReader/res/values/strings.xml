@@ -24,12 +24,12 @@
     <integer name="defAppMode">0</integer>
     <string name="normalModeDesc">一般模式</string>
     <integer name="NORMAL_MODE">0</integer>
-    <string name="readingModeDesc">閱讀模式</string>
-    <integer name="READING_MODE">1</integer>
+    <integer name="READING_MODE">1</integer><integer name="NOSUBTITLE_MODE">2</integer><integer name="TV_MODE">3</integer><string name="readingModeDesc">閱讀模式</string>
+    
     <string name="noSubtitleModeDesc">無字幕模式</string>
-    <integer name="NOSUBTITLE_MODE">2</integer>
+    
     <string name="tvModeDesc">電視模式</string>
-    <integer name="TV_MODE">3</integer>
+    
     <integer-array name="fontSizeArray">
         <item>12</item>
         <item>18</item>
@@ -43,15 +43,23 @@
     <string-array name="remoteSite">
         <item>https://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/</item>
     </string-array>
-    <string name="appExtMemDirName">Lamrim</string>
+    <string name="appExtMemDirName">LamrimReaderTemp</string>
     <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
     <string name="downloadingDesc">資源下載中，請稍候</string>
     <integer name="downloadBufferSize">16384</integer>
-    <string name="tmpFileSaveLocationKey">0</string>
     <string name="audioDirName">Audio</string>
     <string name="subtitleDirName">Subtitle</string>
     <string name="theoryDirName">Theory</string>
     <string name="searchingType">searchingTyep</string>
     <integer name="PLAY_FROM_MEDIA">0</integer>
     <integer name="PLAY_FROM_THEORY">1</integer>
+    <string name="defMediaType">MP3</string>
+    <string name="defSubtitleType">SRT</string>
+    <string name="defTheoryType">TXT</string>
+    <string name="noSubtitleDesc">無字幕</string>
+    <string name="runtimeNormalTheoryIndex">normalModeTheoryIndex</string>
+    <string name="runtimeNormalPlayerState">normalModePlayingState</string>
+    <string name="runtimeNormalPlayingIndex">normalModePlayingIndex</string>
+    <string name="runtimeNormalPlayingPosition">normalModePlayingPosition</string>
+    <string name="runtimeReadingTheoryIndex">readingModeTheoryIndex</string>
 </resources>
