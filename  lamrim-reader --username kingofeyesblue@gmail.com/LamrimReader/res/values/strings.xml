@@ -24,10 +24,11 @@
     <integer name="defAppMode">0</integer>
     <string name="normalModeDesc">一般模式</string>
     <integer name="NORMAL_MODE">0</integer>
-    <integer name="READING_MODE">1</integer><integer name="NOSUBTITLE_MODE">2</integer><integer name="TV_MODE">3</integer><string name="readingModeDesc">閱讀模式</string>
-    
+    <integer name="READING_MODE">1</integer>
+    <integer name="NOSUBTITLE_MODE">2</integer>
+    <integer name="TV_MODE">3</integer>
+    <string name="readingModeDesc">閱讀模式</string>
     <string name="noSubtitleModeDesc">無字幕模式</string>
-    
     <string name="tvModeDesc">電視模式</string>
     
     <integer-array name="fontSizeArray">

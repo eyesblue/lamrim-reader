@@ -27,7 +27,7 @@ public class SpeechMenuActivity extends ListActivity {
 	 public void onCreate(Bundle savedInstanceState) {
 		
 	 super.onCreate(savedInstanceState);
-	 try {
+/*	 try {
 		LogRepoter.setRecever("http://10.0.200.156:8080/cylog/api/interface","Eyes Blue","Log");
 	} catch (MalformedURLException e) {
 		// TODO Auto-generated catch block
@@ -37,7 +37,7 @@ public class SpeechMenuActivity extends ListActivity {
 		e.printStackTrace();
 	}
 	 LogRepoter.reportMachineType();
-	 
+*/	 
 	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);	//將螢幕轉成横式
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -55,12 +55,10 @@ public class SpeechMenuActivity extends ListActivity {
 
 	 for(String value:speechTitle){
 		 HashMap<String,String> item = new HashMap<String,String>();
-		 item.put( "food", null);
-		 item.put( "place",null );
 		 item.put("title", value);
 		 item.put("desc", "Descript here");
 		 list.add( item );
-		 }
+		}
 
 
 	 //新增SimpleAdapter
@@ -77,7 +75,6 @@ public class SpeechMenuActivity extends ListActivity {
 		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
 		
 		list=null;
-		
 		playWindow.putExtra(this.getResources().getString(R.string.searchingType), this.getResources().getInteger(R.integer.PLAY_FROM_MEDIA));
 		playWindow.putExtra("index", position);
 		this.startActivity(playWindow);
