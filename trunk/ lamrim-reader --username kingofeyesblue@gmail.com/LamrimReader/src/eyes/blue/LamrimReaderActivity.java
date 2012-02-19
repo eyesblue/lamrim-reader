@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -50,8 +51,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class LamrimReaderActivity extends Activity implements OnAudioFocusChangeListener, OnBufferingUpdateListener, OnPreparedListener {
@@ -60,7 +63,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         
     final static int NORMAL_MODE=0;
     final static int READING_MODE=1;
-    final static int NOSUBTITLE_MODE=2;
+    final static int RECODE_SECTION_MODE=2;
     final static int TV_MODE=3;
     
 //    final static int DIALOG_DOWNLOAD_FAIL=0;
@@ -72,7 +75,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
 //    Intent optCtrlPanel=null;
     private MediaPlayer mediaPlayer=null;
 	
-	TextView bookView;
+    ListView bookView;
 	TextView subtitleView;
 	SeekBar playBar;
 	SharedPreferences options;
@@ -82,7 +85,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
 	int playerStartPosition=-1;
 	
 	Timer playBarTimer=new Timer();
-        
+	ArrayList<HashMap<String,String>> bookList =null;
 //	String bookFontSizeKey=null;
 //	String subtitleFontSizeKey=null;
 //	String subtitleLineCountKey=null;
@@ -95,7 +98,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
-   	try{
+//   	try{
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -110,30 +113,22 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         appMode=getResources().getInteger(R.integer.defAppMode);
         appMode=options.getInt(getString(R.string.appModeKey), appMode);
 //        remoteSite=getResources().getStringArray(R.array.remoteSite);
-        
-        
-        
+
         if(fileSysManager==null)fileSysManager=new FileSysManager(this);
         FileSysManager.checkFileStructure();
+
         
-        
-        int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
-        bookFontSize=options.getInt(getString(R.string.bookFontSizeKey), bookFontSize);
         int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
         subtitleFontSize=options.getInt(getString(R.string.subtitleFontSizeKey), subtitleFontSize);
         int subtitleLineCount=getResources().getInteger(R.integer.defSubtitleLineCount);
         subtitleLineCount=options.getInt(getString(R.string.subtitleLineCount), subtitleLineCount);
-        
-        
-        
-//        if(optCtrlPanel==null)optCtrlPanel = new Intent(LamrimReaderActivity.this,OptCtrlPanel.class);
-        bookView=(TextView)findViewById(R.id.bookView);
-        bookView.setMovementMethod(new ScrollingMovementMethod());
-        bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
 
-        
-        
-        
+
+        // Contruct the content of book with the bookViewList
+        getAllBookContent();
+//        bookView.setMovementMethod(new ScrollingMovementMethod());
+//        bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+
         // For Demo
 //        String[] bookContent=getResources().getStringArray(R.array.book);
 //        String bookPages=bookContent[63]+"\n"+bookContent[64]+"\n"+bookContent[65]+"\n"+bookContent[66]+"\n"+bookContent[67]+"\n"+bookContent[68]+"\n"+bookContent[69]+"\n"+bookContent[70]+"\n"+bookContent[71]+"\n"+bookContent[72];
@@ -144,12 +139,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         subtitleView=(TextView)findViewById(R.id.subtitleView);
         subtitleView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
         subtitleView.setLines(subtitleLineCount);
-        
-        
-        
-        
-        
-       
+
 //        subtitleMonInterval=getResources().getInteger(R.integer.subtitleMonInterval);
         
         
@@ -158,32 +148,53 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         playBar.setClickable(false);
         playBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
 
-        	@Override
-        	public void onProgressChanged(SeekBar playBar, int progress, boolean fromUser) {
-        		// For avoid the critical with subtitle player, we cancel the subtitle player and reset the currentPlayedSubtitleIndex, restart subtitle player while all ready.
+        @Override
+        public void onProgressChanged(SeekBar playBar, int progress, boolean fromUser) {
+        // For avoid the critical with subtitle player, we cancel the subtitle player and reset the currentPlayedSubtitleIndex, restart subtitle player while all ready.
        		
-        		if(!fromUser)return;
-        		if(mediaPlayer!=null&&mediaPlayer.isPlaying())mediaPlayer.seekTo(progress);
+        	if(!fromUser)return;
+       		if(mediaPlayer!=null&&mediaPlayer.isPlaying())mediaPlayer.seekTo(progress);
         		
-        		if(subtitle==null)return;
-        		synchronized(playBarTimer){
-        			currentPlayedSubtitleIndex=subtitleBSearch(subtitle,progress);
-        			final char[] text=subtitle[currentPlayedSubtitleIndex].text.toCharArray();
-       					setSubtitleViewText(text);
-        			}
-        	}
+        	if(subtitle==null)return;
+        	synchronized(playBarTimer){
+        		currentPlayedSubtitleIndex=subtitleBSearch(subtitle,progress);
+        		final char[] text=subtitle[currentPlayedSubtitleIndex].text.toCharArray();
+      				setSubtitleViewText(text);
+       		}
+       	}
 
         	@Override
         	public void onStartTrackingTouch(SeekBar seekBar) {}
         	@Override
         	public void onStopTrackingTouch(SeekBar seekBar) {}});
-    	}catch(Exception e){
+/*    	}catch(Exception e){
     		LogRepoter.log(e.toString());
     	}
-   	
-   	
-    }
+*/    }
     
+    private void getAllBookContent(){
+    	bookView=(ListView)findViewById(R.id.bookListView);
+        String[] bookPage=getResources().getStringArray(R.array.book);
+
+        bookList=new ArrayList<HashMap<String,String>>();
+        int pIndex=0;
+   	 	for(String value:bookPage){
+   	 		HashMap<String,String> item = new HashMap<String,String>();
+   	 		item.put("page", value);
+   	 		item.put("desc", "- "+(++pIndex)+" -");
+   	 		bookList.add( item );
+   	 	}
+   	 	SimpleAdapter adapter = new SimpleAdapter(this, bookList, R.layout.theory_page_view, new String[] { "page","desc" },
+   	 			new int[] { R.id.pageContentView, R.id.pageNumView } );
+   	 	bookView.setAdapter( adapter );
+
+   	 	// Setup the book page content
+//   	 	int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
+//   	 	bookFontSize=options.getInt(getString(R.string.bookFontSizeKey), bookFontSize);
+//   	 	TextView tv=(TextView) findViewById(R.id.speechTitle);
+//   	 	tv.setMovementMethod(new ScrollingMovementMethod());
+//   	 	tv.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+    }
     
     /*
      * Set the message on the subtitle view, there should check the subtitleView is not playing, or hide the message.
@@ -205,7 +216,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         Log.d(logTag,"Switch to Normal mode.");
                         ((LinearLayout)findViewById(R.id.rootLayout)).setGravity(Gravity.CENTER);
 //                      bookView.setLayoutParams(mainLayout);
-                        findViewById(R.id.horizontalScrollView1).setVisibility(View.VISIBLE);
+                        findViewById(R.id.bookListView).setVisibility(View.VISIBLE);
 
                         subtitleView.setLayoutParams(bottomLayout);
                         subtitleView.setGravity(Gravity.CENTER|Gravity.BOTTOM);
@@ -215,6 +226,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         break;
                 case READING_MODE:
                         Log.d(logTag,"Switch to Reading mode.");
+
 //                      bookView.setLayoutParams(mainLayout);
 //                      bookView.setVisibility(View.VISIBLE);
                         subtitleView.setVisibility(View.GONE);
@@ -222,7 +234,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         releasePlayer();
                         appMode=mode;
                         break;
-                case NOSUBTITLE_MODE:
+                case RECODE_SECTION_MODE:
                         Log.d(logTag,"Switch to NoSubtitle mode.");
 //                      bookView.setLayoutParams(mainLayout);
 //                      bookView.setVisibility(View.VISIBLE);
@@ -235,7 +247,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                 case TV_MODE:
                         Log.d(logTag,"Switch to TV mode.");
 //                      bookView.setLayoutParams(mainLayout);
-                        findViewById(R.id.horizontalScrollView1).setVisibility(View.GONE);
+                        findViewById(R.id.bookListView).setVisibility(View.GONE);
                         subtitleView.setLayoutParams(mainLayout);
                         subtitleView.setGravity(Gravity.CENTER);
                         subtitleView.setVisibility(View.VISIBLE);
@@ -260,7 +272,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0,NORMAL_MODE,0,R.string.normalModeDesc);
         menu.add(0,READING_MODE,1,R.string.readingModeDesc);
-        menu.add(0,NOSUBTITLE_MODE,2,R.string.noSubtitleModeDesc);
+        menu.add(0,RECODE_SECTION_MODE,2,R.string.noSubtitleModeDesc);
         menu.add(0,TV_MODE,3,R.string.tvModeDesc);
         menu.add(0,4,4,R.string.showCtrlPanel);
         menu.add(0,5,5,R.string.showAbout);
@@ -276,7 +288,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         switch (mode) {
         	case NORMAL_MODE:saveRuntime();switchMode(NORMAL_MODE);loadRuntime(NORMAL_MODE);return true;
         	case READING_MODE:saveRuntime();switchMode(READING_MODE);loadRuntime(READING_MODE);return true;
-        	case NOSUBTITLE_MODE:saveRuntime();switchMode(NOSUBTITLE_MODE);loadRuntime(NOSUBTITLE_MODE);return true;
+        	case RECODE_SECTION_MODE:saveRuntime();switchMode(RECODE_SECTION_MODE);loadRuntime(RECODE_SECTION_MODE);return true;
         	case TV_MODE:saveRuntime();switchMode(TV_MODE);loadRuntime(TV_MODE);return true;
         	case 4:
         		final Intent optCtrlPanel=new Intent(LamrimReaderActivity.this,OptCtrlPanel.class);
@@ -318,11 +330,11 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         runOnUiThread(new Thread() {
                 @Override
                         public void run() {
-                                if(bookView.getTextSize()!=bookFontSize){
+/*                                if(bookView.getTextSize()!=bookFontSize){
                                         Log.d(logTag,"Set book font size to "+getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
                                         bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
                                 }
-                                if(subtitleView.getTextSize()!=subtitleFontSize){
+*/                                if(subtitleView.getTextSize()!=subtitleFontSize){
                                         Log.d(logTag,"Set subtitle font size to "+getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
                                         subtitleView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
                                 }
@@ -410,7 +422,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         // Before load subtitle, we should check is the subtitle has downloaded and installed.
         File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
         if(subtitleFile.exists()){
-//        	subtitle=Util.loadSubtitle(subtitleFile);
+        	subtitle=Util.loadSubtitle(subtitleFile);
         	runOnUiThread(new Runnable() {
                 public void run() {
                 	playBar.setEnabled(true);
@@ -760,6 +772,14 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         }
         
         switchMode(appMode);
+        
+  	 	// Setup the book page content, this can't put in onCreate, will cause null point.
+//	 	int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
+//	 	bookFontSize=options.getInt(getString(R.string.bookFontSizeKey), bookFontSize);
+//	 	TextView tv=(TextView) findViewById(R.id.speechTitle);
+//	 	tv.setMovementMethod(new ScrollingMovementMethod());
+//	 	tv.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+        
     }
     /*    
     protected void onRestart(){}
