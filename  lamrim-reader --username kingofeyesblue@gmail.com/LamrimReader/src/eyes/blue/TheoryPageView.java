@@ -51,7 +51,7 @@ public class TheoryPageView extends TextView {
         	if(c=='\n'){line++;index=0;}
         	else if(c=='.'){
         		al.add(new int[]{line,index});
-        		Log.d("LamrimReader","Find point at: "+line+", "+index);
+        		//Log.d("LamrimReader","Find point at: "+line+", "+index);
         		continue;
         	}
         	newStr+=c;
