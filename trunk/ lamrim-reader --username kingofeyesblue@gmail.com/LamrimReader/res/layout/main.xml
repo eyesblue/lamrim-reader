@@ -6,15 +6,27 @@
     android:gravity="fill"
     android:orientation="vertical"
     android:screenOrientation="landscape" >
-
-    <ListView
-        android:id="@+id/bookListView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:choiceMode="none" >
 
+    <HorizontalScrollView
+        android:id="@+id/horizontalScrollView1"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:layout_weight="1" >
+
+
+
+    <ListView
+        android:id="@+id/bookPageGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:stretchMode="columnWidth"
+        android:layout_weight="1" >
+        
     </ListView>
+
+    </HorizontalScrollView>
 
             <TextView
                 android:id="@+id/subtitleView"

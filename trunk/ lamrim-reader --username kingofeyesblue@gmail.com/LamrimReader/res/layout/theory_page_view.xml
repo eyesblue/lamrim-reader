@@ -6,22 +6,17 @@
     android:isScrollContainer="true"
     android:orientation="vertical" >
 
-    <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:scrollbars="horizontal" >
-
         <eyes.blue.TheoryPageView
             android:id="@+id/pageContentView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingBottom="30dip"
+            android:paddingTop="30dip"
+            android:paddingLeft="30dip"
+            android:paddingRight="30dip"
             android:scrollHorizontally="true"
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    </LinearLayout>
 
     <TextView
         android:id="@+id/pageNumView"

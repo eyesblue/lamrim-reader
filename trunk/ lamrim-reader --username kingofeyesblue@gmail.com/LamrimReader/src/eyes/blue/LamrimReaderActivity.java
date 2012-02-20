@@ -49,6 +49,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -173,7 +174,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
 */    }
     
     private void getAllBookContent(){
-    	bookView=(ListView)findViewById(R.id.bookListView);
+    	bookView=(ListView)findViewById(R.id.bookPageGrid);
         String[] bookPage=getResources().getStringArray(R.array.book);
 
         bookList=new ArrayList<HashMap<String,String>>();
@@ -181,7 +182,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
    	 	for(String value:bookPage){
    	 		HashMap<String,String> item = new HashMap<String,String>();
    	 		item.put("page", value);
-   	 		item.put("desc", "- "+(++pIndex)+" -");
+   	 		item.put("desc", "第 "+(++pIndex)+" 頁");
    	 		bookList.add( item );
    	 	}
    	 	SimpleAdapter adapter = new SimpleAdapter(this, bookList, R.layout.theory_page_view, new String[] { "page","desc" },
@@ -216,7 +217,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         Log.d(logTag,"Switch to Normal mode.");
                         ((LinearLayout)findViewById(R.id.rootLayout)).setGravity(Gravity.CENTER);
 //                      bookView.setLayoutParams(mainLayout);
-                        findViewById(R.id.bookListView).setVisibility(View.VISIBLE);
+                        findViewById(R.id.bookPageGrid).setVisibility(View.VISIBLE);
 
                         subtitleView.setLayoutParams(bottomLayout);
                         subtitleView.setGravity(Gravity.CENTER|Gravity.BOTTOM);
@@ -247,7 +248,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                 case TV_MODE:
                         Log.d(logTag,"Switch to TV mode.");
 //                      bookView.setLayoutParams(mainLayout);
-                        findViewById(R.id.bookListView).setVisibility(View.GONE);
+                        findViewById(R.id.bookPageGrid).setVisibility(View.GONE);
                         subtitleView.setLayoutParams(mainLayout);
                         subtitleView.setGravity(Gravity.CENTER);
                         subtitleView.setVisibility(View.VISIBLE);
