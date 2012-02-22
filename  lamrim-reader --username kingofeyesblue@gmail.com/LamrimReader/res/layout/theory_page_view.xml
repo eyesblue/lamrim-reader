@@ -5,19 +5,21 @@
     android:gravity="center"
     android:isScrollContainer="true"
     android:orientation="vertical" >
-
+
         <eyes.blue.TheoryPageView
             android:id="@+id/pageContentView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingBottom="30dip"
             android:paddingTop="30dip"
+            android:paddingBottom="30dip"
             android:paddingLeft="30dip"
             android:paddingRight="30dip"
             android:scrollHorizontally="true"
+            android:background="#FFFFDF"
+            
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
+
     <TextView
         android:id="@+id/pageNumView"
         android:layout_width="wrap_content"
