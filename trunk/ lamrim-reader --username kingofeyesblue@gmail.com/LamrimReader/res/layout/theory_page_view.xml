@@ -16,7 +16,8 @@
             android:paddingRight="30dip"
             android:scrollHorizontally="true"
             android:background="#FFFFDF"
-            
+            android:lineSpacingExtra="5dip"
+			android:lineSpacingMultiplier="1.2"
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
