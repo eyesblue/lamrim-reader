@@ -37,13 +37,11 @@ public class TheoryPageView extends TextView {
     protected void onDraw(Canvas canvas)
     {
 		super.onDraw(canvas);
-        
+/*        
         Paint paint = new Paint();
-        //  将边框设为黑色
+
         paint.setColor(android.graphics.Color.BLUE);
-//        paint.setShadowLayer(5, this.getWidth()/2, this.getHeight()/2, android.graphics.Color.YELLOW);
-//        Drawable da=this.getBackground();
-//        this.setPaintFlags(getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
 
 
         
@@ -51,17 +49,15 @@ public class TheoryPageView extends TextView {
         float wordLen=getPaint().measureText("中");
 
         Rect bounds=new Rect();
-        int baseLine=this.getLineBounds(0, bounds);
+        int pointSize=(int) (getTextSize()/7);
         
+        for(int j=0;j<10;j++){
+        	int baseLine=this.getLineBounds(j, bounds)+pointSize+2;
+        	
         for(int i=0;i<35;i++){
-        	canvas.drawCircle(bounds.left+(i*wordLen), baseLine, 5, paint);
-        }
+        	canvas.drawCircle(bounds.left+(i*wordLen), baseLine, pointSize, paint);
+        }}
+*/
 //        canvas.drawLine(bounds.left, baseLine + 1, bounds.right, baseLine + 1, paint);
-//        canvas.drawCircle(bounds.right, bounds.bottom, 30, paint);
-        
-//        canvas.drawLine(0, 0, this.getWidth() - 1, 0, paint);
-//        canvas.drawLine(0, 0, 0, this.getHeight() - 1, paint);
-//        canvas.drawLine(this.getWidth() - 1, 0, this.getWidth() - 1, this.getHeight() - 1, paint);
-//        canvas.drawLine(0, this.getHeight() - 1, this.getWidth() - 1, this.getHeight() - 1, paint);
     }
 }

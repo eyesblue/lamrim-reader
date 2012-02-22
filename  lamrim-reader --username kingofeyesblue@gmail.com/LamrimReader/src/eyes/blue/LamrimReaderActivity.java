@@ -183,8 +183,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         
                 for(String value:bookPage){
                         HashMap<String,String> item = new HashMap<String,String>();
-                        
-                        int start=-1;
+/*                        
                         int line=0;int index=0;
                         String newStr="";
                         for(char c: value.toCharArray()){
@@ -199,8 +198,9 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         	newStr+=c;
                         }
 
-                        
                         item.put("page", newStr);
+*/
+                        item.put("page", value);
                         item.put("desc", "第 "+(++pIndex)+" 頁");
                         bookList.add( item );
                 }
@@ -222,9 +222,9 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
     private void setSubtitleViewText(String s){setSubtitleViewText(s.toCharArray());}
     private void setSubtitleViewText(final char[] b){
         runOnUiThread(new Runnable() {
-                        public void run() {
-                                subtitleView.setText(b, 0, b.length);
-                        }});
+        	public void run() {
+        		subtitleView.setText(b, 0, b.length);
+        	}});
     }
     
     private void switchMode(int mode){
@@ -233,17 +233,17 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         
         switch(mode){
                 case NORMAL_MODE:
-                        Log.d(logTag,"Switch to Normal mode.");
-                        ((LinearLayout)findViewById(R.id.rootLayout)).setGravity(Gravity.CENTER);
+                	Log.d(logTag,"Switch to Normal mode.");
+                	((LinearLayout)findViewById(R.id.rootLayout)).setGravity(Gravity.CENTER);
 //                      bookView.setLayoutParams(mainLayout);
-                        findViewById(R.id.bookPageGrid).setVisibility(View.VISIBLE);
+                	findViewById(R.id.bookPageGrid).setVisibility(View.VISIBLE);
 
-                        subtitleView.setLayoutParams(bottomLayout);
-                        subtitleView.setGravity(Gravity.CENTER|Gravity.BOTTOM);
-                        subtitleView.setVisibility(View.VISIBLE);
-                        ((LinearLayout)findViewById(R.id.audioPanel)).setVisibility(View.VISIBLE);
-                        appMode=mode;
-                        break;
+                	subtitleView.setLayoutParams(bottomLayout);
+                	subtitleView.setGravity(Gravity.CENTER|Gravity.BOTTOM);
+                	subtitleView.setVisibility(View.VISIBLE);
+                	((LinearLayout)findViewById(R.id.audioPanel)).setVisibility(View.VISIBLE);
+                	appMode=mode;
+                	break;
                 case READING_MODE:
                         Log.d(logTag,"Switch to Reading mode.");
 
@@ -875,21 +875,18 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
 
         
         public void onPrepared(MediaPlayer arg0) {
-                int videoWidth = mediaPlayer.getVideoWidth();
-                int videoHeight = mediaPlayer.getVideoHeight();
-                if (videoHeight != 0 && videoWidth != 0) {
-                        arg0.start();
-                }
-                Log.e("mediaPlayer", "onPrepared");
+        	int videoWidth = mediaPlayer.getVideoWidth();
+        	int videoHeight = mediaPlayer.getVideoHeight();
+        	if (videoHeight != 0 && videoWidth != 0) {
+        		arg0.start();
+        	}
+        	Log.e("mediaPlayer", "onPrepared");
         }
         
         @Override
         public void onBufferingUpdate(MediaPlayer arg0, int bufferingProgress) {
-                playBar.setSecondaryProgress(bufferingProgress);
-                int currentProgress=playBar.getMax()*mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration();
-                Log.e(currentProgress+"% play", bufferingProgress + "% buffer");
- 
+        	playBar.setSecondaryProgress(bufferingProgress);
+        	int currentProgress=playBar.getMax()*mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration();
+        	Log.e(currentProgress+"% play", bufferingProgress + "% buffer");
         }
-        
-        
 }
