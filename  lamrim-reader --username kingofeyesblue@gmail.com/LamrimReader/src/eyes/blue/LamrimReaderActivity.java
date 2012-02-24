@@ -21,6 +21,7 @@ import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +43,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -57,6 +59,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class LamrimReaderActivity extends Activity implements OnAudioFocusChangeListener, OnBufferingUpdateListener, OnPreparedListener {
     /** Called when the activity is first created. */
@@ -87,6 +90,9 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         
         Timer playBarTimer=new Timer();
         ArrayList<HashMap<String,String>> bookList =null;
+        
+        Builder dialogBuilder =null;
+        Toast toast=null;
 //      String bookFontSizeKey=null;
 //      String subtitleFontSizeKey=null;
 //      String subtitleLineCountKey=null;
@@ -134,6 +140,8 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
 //        String[] bookContent=getResources().getStringArray(R.array.book);
 //        String bookPages=bookContent[63]+"\n"+bookContent[64]+"\n"+bookContent[65]+"\n"+bookContent[66]+"\n"+bookContent[67]+"\n"+bookContent[68]+"\n"+bookContent[69]+"\n"+bookContent[70]+"\n"+bookContent[71]+"\n"+bookContent[72];
 //        bookView.setText(bookPages);
+        dialogBuilder=new AlertDialog.Builder(this);
+        toast=Toast.makeText(this, "", Toast.LENGTH_SHORT);
         
         Log.d(logTag,"Leave onCreate");
         
@@ -142,8 +150,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         subtitleView.setLines(subtitleLineCount);
 
 //        subtitleMonInterval=getResources().getInteger(R.integer.subtitleMonInterval);
-        
-        
+                
         playBar=(SeekBar)findViewById(R.id.playBar);
         playBar.setEnabled(false);
         playBar.setClickable(false);
@@ -155,14 +162,32 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                 
                 if(!fromUser)return;
                 if(mediaPlayer!=null&&mediaPlayer.isPlaying())mediaPlayer.seekTo(progress);
-                        
                 if(subtitle==null)return;
+                
+                final String[] hms = new String[3];
+                int time=mediaPlayer.getCurrentPosition();
+                hms[0]=""+time/3600000;
+                if(hms[0].length()==1)hms[0]='0'+hms[0];
+                time=time%3600000;
+                hms[1]=""+time/60000;
+                time=time%60000;
+                hms[2]=""+time/1000;
+                int ms=time%1000;
+                
+                for(int i=0;i<3;i++)
+                	if(hms[i].length()==1)hms[i]='0'+hms[i];
+                final String timeStr=hms[0]+':'+hms[1]+':'+hms[2]+'.'+ms;
+                
+                toast.setText(timeStr);
+                toast.show();
+                
+                playBar.setProgress(progress);
                 synchronized(playBarTimer){
-                        currentPlayedSubtitleIndex=subtitleBSearch(subtitle,progress);
-                        final char[] text=subtitle[currentPlayedSubtitleIndex].text.toCharArray();
-                                setSubtitleViewText(text);
+                	currentPlayedSubtitleIndex=subtitleBSearch(subtitle,progress);
+                    final char[] text=subtitle[currentPlayedSubtitleIndex].text.toCharArray();
+                	setSubtitleViewText(text);
                 }
-        }
+        	}
 
                 @Override
                 public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -175,6 +200,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
     
     private void getAllBookContent(){
         bookView=(ListView)findViewById(R.id.bookPageGrid);
+
         String[] bookPage=getResources().getStringArray(R.array.book);
 
         bookList=new ArrayList<HashMap<String,String>>();
@@ -205,7 +231,19 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                         bookList.add( item );
                 }
                 SimpleAdapter adapter = new SimpleAdapter(this, bookList, R.layout.theory_page_view, new String[] { "page","desc" },
-                                new int[] { R.id.pageContentView, R.id.pageNumView } );
+                                new int[] { R.id.pageContentView, R.id.pageNumView } ){
+                	@Override
+                	public View getView(int position, View convertView, ViewGroup parent){
+                		Activity activity = (Activity)getApplicationContext();
+                		if(convertView==null){
+                			LayoutInflater inflater = activity.getLayoutInflater();  
+                			convertView=inflater.inflate(R.layout.theory_page_view, null); 
+//                			inflater.
+                		}
+                		TheoryPageView view=(TheoryPageView)convertView;
+                		view.setText(text);
+                	}
+                };
                 bookView.setAdapter( adapter );
 
                 // Setup the book page content
@@ -311,9 +349,9 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                 case RECODE_SECTION_MODE:saveRuntime();switchMode(RECODE_SECTION_MODE);loadRuntime(RECODE_SECTION_MODE);return true;
                 case TV_MODE:saveRuntime();switchMode(TV_MODE);loadRuntime(TV_MODE);return true;
                 case 4:
-                        final Intent optCtrlPanel=new Intent(LamrimReaderActivity.this,OptCtrlPanel.class);
-                        startActivityForResult(optCtrlPanel, 0);
-                        return true;
+                	final Intent optCtrlPanel=new Intent(LamrimReaderActivity.this,OptCtrlPanel.class);
+                	startActivityForResult(optCtrlPanel, 0);
+                	return true;
                 case 5: return true;
         }
                 return false;
@@ -441,23 +479,19 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         // Load the subtitle file, if not exist, show "no subtitle" on subtitle view.
         // Before load subtitle, we should check is the subtitle has downloaded and installed.
         File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
-        if(subtitleFile.exists()){
-                subtitle=Util.loadSubtitle(subtitleFile);
-                runOnUiThread(new Runnable() {
-                public void run() {
-                        playBar.setEnabled(true);
-                        playBar.setClickable(true);
-                }
-            });
+        if(!subtitleFile.exists()){
+        	subtitle=null;
+            setSubtitleViewText(getResources().getString(R.string.noSubtitleDesc));
+            return;
         }
         
-        // There is no subtitle for the speech media, just show "no title" on subtitle view and return. 
-        else{
-                subtitle=null;
-                setSubtitleViewText(getResources().getString(R.string.noSubtitleDesc));
-                return;
-        }
-        
+        subtitle=Util.loadSubtitle(subtitleFile);
+        runOnUiThread(new Runnable() {
+        	public void run() {
+                playBar.setEnabled(true);
+                playBar.setClickable(true);
+        	}
+        });
         if(playBarTimer==null)playBarTimer=new Timer();
         playBarTimer.schedule(
          new TimerTask(){
@@ -473,11 +507,11 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
           playBar.setProgress(mediaPosition);
           synchronized(playBarTimer){
           if(currentPlayedSubtitleIndex<subtitle.length-1 && mediaPosition>=subtitle[currentPlayedSubtitleIndex+1].startTimeMs){
-                  final char[] text=subtitle[++currentPlayedSubtitleIndex].text.toCharArray();
-                  runOnUiThread(new Runnable() {
-                          public void run() {
-                                  subtitleView.setText(text, 0, text.length);
-                          }});
+        	  final char[] text=subtitle[++currentPlayedSubtitleIndex].text.toCharArray();
+        	  runOnUiThread(new Runnable() {
+        		  public void run() {
+        			  subtitleView.setText(text, 0, text.length);
+        		  }});
           }}
         }
           }, 0, getResources().getInteger(R.integer.subtitleMonInterval));
@@ -676,6 +710,7 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
                 Log.d(logTag,"Media player seek to last play point "+playerStartPosition);
                 mediaPlayer.seekTo(playerStartPosition);
             }
+            Log.d(logTag,"Set max of playBar: "+mediaPlayer.getDuration());
             playBar.setMax(mediaPlayer.getDuration());
             startSubtitlePlayer(index);
             playingMediaIndex=index;
@@ -780,12 +815,12 @@ public class LamrimReaderActivity extends Activity implements OnAudioFocusChange
         if(searchingMode==-1 || mediaPosition == -1){}
         
         if(searchingMode==getResources().getInteger(R.integer.PLAY_FROM_MEDIA)){
-                Log.d(logTag,"Play from media "+mediaPosition);
-                new Thread("Play thread"){
-                public void run(){
-                        playAudio(mediaPosition);
-                        }
-                }.start();
+        	Log.d(logTag,"Play from media "+mediaPosition);
+        	new Thread("Play thread"){
+        		public void run(){
+        			playAudio(mediaPosition);
+        		}
+        	}.start();
         }
         else if(searchingMode==getResources().getInteger(R.integer.PLAY_FROM_THEORY)){
                 Log.d(logTag,"Play from theory "+mediaPosition);
