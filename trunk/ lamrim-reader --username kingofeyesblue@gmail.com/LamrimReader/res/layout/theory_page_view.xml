@@ -19,6 +19,7 @@
             android:background="#FFFFDF"
             android:lineSpacingExtra="5dip"
 			android:lineSpacingMultiplier="1.2"
+			android:ellipsize="none"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView

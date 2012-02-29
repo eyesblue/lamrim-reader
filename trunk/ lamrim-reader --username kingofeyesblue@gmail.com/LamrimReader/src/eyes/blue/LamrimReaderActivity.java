@@ -100,7 +100,7 @@ public class LamrimReaderActivity extends Activity implements
 
 	Timer playBarTimer = new Timer();
 	ArrayList<HashMap<String, String>> bookList = null;
-
+	TheoryListAdapter adapter=null;
 	Builder dialogBuilder = null;
 	Toast toast = null;
 	// String bookFontSizeKey=null;
@@ -147,15 +147,8 @@ public class LamrimReaderActivity extends Activity implements
 				getString(R.string.subtitleLineCount), subtitleLineCount);
 
 		// Contruct the content of book with the bookViewList
-		try {
 			getAllBookContent();
-		} catch (NotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 		// bookView.setMovementMethod(new ScrollingMovementMethod());
 		// bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
 
@@ -237,7 +230,7 @@ public class LamrimReaderActivity extends Activity implements
 		 * }catch(Exception e){ LogRepoter.log(e.toString()); }
 		 */}
 
-	private void getAllBookContent() throws NotFoundException, JSONException {
+	private void getAllBookContent(){
 		bookView = (ListView) findViewById(R.id.bookPageGrid);
 		String[] bookPage = getResources().getStringArray(R.array.book);
 //		JSONArray pages=null;
@@ -292,36 +285,9 @@ public class LamrimReaderActivity extends Activity implements
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-*/		SimpleAdapter adapter = new SimpleAdapter(this, bookList,
+*/		adapter = new TheoryListAdapter(this, bookList,
 				R.layout.theory_page_view, new String[] { "page", "desc" },
-				new int[] { R.id.pageContentView, R.id.pageNumView }) {
-			@Override
-			public View getView(int position, View convertView, ViewGroup parent) {
-//				super.getView(position, convertView, parent);
-
-				View row = convertView;
-				if (row == null) {
-					Log.d(logTag, "row=null, construct it.");
-					LayoutInflater inflater = getLayoutInflater();
-					row = inflater.inflate(R.layout.theory_page_view, parent,
-							false);
-				}
-
-				Log.d(logTag, "row=" + row+", ConvertView="+convertView);
-				TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
-				//bContent.drawPoints(new int[0][0]);
-			
-				Log.d(logTag,"TheoryPageView="+bContent);
-				bContent.setText(bookList.get(position).get("page"));
-//				bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
-				TextView pNum = (TextView)row.findViewById(R.id.pageNumView);
-				 
-				pNum.setText(bookList.get(position).get("desc"));
-				//pNum.setText("text");
-				Log.d(logTag, "Leave getView()");
-				return row;
-			}
-		};
+				new int[] { R.id.pageContentView, R.id.pageNumView }) ;
 		bookView.setAdapter(adapter);
 
 		// Setup the book page content
@@ -334,7 +300,49 @@ public class LamrimReaderActivity extends Activity implements
 		// tv.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
 	}
 
+	class TheoryListAdapter extends SimpleAdapter{
+		float textSize=0;
+		public TheoryListAdapter(Context context,
+				List<? extends Map<String, ?>> data, int resource,
+				String[] from, int[] to) {
+			super(context, data, resource, from, to);
+			// TODO Auto-generated constructor stub
+		}
+		
+			
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+//			super.getView(position, convertView, parent);
 
+			View row = convertView;
+			if (row == null) {
+				Log.d(logTag, "row=null, construct it.");
+				LayoutInflater inflater = getLayoutInflater();
+				row = inflater.inflate(R.layout.theory_page_view, parent,
+						false);
+			}
+
+			Log.d(logTag, "row=" + row+", ConvertView="+convertView);
+			TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
+				//bContent.drawPoints(new int[0][0]);
+			
+			Log.d(logTag,"TheoryPageView="+bContent);
+			if(bContent.getTextSize()!=textSize)bContent.setTextSize(textSize);
+			bContent.setText(bookList.get(position).get("page"));
+//				bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
+			TextView pNum = (TextView)row.findViewById(R.id.pageNumView);
+			if(pNum.getTextSize()!=textSize)pNum.setTextSize(textSize);
+			pNum.setText(bookList.get(position).get("desc"));
+				//pNum.setText("text");
+			Log.d(logTag, "Leave getView()");
+			return row;
+		}
+			
+			public void setTextSize(float size){
+				textSize=size;
+			}
+		
+	}
 
 	/*
 	 * Set the message on the subtitle view, there should check the subtitleView
@@ -419,8 +427,7 @@ public class LamrimReaderActivity extends Activity implements
 		DisplayMetrics dm = new DisplayMetrics();
 		this.getWindowManager().getDefaultDisplay().getMetrics(dm);
 		int screenWidth = dm.widthPixels;
-		int count = (int) ((float) screenWidth / view.getPaint().measureText(
-				"中"));
+		int count = (int) ((float) screenWidth / view.getPaint().measureText("中"));
 		Log.d(logTag, "Width of screen: " + screenWidth + ", Width of Word: "
 				+ view.getPaint().measureText("中") + ", There are " + count
 				+ " can show in one line.");
@@ -477,10 +484,10 @@ public class LamrimReaderActivity extends Activity implements
 		return false;
 	}
 
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent intent) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 
+		Log.d(logTag, "Option activity returned.");
 		final int bookFontSize = intent.getIntExtra(
 				getString(R.string.bookFontSizeKey), R.integer.defBookFontSize);
 		final int subtitleFontSize = intent.getIntExtra(
@@ -492,35 +499,41 @@ public class LamrimReaderActivity extends Activity implements
 
 		Log.d(logTag, "Get the book font size: " + bookFontSize
 				+ ", subtitleFontSize: " + subtitleFontSize);
-		/*
-		 * if(isDisplayBook!=uiIsDisplayBook){ intent.putExtra(isDisplayBookKey,
-		 * uiIsDisplayBook); } else if(isDisplaySubtitle!=uiIsDisplaySubtitle){
-		 * intent.putExtra(isDisplaySubtitleKey, uiIsDisplaySubtitle); } else
-		 * if(isPlayAudio!=uiIsPlayAudio){ intent.putExtra(isPlayAudioKey,
-		 * uiIsPlayAudio); } else if(bookFontSize!=uiBookFontSize){
-		 * intent.putExtra(bookFontSizeKey, uiBookFontSize); } else
-		 * if(subtitleFontSize!=uiSubtitleFontSize){
-		 * intent.putExtra(subtitleFontSizeKey, uiSubtitleFontSize); } else
-		 * if(subtitleLineCount!=uiSubtitleLineCount){
-		 * intent.putExtra(subtitleLineCountKey, uiSubtitleLineCount); }
-		 */
+		
+
 		runOnUiThread(new Thread() {
 			@Override
 			public void run() {
-				/*
-				 * if(bookView.getTextSize()!=bookFontSize){
-				 * Log.d(logTag,"Set book font size to "
-				 * +getResources().getIntArray
-				 * (R.array.fontSizeArray)[bookFontSize]);
-				 * bookView.setTextSize(getResources
-				 * ().getIntArray(R.array.fontSizeArray)[bookFontSize]); }
-				 */if (subtitleView.getTextSize() != subtitleFontSize) {
-					Log.d(logTag,
-							"Set subtitle font size to "
-									+ getResources().getIntArray(
-											R.array.fontSizeArray)[subtitleFontSize]);
-					subtitleView.setTextSize(getResources().getIntArray(
-							R.array.fontSizeArray)[subtitleFontSize]);
+				TheoryPageView tView=(TheoryPageView) bookView.findViewById(R.id.pageContentView);
+				
+				bookView.destroyDrawingCache();
+				//TheoryPageView tView=(TheoryPageView) findViewById(R.id.pageContentView);
+				Log.d(logTag,"Set book font size from "+tView.getTextSize()+" to "+getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+				
+				  if(tView.getTextSize()!=bookFontSize){
+					  Log.d(logTag,"Set book font size to "+getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+					  adapter.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+/*					  tView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+					  float wordLen=tView.getPaint().measureText("中");
+					  tView.setWidth((int) (45*wordLen));
+					  Log.d(logTag,"Set width="+45*wordLen);
+					  bookView.childDrawableStateChanged(bookView.findViewById(R.id.pageContentView));
+					  bookView.computeScroll();
+					  bookView.clearDisappearingChildren();
+					  bookView.forceLayout();
+					  bookView.invalidateViews();
+					  bookView.invalidate();
+					  for(int i=0;i<bookView.getCount();i++)
+						  ((TextView)bookView.getItemAtPosition(i)).setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
+*/					  adapter.notifyDataSetChanged();
+					  //bookView.setAdapter(adapter);
+//					  adapter=null;
+//					  bookList=null;
+//					  getAllBookContent();
+				  }
+				 if (subtitleView.getTextSize() != subtitleFontSize) {
+					Log.d(logTag,"Set subtitle font size to "+ getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
+					subtitleView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
 				}
 				if (subtitleView.getLineCount() != subtitleLineCount)
 					subtitleView.setLines(subtitleLineCount);
