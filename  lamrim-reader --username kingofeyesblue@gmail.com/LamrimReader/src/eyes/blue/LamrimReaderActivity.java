@@ -350,7 +350,6 @@ public class LamrimReaderActivity extends Activity implements
 	 */
 	private void setSubtitleViewText(String s) {
 		setSubtitleViewText(s.toCharArray());
-		
 	}
 
 	private void setSubtitleViewText(final char[] b) {
