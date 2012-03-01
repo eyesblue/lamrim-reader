@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 public class TheoryPageView extends TextView {
 	boolean onCmd=false;
-	float partSize=0;
+
 	
 	public TheoryPageView(Context context) {
 		super(context);
@@ -35,67 +35,46 @@ public class TheoryPageView extends TextView {
 	@Override
     protected void onDraw(Canvas canvas)
     {
-		ArrayList<Integer> cmdList=new ArrayList<Integer>();
-        partSize=(float) (getTextSize()*0.7);
-        float wordLen=getPaint().measureText("中");
         float orgTextSize=getTextSize();
-        
         Rect bounds=new Rect();
         int pointSize=(int) (getTextSize()/7);
-        
-/*        for(int j=0;j<10;j++){
-        	int baseLine=this.getLineBounds(j, bounds)+pointSize+2;
-        	for(int i=0;i<35;i++){
-        		canvas.drawCircle(bounds.left+(i*wordLen), baseLine, pointSize, paint);
-        }}
-*/
-        // Draw Text
         String text = (String) super.getText();
         int lineCounter=0;
-//        int wordCounter=0;
-        int baseLine=0;
-//        String words="";
         int start=0,end=0;
         int y=getLineBounds(lineCounter, bounds);
         int x=bounds.left;
-        String cmd=null;
+
         for(int i=0;i<text.length();i++){
         	char c=text.charAt(i);
         	if(onCmd){
         		if(c!='>'){end++;continue;}
         		Log.d("LamrimReader","Find a command stop");
-            	end=i;
             	onCmd=false;
-            	cmd=text.substring(start, end);
-            	Log.d("LamrimReader","Command: "+cmd+", start: "+start+", end: "+end);
-            	char cmd1=0;
-            	if((end-start)==1)cmd1=text.charAt(start);
-            	else cmd1=text.substring(start, end).charAt(0);
-
             	
-           		switch(cmd1){
+           		switch(text.charAt(start)){
            			case '/':
-           				switch(cmd.charAt(1)){
+           				switch(text.charAt(start+1)){
            				case 'b':Log.d("LamrimReader","release bold command");getPaint().setFakeBoldText(false);break;
            				case 'n':Log.d("LamrimReader","release num command");getPaint().setColor(Color.BLACK);break;
            				case 's':Log.d("LamrimReader","release small command");getPaint().setTextSize(orgTextSize);break;
            				};break;
            			case 'b':Log.d("LamrimReader","set bold command");getPaint().setFakeBoldText(true);break;
            			case 'n':Log.d("LamrimReader","set num command");getPaint().setColor(Color.BLUE);break;
-           			case 's':Log.d("LamrimReader","set small command");getPaint().setTextSize((float) (getTextSize()*0.93));break;
+           			case 's':Log.d("LamrimReader","set small command");getPaint().setTextSize((float) (getTextSize()*0.9));break;
            		}
            		start=i+1;
-           		end=i+1;
+           		end=start;
         	}
-        	if(c=='.'){
-        		if(text.charAt(start)!='.'){canvas.drawText(text, start, end, x, y, getPaint());
-//        		wordCounter+=end-start;
-        		x+=getPaint().measureText("中")*(end-start);
+        	else if(c=='.'){
+        		if(text.charAt(start)!='.'){
+        			canvas.drawText(text, start, end, x, y, getPaint());
+        			x+=getPaint().measureText("中")*(end-start);
         		}
+        		Log.d("LamrimReader","Print "+text.substring(start, end)+", start: "+start+", end: "+end+", ("+(end-start)+")");
 //        		Log.d("LamrimReader","Get point, Before:"+words);
         		canvas.drawCircle(x, y+pointSize+2, pointSize, getPaint());
         		start=i+1;
-        		end=i+1;
+        		end=start;
         		continue;
         	}
         	else if(c=='\n'){
@@ -103,7 +82,7 @@ public class TheoryPageView extends TextView {
         		canvas.drawText(text, start, end, x, y, getPaint());
 //        		x+=wordLen*words.length();
         		start=i+1;
-        		end=i+1;
+        		end=start;
 //        		wordCounter=0;
         		y=getLineBounds(++lineCounter, bounds);
         		x=bounds.left;
@@ -112,15 +91,14 @@ public class TheoryPageView extends TextView {
         	else if(c=='<'){
         		Log.d("LamrimReader","Find a command start");
         		if(end-start>0){
-        			canvas.drawText(text, start, end-1, x, y, getPaint());
-        			x+=getPaint().measureText("中")*(end-start-1);
+        			canvas.drawText(text, start, end, x, y, getPaint());
+        			x+=getPaint().measureText("中")*(end-start);
         		}
         		
         		start=i+1;
-        		end=i+1;
+        		end=start;
         		onCmd=true;
         	}
-        	
         	else{
         		end++;
         	}
