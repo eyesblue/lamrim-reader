@@ -54,7 +54,10 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.CheckBox;
@@ -63,11 +66,14 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.MediaController;
+import android.widget.MediaController.MediaPlayerControl;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 public class LamrimReaderActivity extends Activity implements
 		OnAudioFocusChangeListener, OnBufferingUpdateListener,
@@ -84,6 +90,8 @@ public class LamrimReaderActivity extends Activity implements
 	static SubtitleElement[] subtitle = null;
 	int currentPlayedSubtitleIndex = -1;
 	int subtitleWordMax = 0;
+	int theoryIndexShift = 0;
+	int theoryIndexTop = 0;
 	// int subtitleMonInterval = -1;
 	// AlertDialog.Builder dialogBuilder =null;
 	// Intent optCtrlPanel=null;
@@ -91,6 +99,7 @@ public class LamrimReaderActivity extends Activity implements
 
 	ListView bookView;
 	TextView subtitleView;
+	MediaController mctrler=null;
 	SeekBar playBar;
 	SharedPreferences options;
 	SharedPreferences runtime;
@@ -127,27 +136,17 @@ public class LamrimReaderActivity extends Activity implements
 
 		Log.d(logTag, "Into LamrimReader.onCreate");
 
-		options = getSharedPreferences(getString(R.string.optionFile), 0);
-		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
-		appMode = getResources().getInteger(R.integer.defAppMode);
-		appMode = options.getInt(getString(R.string.appModeKey), appMode);
+		
 		// remoteSite=getResources().getStringArray(R.array.remoteSite);
 
 		if (fileSysManager == null)
 			fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
-
-		int subtitleFontSize = getResources().getInteger(
-				R.integer.defSubtitleFontSize);
-		subtitleFontSize = options.getInt(
-				getString(R.string.subtitleFontSizeKey), subtitleFontSize);
-		int subtitleLineCount = getResources().getInteger(
-				R.integer.defSubtitleLineCount);
-		subtitleLineCount = options.getInt(
-				getString(R.string.subtitleLineCount), subtitleLineCount);
+		mctrler=new MediaController(this);
+		
 
 		// Contruct the content of book with the bookViewList
-			getAllBookContent();
+		getAllBookContent();
 
 		// bookView.setMovementMethod(new ScrollingMovementMethod());
 		// bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
@@ -163,9 +162,41 @@ public class LamrimReaderActivity extends Activity implements
 		Log.d(logTag, "Leave onCreate");
 
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
-		subtitleView.setTextSize(getResources().getIntArray(
-				R.array.fontSizeArray)[subtitleFontSize]);
-		subtitleView.setLines(subtitleLineCount);
+		
+		
+/*		final LinearLayout rootLayout=(LinearLayout) findViewById(R.id.rootLayout);
+		rootLayout.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				
+				String s=(v.equals(subtitleView))?" is ":" is not ";
+				Log.d(logTag,v+" been clicked. it "+s+" textview");
+				
+				rootLayout.bringChildToFront(subtitleView);
+				s=(v.equals(subtitleView))?" is ":" is not ";
+				Log.d(logTag,v+" been clicked. it "+s+" textview");
+			}
+		});
+*/
+		subtitleView.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				mctrler.show();
+			}
+		});
+		/*		subtitleView.setOnTouchListener(new OnTouchListener(){
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+				mctrler.show();
+				return true;
+			}
+			
+		});
+*/		
 
 		// subtitleMonInterval=getResources().getInteger(R.integer.subtitleMonInterval);
 
@@ -210,10 +241,8 @@ public class LamrimReaderActivity extends Activity implements
 
 				playBar.setProgress(progress);
 				synchronized (playBarTimer) {
-					currentPlayedSubtitleIndex = subtitleBSearch(subtitle,
-							progress);
-					final char[] text = subtitle[currentPlayedSubtitleIndex].text
-							.toCharArray();
+					currentPlayedSubtitleIndex = subtitleBSearch(subtitle,progress);
+					final char[] text = subtitle[currentPlayedSubtitleIndex].text.toCharArray();
 					setSubtitleViewText(text);
 				}
 			}
@@ -285,9 +314,7 @@ public class LamrimReaderActivity extends Activity implements
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-*/		adapter = new TheoryListAdapter(this, bookList,
-				R.layout.theory_page_view, new String[] { "page", "desc" },
-				new int[] { R.id.pageContentView, R.id.pageNumView }) ;
+*/		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView }) ;
 		bookView.setAdapter(adapter);
 
 		// Setup the book page content
@@ -318,8 +345,7 @@ public class LamrimReaderActivity extends Activity implements
 			if (row == null) {
 				Log.d(logTag, "row=null, construct it.");
 				LayoutInflater inflater = getLayoutInflater();
-				row = inflater.inflate(R.layout.theory_page_view, parent,
-						false);
+				row = inflater.inflate(R.layout.theory_page_view, parent,false);
 			}
 
 			Log.d(logTag, "row=" + row+", ConvertView="+convertView);
@@ -362,19 +388,15 @@ public class LamrimReaderActivity extends Activity implements
 	}
 
 	private void switchMode(int mode) {
-		final LinearLayout.LayoutParams mainLayout = new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.FILL_PARENT, 3);
-		final LinearLayout.LayoutParams bottomLayout = new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT, 0);
+		final LinearLayout.LayoutParams mainLayout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.FILL_PARENT, 3);
+		final LinearLayout.LayoutParams bottomLayout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT, 0);
 
 		switch (mode) {
 		case NORMAL_MODE:
 			Log.d(logTag, "Switch to Normal mode.");
 			((LinearLayout) findViewById(R.id.rootLayout))
 					.setGravity(Gravity.CENTER);
-			// bookView.setLayoutParams(mainLayout);
+			bookView.setSelectionFromTop(theoryIndexShift, theoryIndexTop);
 			findViewById(R.id.bookPageGrid).setVisibility(View.VISIBLE);
 
 			subtitleView.setLayoutParams(bottomLayout);
@@ -387,8 +409,7 @@ public class LamrimReaderActivity extends Activity implements
 		case READING_MODE:
 			Log.d(logTag, "Switch to Reading mode.");
 
-			// bookView.setLayoutParams(mainLayout);
-			// bookView.setVisibility(View.VISIBLE);
+			bookView.setSelectionFromTop(theoryIndexShift, theoryIndexTop);
 			subtitleView.setVisibility(View.GONE);
 			((LinearLayout) findViewById(R.id.audioPanel))
 					.setVisibility(View.GONE);
@@ -427,9 +448,7 @@ public class LamrimReaderActivity extends Activity implements
 		this.getWindowManager().getDefaultDisplay().getMetrics(dm);
 		int screenWidth = dm.widthPixels;
 		int count = (int) ((float) screenWidth / view.getPaint().measureText("中"));
-		Log.d(logTag, "Width of screen: " + screenWidth + ", Width of Word: "
-				+ view.getPaint().measureText("中") + ", There are " + count
-				+ " can show in one line.");
+		Log.d(logTag, "Width of screen: " + screenWidth + ", Width of Word: "+ view.getPaint().measureText("中") + ", There are " + count+ " can show in one line.");
 		return count;
 	}
 
@@ -473,8 +492,7 @@ public class LamrimReaderActivity extends Activity implements
 			loadRuntime(TV_MODE);
 			return true;
 		case 4:
-			final Intent optCtrlPanel = new Intent(LamrimReaderActivity.this,
-					OptCtrlPanel.class);
+			final Intent optCtrlPanel = new Intent(LamrimReaderActivity.this,OptCtrlPanel.class);
 			startActivityForResult(optCtrlPanel, 0);
 			return true;
 		case 5:
@@ -487,19 +505,12 @@ public class LamrimReaderActivity extends Activity implements
 		super.onActivityResult(requestCode, resultCode, intent);
 
 		Log.d(logTag, "Option activity returned.");
-		final int bookFontSize = intent.getIntExtra(
-				getString(R.string.bookFontSizeKey), R.integer.defBookFontSize);
-		final int subtitleFontSize = intent.getIntExtra(
-				getString(R.string.subtitleFontSizeKey),
-				R.integer.defSubtitleFontSize);
-		final int subtitleLineCount = intent.getIntExtra(
-				getString(R.string.subtitleLineCount),
-				R.integer.defSubtitleLineCount);
+		final int bookFontSize = intent.getIntExtra(getString(R.string.bookFontSizeKey), R.integer.defBookFontSize);
+		final int subtitleFontSize = intent.getIntExtra(getString(R.string.subtitleFontSizeKey),R.integer.defSubtitleFontSize);
+		final int subtitleLineCount = intent.getIntExtra(getString(R.string.subtitleLineCount),	R.integer.defSubtitleLineCount);
 
-		Log.d(logTag, "Get the book font size: " + bookFontSize
-				+ ", subtitleFontSize: " + subtitleFontSize);
+		Log.d(logTag, "Get the book font size: " + bookFontSize	+ ", subtitleFontSize: " + subtitleFontSize);
 		
-
 		runOnUiThread(new Thread() {
 			@Override
 			public void run() {
@@ -586,12 +597,7 @@ public class LamrimReaderActivity extends Activity implements
 				low = ++mid;
 		}
 		String msg = "Binary search state error, shouldn't go to the unknow stage. this may cause by a not sorted subtitle: MID="
-				+ mid
-				+ ", Compare "
-				+ a[mid].startTimeMs
-				+ " <> "
-				+ key
-				+ " <> " + a[mid + 1].startTimeMs + " into unknow state.";
+				+ mid+ ", Compare "+ a[mid].startTimeMs	+ " <> "+ key+ " <> " + a[mid + 1].startTimeMs + " into unknow state.";
 		Log.e(logTag, msg, new Exception(msg));
 		return -1;
 	}
@@ -664,16 +670,14 @@ public class LamrimReaderActivity extends Activity implements
 				try {
 					mediaPosition = mediaPlayer.getCurrentPosition();
 				} catch (NullPointerException npe) {
-					Log.e(logTag,
-							"The media player has gone. it may happen on normal switch file or release stage.");
+					Log.e(logTag,"The media player has gone. it may happen on normal switch file or release stage.");
 					npe.printStackTrace();
 				}
 				playBar.setProgress(mediaPosition);
 				synchronized (playBarTimer) {
 					if (currentPlayedSubtitleIndex < subtitle.length - 1
 							&& mediaPosition >= subtitle[currentPlayedSubtitleIndex + 1].startTimeMs) {
-						final char[] text = subtitle[++currentPlayedSubtitleIndex].text
-								.toCharArray();
+						final char[] text = subtitle[++currentPlayedSubtitleIndex].text.toCharArray();
 						runOnUiThread(new Runnable() {
 							public void run() {
 								subtitleView.setText(text, 0, text.length);
@@ -743,10 +747,7 @@ public class LamrimReaderActivity extends Activity implements
 
 		fileSysManager.setDownloadFinishListener(new DownloadFinishListener() {
 			public void downloadMediaFinish(int fileIndex) {
-				Log.d(logTag,
-						getResources().getStringArray(R.array.fileName)[fileIndex]
-								+ " Download finish, call LamrimReader.playAudio("
-								+ fileIndex + ") again");
+				Log.d(logTag,getResources().getStringArray(R.array.fileName)[fileIndex]	+ " Download finish, call LamrimReader.playAudio("+ fileIndex + ") again");
 				playAudio(fileIndex);
 				setSubtitleViewText("無字幕");
 			}
@@ -756,11 +757,9 @@ public class LamrimReaderActivity extends Activity implements
 			// Here should show dialog to user that will be start download file
 			// from internet.
 			Log.d(logTag, "The file which alreadly in phone is not valid");
-			setSubtitleViewText(getResources().getString(
-					R.string.downloadingDesc));
+			setSubtitleViewText(getResources().getString(R.string.downloadingDesc));
 			FileSysManager.downloadFileFromRemote(index);
-			Log.d(logTag, Thread.currentThread().getName()
-					+ ": return to onStart()");
+			Log.d(logTag, Thread.currentThread().getName()+ ": return to onStart()");
 			return;
 		}
 		Log.d(logTag, "Found it!");
@@ -793,8 +792,45 @@ public class LamrimReaderActivity extends Activity implements
 			// For mediaPlayer.getDuration(), while start mediaPlayer with
 			// prepareAsync(), the time is not precision enough, we start with
 			// create() function for this.
-			if (mediaPlayer == null)
+			if (mediaPlayer == null){
 				mediaPlayer = MediaPlayer.create(this, Uri.fromFile(file));
+				mctrler.setMediaPlayer(new MediaPlayerControl(){
+					@Override
+					public void pause() {
+						if(mediaPlayer==null)return;
+						mediaPlayer.pause();
+					}
+					@Override
+					public void seekTo(int pos) {
+						if(mediaPlayer==null)return;
+						mediaPlayer.seekTo(pos);
+					}
+					@Override
+					public void start() {if(mediaPlayer!=null)mediaPlayer.start();}
+					@Override
+					public int getBufferPercentage() {return 0;}
+					@Override
+					public int getCurrentPosition() {if(mediaPlayer==null)return 0;return mediaPlayer.getCurrentPosition();}
+					@Override
+					public int getDuration() {
+						if(mediaPlayer==null)return 0;
+						return mediaPlayer.getDuration();
+					}
+
+					@Override
+					public boolean isPlaying() {
+						if(mediaPlayer==null)return false;
+						return mediaPlayer.isPlaying();
+					}
+					@Override
+					public boolean canPause() {return true;}
+					@Override
+					public boolean canSeekBackward() {return true;}
+					@Override
+					public boolean canSeekForward() {return true;}
+
+				});
+			}
 			/*
 			 * if(mediaPlayer!=null)mediaPlayer.reset(); mediaPlayer = new
 			 * MediaPlayer(); mediaPlayer.setDataSource(fis.getFD());
@@ -875,8 +911,7 @@ public class LamrimReaderActivity extends Activity implements
 
 		Log.d(logTag, "Play start positon = " + playerStartPosition);
 		if (playerStartPosition > 0) {
-			Log.d(logTag, "Media player seek to last play point "
-					+ playerStartPosition);
+			Log.d(logTag, "Media player seek to last play point "+ playerStartPosition);
 			mediaPlayer.seekTo(playerStartPosition);
 		}
 		Log.d(logTag, "Set max of playBar: " + mediaPlayer.getDuration());
@@ -884,8 +919,12 @@ public class LamrimReaderActivity extends Activity implements
 		startSubtitlePlayer(index);
 		playingMediaIndex = index;
 		mediaPlayer.start();
+		mctrler.setAnchorView(findViewById(R.id.rootLayout));
+		mctrler.setEnabled(true);
+
 		runOnUiThread(new Runnable() {
 			public void run() {
+				mctrler.show();
 				playBar.setEnabled(true);
 				playBar.setClickable(true);
 			}
@@ -895,34 +934,33 @@ public class LamrimReaderActivity extends Activity implements
 	public void saveRuntime() {
 		// Save status of the mode now in used.
 		SharedPreferences.Editor editor = runtime.edit();
-
+		
+		int index = bookView.getFirstVisiblePosition();
+		View v = bookView.getChildAt(0);
+		int top = (v == null) ? 0 : v.getTop();
+		
 		switch (appMode) {
 		case NORMAL_MODE:
-
 			// getTheoryIndex
+			Log.d(logTag,"Save the theory index "+bookView.getFirstVisiblePosition() +" to normal mode runtime");
+			editor.putInt(getResources().getString(R.string.runtimeNormalTheoryTop),top);
+			editor.putInt(getResources().getString(R.string.runtimeNormalTheoryShift),index);
 			boolean mediaPlayerState = false;
 			// if(mediaPlayer!=null&&mediaPlayer.isPlaying())mediaPlayerState=true;
 			if (mediaPlayer != null)
 				mediaPlayerState = true;
-			editor.putBoolean(
-					getResources().getString(R.string.runtimeNormalPlayerState),
-					mediaPlayerState);
+			editor.putBoolean(getResources().getString(R.string.runtimeNormalPlayerState),mediaPlayerState);
 			if (mediaPlayerState) {
-				editor.putInt(
-						getResources().getString(
-								R.string.runtimeNormalPlayingIndex),
-						playingMediaIndex);
-				editor.putInt(
-						getResources().getString(
-								R.string.runtimeNormalPlayingPosition),
-						mediaPlayer.getCurrentPosition());
-				Log.d(logTag, "Save runtime status: playStartPosition="
-						+ mediaPlayer.getCurrentPosition());
+				editor.putInt(getResources().getString(R.string.runtimeNormalPlayingIndex),playingMediaIndex);
+				editor.putInt(getResources().getString(R.string.runtimeNormalPlayingPosition),mediaPlayer.getCurrentPosition());
+				Log.d(logTag, "Save runtime status: playStartPosition="+ mediaPlayer.getCurrentPosition());
 			}
-			editor.commit();
 			break;
 		case READING_MODE:
 			// Get the theory index and save.
+			Log.d(logTag,"Save the theory index "+bookView.getFirstVisiblePosition() +" to reading mode runtime");
+			editor.putInt(getResources().getString(R.string.runtimeReadingTheoryTop),top);
+			editor.putInt(getResources().getString(R.string.runtimeReadingTheoryShift),index);
 			break;
 		// case NOSUBTITLE_MODE:switchMode(NOSUBTITLE_MODE);break;
 		case TV_MODE:
@@ -932,50 +970,61 @@ public class LamrimReaderActivity extends Activity implements
 				// editor.putInt(getResources().getString(R.string.runtimeNormalPlayingPosition),
 				// mediaPlayer.getCurrentPosition());
 			}
-			editor.commit();
 			break;
 		}
+		editor.commit();
+		
+		// Save options
+		SharedPreferences.Editor opt = options.edit();
+		opt.putInt(getString(R.string.subtitleFontSizeKey), appMode);
+		opt.commit();
 	}
 
 	public void loadRuntime(int mode) {
+		options = getSharedPreferences(getString(R.string.optionFile), 0);
+		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
+		appMode = getResources().getInteger(R.integer.defAppMode);
+		appMode = options.getInt(getString(R.string.appModeKey), appMode);
+		
+		int subtitleFontSize = getResources().getInteger(R.integer.defSubtitleFontSize);
+		subtitleFontSize = options.getInt(getString(R.string.subtitleFontSizeKey), subtitleFontSize);
+		int subtitleLineCount = getResources().getInteger(R.integer.defSubtitleLineCount);
+		subtitleLineCount = options.getInt(getString(R.string.subtitleLineCount), subtitleLineCount);
+		
+		subtitleView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[subtitleFontSize]);
+		subtitleView.setLines(subtitleLineCount);
+		
 		switch (mode) {
 		case NORMAL_MODE:
 			// getTheoryIndex
 			Log.d(logTag, "Load runtime status of Normal_Mode");
+			theoryIndexTop=runtime.getInt(getResources().getString(R.string.runtimeNormalTheoryTop), 0);
+			theoryIndexShift=runtime.getInt(getResources().getString(R.string.runtimeNormalTheoryShift), 0);
+			Log.d(logTag,"Load the theory top "+theoryIndexTop +", shift "+theoryIndexShift+" from normal mode runtime");
+			
 			if (mediaPlayer != null)
 				releasePlayer();
 			playerStartPosition = runtime.getInt(
-					getResources().getString(
-							R.string.runtimeNormalPlayingPosition),
-					playerStartPosition);
-			Log.d(logTag, "Load back the playerStartPosition="
-					+ playerStartPosition);
-			boolean mediaPlayerState = runtime.getBoolean(getResources()
-					.getString(R.string.runtimeNormalPlayerState), false);
+					getResources().getString(R.string.runtimeNormalPlayingPosition), playerStartPosition);
+			Log.d(logTag, "Load back the playerStartPosition="+ playerStartPosition);
+			boolean mediaPlayerState = runtime.getBoolean(getResources().getString(R.string.runtimeNormalPlayerState), false);
 			if (mediaPlayerState)
-				playAudio(runtime.getInt(
-						getResources().getString(
-								R.string.runtimeNormalPlayingIndex),
-						playingMediaIndex));
+				playAudio(runtime.getInt(getResources().getString(R.string.runtimeNormalPlayingIndex),playingMediaIndex));
 			break;
 		case READING_MODE:
 			// Get the theory index and save.
+			theoryIndexTop=runtime.getInt(getResources().getString(R.string.runtimeReadingTheoryTop), 0);
+			theoryIndexShift=runtime.getInt(getResources().getString(R.string.runtimeReadingTheoryShift), 0);
+			
+			Log.d(logTag,"Load the theory top "+theoryIndexTop +", shift "+theoryIndexShift+" from reading mode runtime");
 			break;
 		// case NOSUBTITLE_MODE:switchMode(NOSUBTITLE_MODE);break;
 		case TV_MODE:
 			if (mediaPlayer != null) {
-				playerStartPosition = runtime.getInt(
-						getResources().getString(
-								R.string.runtimeNormalPlayingPosition),
-						playerStartPosition);
-				mediaPlayerState = runtime.getBoolean(
-						getResources().getString(
-								R.string.runtimeNormalPlayerState), false);
+				playerStartPosition = runtime.getInt(getResources().getString(R.string.runtimeNormalPlayingPosition),playerStartPosition);
+				mediaPlayerState = runtime.getBoolean(getResources().getString(R.string.runtimeNormalPlayerState), false);
 				if (mediaPlayerState)
-					playAudio(runtime.getInt(
-							getResources().getString(
-									R.string.runtimeNormalPlayingIndex),
-							playingMediaIndex));
+					playAudio(runtime.getInt(getResources().getString(R.string.runtimeNormalPlayingIndex),playingMediaIndex));
 			}
 			break;
 		}
@@ -994,14 +1043,13 @@ public class LamrimReaderActivity extends Activity implements
 	@Override
 	public void onBackPressed() {
 		releasePlayer();
-		SharedPreferences.Editor editor = options.edit();
-		editor.putInt(getString(R.string.subtitleFontSizeKey), appMode);
-		editor.commit();
+		saveRuntime();
 		finish();
 	}
 
 	protected void onStart() {
 		super.onStart();
+		
 
 		Intent intent = getIntent();
 		final int searchingMode = intent.getIntExtra(this.getResources()
@@ -1011,32 +1059,23 @@ public class LamrimReaderActivity extends Activity implements
 		// menu back. !!!!!!!!!
 		if (searchingMode == -1 || mediaPosition == -1) {
 		}
+		
+		
+		
+		loadRuntime(appMode);
+		switchMode(appMode);
 
-		if (searchingMode == getResources().getInteger(
-				R.integer.PLAY_FROM_MEDIA)) {
+		// Here May have some problem. 
+		if (searchingMode == getResources().getInteger(R.integer.PLAY_FROM_MEDIA)){
 			Log.d(logTag, "Play from media " + mediaPosition);
 			new Thread("Play thread") {
 				public void run() {
 					playAudio(mediaPosition);
 				}
 			}.start();
-		} else if (searchingMode == getResources().getInteger(
-				R.integer.PLAY_FROM_THEORY)) {
+		} else if (searchingMode == getResources().getInteger(R.integer.PLAY_FROM_THEORY)) {
 			Log.d(logTag, "Play from theory " + mediaPosition);
 		}
-
-		switchMode(appMode);
-
-		// Setup the book page content, this can't put in onCreate, will cause
-		// null point.
-		// int
-		// bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
-		// bookFontSize=options.getInt(getString(R.string.bookFontSizeKey),
-		// bookFontSize);
-		// TextView tv=(TextView) findViewById(R.id.speechTitle);
-		// tv.setMovementMethod(new ScrollingMovementMethod());
-		// tv.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
-
 	}
 
 	/*

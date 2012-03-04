@@ -107,24 +107,24 @@ public class FileSysManager {
                 Log.d(logTag,"Create thread for download file");
                 
                 DownloadThread dt=new DownloadThread(context,is,targetFileIndex,context.getResources().getInteger(R.integer.downloadBufferSize),downloadFinishListener,downloadProgressListener, new DownloadFailListener(){
-                        public void downloadMediaFail(int index){
-                                Log.d(logTag,"Download "+context.getResources().getStringArray(R.array.fileName)[index]+" fail, Try to download from other site");
-                                if(remoteSite.length<=1){
-                                        Log.d(logTag,"There is no remote site for download file, recovery site list and return fail to Activate");
-                                        remoteSite=context.getResources().getStringArray(R.array.remoteSite);
-                                        downloadFailListener.downloadMediaFail(index);
-                                }
+                	public void downloadMediaFail(int index){
+                		Log.d(logTag,"Download "+context.getResources().getStringArray(R.array.fileName)[index]+" fail, Try to download from other site");
+                		if(remoteSite.length<=1){
+                			Log.d(logTag,"There is no remote site for download file, recovery site list and return fail to Activate");
+                			remoteSite=context.getResources().getStringArray(R.array.remoteSite);
+                			downloadFailListener.downloadMediaFail(index);
+                		}
                                 
-                                ArrayList<String> al=new ArrayList<String>();
+                		ArrayList<String> al=new ArrayList<String>();
                                 
-                                Log.d(logTag,"Remove the fail site from remote site list, and restart download from other site.");
-                                for(int i=0;i<remoteSite.length;i++){
-                                        if(i==downloadFromSite)continue;
-                                        al.add(remoteSite[i]);
-                                }
-                                remoteSite= al.toArray(new String[0]);
-                                downloadFileFromRemote(targetFileIndex);
-                        }
+                		Log.d(logTag,"Remove the fail site from remote site list, and restart download from other site.");
+                		for(int i=0;i<remoteSite.length;i++){
+                			if(i==downloadFromSite)continue;
+                			al.add(remoteSite[i]);
+                		}
+                		remoteSite= al.toArray(new String[0]);
+                		downloadFileFromRemote(targetFileIndex);
+                	}
                 });
                 dt.start();
         }
@@ -184,7 +184,7 @@ public class FileSysManager {
         	int size=context.getResources().getIntArray(R.array.mediaFileSize)[i];
         	
         	if(file.length()!=size){
-        		Log.d(logTag,"The size of file is not corrent, should be "+size+", but "+file.length());
+        		Log.d(logTag,"The size of file is not correct, should be "+size+", but "+file.length());
         		return false;
         	}
         	
@@ -201,13 +201,9 @@ public class FileSysManager {
                 return NO_CACHE;
         }
         
-
-        
-        
         public static boolean isExtMemWritable(){
         	return (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         }
-        
         
         public void setDownloadFailListener(DownloadFailListener dfl){
             this.downloadFailListener=dfl;
