@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 public class TheoryPageView extends TextView {
 	boolean onCmd=false;
+	final static boolean debug=false;
 
 	
 	public TheoryPageView(Context context) {
@@ -28,7 +29,7 @@ public class TheoryPageView extends TextView {
 
 	public void setTextSize(float size){
 		super.setTextSize(size);
-		Log.d("LamrimLeader","TheoryPageView.setTextSize() Set font size to "+size);
+		if(debug)Log.d("LamrimLeader","TheoryPageView.setTextSize() Set font size to "+size);
 	}
 	
 
@@ -48,19 +49,19 @@ public class TheoryPageView extends TextView {
         	char c=text.charAt(i);
         	if(onCmd){
         		if(c!='>'){end++;continue;}
-        		Log.d("LamrimReader","Find a command stop");
+        		if(debug)Log.d("LamrimReader","Find a command stop");
             	onCmd=false;
             	
            		switch(text.charAt(start)){
            			case '/':
            				switch(text.charAt(start+1)){
-           				case 'b':Log.d("LamrimReader","release bold command");getPaint().setFakeBoldText(false);break;
-           				case 'n':Log.d("LamrimReader","release num command");getPaint().setColor(Color.BLACK);break;
-           				case 's':Log.d("LamrimReader","release small command");getPaint().setTextSize(orgTextSize);break;
+           				case 'b':if(debug)Log.d("LamrimReader","release bold command");getPaint().setFakeBoldText(false);break;
+           				case 'n':if(debug)Log.d("LamrimReader","release num command");getPaint().setColor(Color.BLACK);break;
+           				case 's':if(debug)Log.d("LamrimReader","release small command");getPaint().setTextSize(orgTextSize);break;
            				};break;
-           			case 'b':Log.d("LamrimReader","set bold command");getPaint().setFakeBoldText(true);break;
-           			case 'n':Log.d("LamrimReader","set num command");getPaint().setColor(Color.BLUE);break;
-           			case 's':Log.d("LamrimReader","set small command");getPaint().setTextSize((float) (getTextSize()*0.9));break;
+           			case 'b':if(debug)Log.d("LamrimReader","set bold command");getPaint().setFakeBoldText(true);break;
+           			case 'n':if(debug)Log.d("LamrimReader","set num command");getPaint().setColor(Color.BLUE);break;
+           			case 's':if(debug)Log.d("LamrimReader","set small command");getPaint().setTextSize((float) (getTextSize()*0.9));break;
            		}
            		start=i+1;
            		end=start;
@@ -70,7 +71,7 @@ public class TheoryPageView extends TextView {
         			canvas.drawText(text, start, end, x, y, getPaint());
         			x+=getPaint().measureText("中")*(end-start);
         		}
-        		Log.d("LamrimReader","Print "+text.substring(start, end)+", start: "+start+", end: "+end+", ("+(end-start)+")");
+        		if(debug)Log.d("LamrimReader","Print "+text.substring(start, end)+", start: "+start+", end: "+end+", ("+(end-start)+")");
 //        		Log.d("LamrimReader","Get point, Before:"+words);
         		canvas.drawCircle(x, y+pointSize+2, pointSize, getPaint());
         		start=i+1;
@@ -89,7 +90,7 @@ public class TheoryPageView extends TextView {
         		continue;
         	}
         	else if(c=='<'){
-        		Log.d("LamrimReader","Find a command start");
+        		if(debug)Log.d("LamrimReader","Find a command start");
         		if(end-start>0){
         			canvas.drawText(text, start, end, x, y, getPaint());
         			x+=getPaint().measureText("中")*(end-start);
