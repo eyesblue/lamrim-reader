@@ -25,14 +25,14 @@
         android:layout_weight="1" >
     </ListView>
     </HorizontalScrollView>
-
+
             <TextView
                 android:id="@+id/subtitleView"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:background="#FFFFDF"
                 android:layout_weight="0"
+                android:gravity="center"
                 android:text="@string/app_name" />
 
             <LinearLayout
@@ -43,15 +43,19 @@
                 android:layout_weight="0"
                 android:gravity="center" >
 
-                <MediaController
+                
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+				<MediaController
                     android:id="@+id/mediaController"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" >
                 </MediaController>
-                <SeekBar
-                    android:id="@+id/playBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
         </LinearLayout>
 
 </LinearLayout>

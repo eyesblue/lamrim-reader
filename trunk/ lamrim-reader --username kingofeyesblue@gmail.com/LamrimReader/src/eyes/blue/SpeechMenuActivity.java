@@ -42,7 +42,7 @@ public class SpeechMenuActivity extends ListActivity {
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);	//將螢幕轉成横式
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	 if(playWindow==null)
-		 playWindow=new Intent(SpeechMenuActivity.this,LamrimReaderActivity.class);
+		playWindow=new Intent(SpeechMenuActivity.this,LamrimReaderActivity.class);
 	 
 //	 setContentView(R.layout.speech_menu);
 	 //注意：不能使用main中的layout，用了會出現錯誤
@@ -60,7 +60,6 @@ public class SpeechMenuActivity extends ListActivity {
 		 list.add( item );
 		}
 
-
 	 //新增SimpleAdapter
 	 adapter = new SimpleAdapter(this, list, R.layout.speech_row, new String[] { "title","desc" },
 			 new int[] { R.id.speechTitle, R.id.speechDesc } );
@@ -77,6 +76,7 @@ public class SpeechMenuActivity extends ListActivity {
 		list=null;
 		playWindow.putExtra(this.getResources().getString(R.string.searchingType), this.getResources().getInteger(R.integer.PLAY_FROM_MEDIA));
 		playWindow.putExtra("index", position);
-		this.startActivity(playWindow);
+		setResult(RESULT_OK,new Intent().putExtras(playWindow));
+		finish();
 	}
 }
