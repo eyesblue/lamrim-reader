@@ -16,13 +16,9 @@ public class OptCtrlPanel extends Activity {
 	SharedPreferences options;
 	String bookFontSizeKey=null;
 	String subtitleFontSizeKey=null;
-	String subtitleLineCountKey=null;
-	CheckBox isDisplayBookBox=null;
-	CheckBox isDisplaySubtitleBox=null;
-	CheckBox isPlayAudioBox=null;
 	SeekBar bookFontSizeBar=null;
 	SeekBar subtitleFontSizeBar=null;
-	EditText subtitleLineCountText=null;
+	TextView sizeSample=null;
 	int defBookFontSize=R.integer.defBookFontSize;
 	int[] fontSizeArray=null;
 	
@@ -30,38 +26,34 @@ public class OptCtrlPanel extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.options);
 		options = getSharedPreferences(getString(R.string.optionFile), 0);
+		bookFontSizeBar=((SeekBar)findViewById(R.id.bookFontSize));
+		subtitleFontSizeBar=((SeekBar)findViewById(R.id.subtitleFontSize));
+		sizeSample=(TextView) findViewById(R.id.setupTextSizeSample);
+		fontSizeArray=getResources().getIntArray(R.array.fontSizeArray);
+		FontSizeIndicator indicator=new FontSizeIndicator((TextView) findViewById(R.id.textSizeIndicator));
 		
 		bookFontSizeKey=getString(R.string.bookFontSizeKey);
 		subtitleFontSizeKey=getString(R.string.subtitleFontSizeKey);
-		subtitleLineCountKey=getString(R.string.subtitleLineCount);
-		bookFontSizeBar=((SeekBar)findViewById(R.id.bookFontSize));
-		subtitleFontSizeBar=((SeekBar)findViewById(R.id.subtitleFontSize));
-		subtitleLineCountText=((EditText)findViewById(R.id.subtitleLineCount));
-		fontSizeArray=getResources().getIntArray(R.array.fontSizeArray);
-		
-		Log.d(logTag,"Book font size key="+bookFontSizeKey+", subtitle font size key="+subtitleFontSizeKey);
 		bookFontSizeBar.setMax(fontSizeArray.length-1);
-		bookFontSizeBar.setOnSeekBarChangeListener(new FontSizeIndicator((TextView) findViewById(R.id.BookFontSizeDesc)));
+		bookFontSizeBar.setOnSeekBarChangeListener(indicator);
 		subtitleFontSizeBar.setMax(fontSizeArray.length-1);
-		subtitleFontSizeBar.setOnSeekBarChangeListener(new FontSizeIndicator((TextView) findViewById(R.id.subtitleFontSizeDesc)));
-	        
+		subtitleFontSizeBar.setOnSeekBarChangeListener(indicator);
+		
 	}
 	@Override
 	protected void onStart(){
 		super.onStart();
 		
+		// Reload last options.
 		// Get options
 		int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
         bookFontSize=options.getInt(bookFontSizeKey, bookFontSize);
         int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
         subtitleFontSize=options.getInt(subtitleFontSizeKey, subtitleFontSize);
-        int subtitleLineCount=getResources().getInteger(R.integer.defSubtitleLineCount);
-        subtitleLineCount=options.getInt(subtitleLineCountKey, subtitleLineCount);
         
         // Set options
         bookFontSizeBar.setProgress(bookFontSize);
         subtitleFontSizeBar.setProgress(subtitleFontSize);
-        subtitleLineCountText.setText(""+subtitleLineCount);
     }
 	
 	public void onBackPressed(){
@@ -72,13 +64,10 @@ public class OptCtrlPanel extends Activity {
         bookFontSize=options.getInt(bookFontSizeKey, bookFontSize);
         int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
         subtitleFontSize=options.getInt(subtitleFontSizeKey, subtitleFontSize);
-        int subtitleLineCount=getResources().getInteger(R.integer.defSubtitleLineCount);
-        subtitleLineCount=options.getInt(subtitleLineCountKey, subtitleLineCount);
         
         int uiBookFontSize=bookFontSizeBar.getProgress();
         int uiSubtitleFontSize=subtitleFontSizeBar.getProgress();
         Log.d(logTag,"Get book font size: "+bookFontSize+", subtitle font size: "+uiSubtitleFontSize);
-        int uiSubtitleLineCount=Integer.parseInt(subtitleLineCountText.getText().toString());
         
         
         SharedPreferences.Editor editor =options.edit();
@@ -86,15 +75,12 @@ public class OptCtrlPanel extends Activity {
         	editor.putInt(bookFontSizeKey, uiBookFontSize);
         if(subtitleFontSize!=uiSubtitleFontSize)
         	editor.putInt(subtitleFontSizeKey, uiSubtitleFontSize);
-        if(subtitleLineCount!=uiSubtitleLineCount)
-        	editor.putInt(subtitleLineCountKey, uiSubtitleLineCount);
         
         editor.commit();
         
         Bundle b=new Bundle();
         b.putInt(bookFontSizeKey, uiBookFontSize);
         b.putInt(subtitleFontSizeKey, uiSubtitleFontSize);
-        b.putInt(subtitleLineCountKey, uiSubtitleLineCount);
         
 		setResult(RESULT_OK,new Intent().putExtras(b));
 		finish();
