@@ -5,11 +5,10 @@
     <string name="app_name">LamrimReader</string>
     <string name="isInitKey">isInit</string>
     <integer name="isInit">0</integer>
-	<string name="bookFontSize">課文</string>
+	<string name="bookFontSize">論文</string>
 	<string name="bookFontSizeKey">BookFontSize</string>
     <string name="subtitleFontSize">字幕</string>
     <string name="subtitleFontSizeKey">SubtitleFontSize</string>
-    <string name="subtitleLineCount">字幕顯示行數</string>
     <string name="selectMenu">選擇章節</string>
     <string name="selectFromTheoryMenu">從科判</string>
     <string name="selectFromSpeechMenu">從錄音</string>
@@ -17,11 +16,11 @@
     <string name="showAbout">關於</string>
     <string name="runtimeStateFile">runtime</string>
     <string name="optionFile">options</string>
-    <integer name="defSubtitleLineCount">1</integer>
 	<integer name="defBookFontSize">2</integer>
     <integer name="defSubtitleFontSize">2</integer>
     <integer name="subtitleMonInterval">100</integer>
     <string name="setupFontSizeStr">設定字型大小</string>
+    <string name="setupTextSizeSample">廣論</string>
     <string name="appModeKey">AppMode</string>
     <integer name="defAppMode">0</integer>
     <string name="normalModeDesc">一般模式</string>

@@ -4,6 +4,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import android.content.Context;
 import android.util.Log;
@@ -19,9 +23,10 @@ public class DownloadThread extends Thread{
     int[] fileSize=null;
     int fileIndex;
     String logTag=null;
+    long crc32=-1;
 //    String fileName=null;
     
-    public DownloadThread(Context context,InputStream is,int fileIndex,int bufLen,DownloadFinishListener downloadFinishListener,DownloadProgressListener downloadProgressListener,DownloadFailListener downloadFailListener){
+    public DownloadThread(Context context,InputStream is,int fileIndex,long crc32,int bufLen,DownloadFinishListener downloadFinishListener,DownloadProgressListener downloadProgressListener,DownloadFailListener downloadFailListener){
     	this.context=context;
             this.is=is;
             this.bufLen=bufLen;
@@ -32,16 +37,18 @@ public class DownloadThread extends Thread{
             fileSize=context.getResources().getIntArray(R.array.mediaFileSize);
             this.fileIndex=fileIndex;
             logTag=context.getResources().getString(R.string.app_name);
+            this.crc32=crc32;
     }
     
     public void run(){
             Log.d(logTag,"Download Thread started");
-            
+            long startTime=System.currentTimeMillis();
             int percent=fileSize[fileIndex]/100;
             int percentArray[]=new int[100];
             int percentIndex=0;
             int readLen=-1;
             int counter=0;
+            Checksum checksum = new CRC32();
             
             FileOutputStream fos=null;
             if(context==null)Log.d(logTag,"The context is NULL");
@@ -65,21 +72,27 @@ public class DownloadThread extends Thread{
             	while((readLen=is.read(buf))!=-1){
             		counter+=readLen;
             		fos.write(buf,0,readLen);
-            		Log.d(logTag,this.getName()+": Read length: "+counter+", index="+percentIndex);
+            		checksum.update(buf,0,readLen);
             		if(percentIndex<=99&&counter>=percentArray[percentIndex]){
             			downloadProgressListener.setDownloadProgress(++percentIndex);
             			Log.d(logTag,"Add one percent");
             		}
             	}
-            	is.close();
-            	fos.flush();
-            	fos.close();
+
+            is.close();
+            fos.flush();
+            fos.close();
             } catch (IOException e) {
             	e.printStackTrace();
             	Log.d(logTag,"IOException happen while download media.");
             	downloadFailListener.downloadMediaFail(fileIndex);
             }
             Log.d(logTag,"Download finish, notify downloadFinishListener");
-            downloadFinishListener.downloadMediaFinish(fileIndex);
+            long sum = checksum.getValue();
+            boolean isCorrect=(crc32==sum);
+            int spend=(int) (System.currentTimeMillis()-startTime);
+            Log.d(logTag,this.getName()+":File index: "+fileIndex+" Read length: "+counter+", CRC32 check: "+((isCorrect)?" Correct!":" Error!"+" ("+sum+"/"+crc32)+"), spend time: "+spend+"ms");
+            if(!isCorrect)downloadFailListener.downloadMediaFail(fileIndex);
+            else downloadFinishListener.downloadMediaFinish(fileIndex);
     }
 }
