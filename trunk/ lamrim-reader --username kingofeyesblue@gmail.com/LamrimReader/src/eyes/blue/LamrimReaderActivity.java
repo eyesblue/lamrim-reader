@@ -3,6 +3,7 @@ package eyes.blue;
 import java.io.BufferedReader;
 
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,9 +27,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -101,6 +106,8 @@ public class LamrimReaderActivity extends Activity implements
 
 	// final static int DIALOG_DOWNLOAD_FAIL=0;
 	static SubtitleElement[] subtitle = null;
+	int newMediaTarget=-1;
+	int newMediaPlayPosition=-1;
 	int currentPlayedSubtitleIndex = -1;
 	int playingMediaIndex = -1;
 	int playerStartPosition = -1;
@@ -119,11 +126,10 @@ public class LamrimReaderActivity extends Activity implements
 	SharedPreferences runtime=null;
 	int appMode = 0;
 	
-
+	ArrayList<RemoteSource> remoteSource=null;
 	Timer playBarTimer = new Timer();
 	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter=null;
-	Builder dialogBuilder = null;
 	Toast toast = null;
 	// String bookFontSizeKey=null;
 	// String subtitleFontSizeKey=null;
@@ -135,12 +141,13 @@ public class LamrimReaderActivity extends Activity implements
 	MediaPlayerOnPreparedListener mediaOnPreparedListener=null;
 	LinearLayout rootLayout=null;
 	TranslateAnimation hideController=null;
+	boolean screenOn=true;
 
 	// String remoteSite[]=null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
+		
 		// try{
 		super.onCreate(savedInstanceState);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -149,13 +156,25 @@ public class LamrimReaderActivity extends Activity implements
 		// fontSizeArraylength=getResources().getIntArray(R.array.fontSizeArray).length;
 
 		setContentView(R.layout.main);
-
+		
 		Log.d(logTag, "******* Into LamrimReader.onCreate *******");
-
+		if(savedInstanceState!=null)Log.d(logTag, "The savedInstanceState is not null!");
+		
+		
+		
 		
 		// remoteSite=getResources().getStringArray(R.array.remoteSite);
-
-		if (fileSysManager == null)fileSysManager=getFileSysManager();
+		if(remoteSource == null){
+			remoteSource=new ArrayList<RemoteSource>();
+			GoogleRemoteSource grs=new GoogleRemoteSource(this);
+			remoteSource.add(grs);
+			Log.d(logTag,"Add remote resource site: " +grs.getName()+", there are "+remoteSource.size()+" site in list.");
+		}
+		if (fileSysManager == null){
+			Log.d(logTag,"fileSysManager is NULL");
+			fileSysManager=getFileSysManager();
+			fileSysManager.setRemoteResource(remoteSource);
+		}
 		if(mediaController==null){
 			mediaController=new MediaController(this);
 			mediaController.setMediaPlayer(getMediaPlayerControl());
@@ -165,8 +184,6 @@ public class LamrimReaderActivity extends Activity implements
 		// bookView.setMovementMethod(new ScrollingMovementMethod());
 		// bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
 
-
-		if(dialogBuilder==null)dialogBuilder = new AlertDialog.Builder(this);
 		if(toast==null)toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 		if(subtitleView==null){
 			subtitleView = (TextView) findViewById(R.id.subtitleView);
@@ -178,8 +195,7 @@ public class LamrimReaderActivity extends Activity implements
 						Log.d(logTag,"Show media plyaer control panel.");
 						showMediaPlayerController();
 					}
-				}
-			});
+				}});
 		}
 		
 		if(bookView==null){
@@ -201,14 +217,11 @@ public class LamrimReaderActivity extends Activity implements
 						Log.d(logTag,"Show media plyaer control panel.");
 						showMediaPlayerController();
 					}
-					
 				}
 			});
 		}
-/*		
 
 		// subtitleMonInterval=getResources().getInteger(R.integer.subtitleMonInterval);
-
 /*		playBar = (SeekBar) findViewById(R.id.playBar);
 		playBar.setEnabled(false);
 		playBar.setClickable(false);
@@ -356,7 +369,7 @@ public class LamrimReaderActivity extends Activity implements
 			item.put("desc", "第 " + (++pIndex) + " 頁");
 			bookList.add(item);
 		}
-		return new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView }) ;
+		return new TheoryListAdapter(this, bookList, R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView }) ;
 	}
 
 	class TheoryListAdapter extends SimpleAdapter{
@@ -446,13 +459,29 @@ public class LamrimReaderActivity extends Activity implements
 		runOnUiThread(new Runnable() {	public void run() {	subtitleView.setText(b, 0, b.length);	}});
 	}
 	
-	private void showMediaPlayerController(){
+	public class receiverScreen extends BroadcastReceiver {
+		 
+		 @Override
+		 public void onReceive(Context context, Intent intent) {
+		   
+		     if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)){
+		    	 Log.d(logTag,"Screen has turn on");
+		    	 screenOn=true;
+		     }else{
+		    	 Log.d(logTag,"Screen has turn off");
+		    	 screenOn=false;
+		     }
+		 }
+		 
+		}
+	
+	synchronized private void showMediaPlayerController(){
 		runOnUiThread(new Runnable() {
 			public void run() {
-				mediaController.show();
+				        if (screenOn) 
+				        	mediaController.show();
 			}
 		});
-		
 	}
 	
 	private void switchMode(int mode) {
@@ -517,7 +546,7 @@ public class LamrimReaderActivity extends Activity implements
 		}
 	}
 	
-	public void saveRuntime() {
+		public void saveRuntime() {
 		// Save status of the mode now in used.
 		SharedPreferences.Editor editor = runtime.edit();
 		
@@ -530,6 +559,9 @@ public class LamrimReaderActivity extends Activity implements
 		switch (appMode) {
 		case NORMAL_MODE:
 			// getTheoryIndex
+			editor.putInt(getResources().getString(R.string.newMediaTarget),newMediaTarget);
+			editor.putInt(getResources().getString(R.string.newMediaPlayPosition),newMediaPlayPosition);
+
 			editor.putInt(getResources().getString(R.string.runtimeNormalTheoryTop),top);
 			editor.putInt(getResources().getString(R.string.runtimeNormalTheoryShift),index);
 			
@@ -562,14 +594,11 @@ public class LamrimReaderActivity extends Activity implements
 		}
 		editor.commit();
 		
-		// Save options
-		
-
 	}
 	
 	
 	public boolean loadRuntime(int mode) {
-		
+		Log.d(logTag,"**** Into onResume. ****");
 		switch (mode) {
 		case NORMAL_MODE:
 			// getTheoryIndex
@@ -592,6 +621,7 @@ public class LamrimReaderActivity extends Activity implements
 		}
 		return true;
 	}
+
 	private int getSubtitleWordCountMax(TextView view) {
 		// Determine how many words can show per line.
 		DisplayMetrics dm = new DisplayMetrics();
@@ -662,6 +692,7 @@ public class LamrimReaderActivity extends Activity implements
 	}
 	
 	private void onOptResultData(int resultCode, Intent intent){
+		Log.d(logTag, "Into onOptResultData");
 		final int bookFontSize = intent.getIntExtra(getString(R.string.bookFontSizeKey), getResources().getInteger(R.integer.defBookFontSize));
 		final int subtitleFontSize = intent.getIntExtra(getString(R.string.subtitleFontSizeKey),getResources().getInteger(R.integer.defSubtitleFontSize));
 		
@@ -692,9 +723,11 @@ public class LamrimReaderActivity extends Activity implements
 					subtitleView.setLines(subtitleLineCount);
 			}
 		});
-*/	}
+*/		Log.d(logTag, "Leave onOptResultData");
+	}
 
 	private void onSpeechMenuResultData(int resultCode, Intent intent){
+		Log.d(logTag, "Into onSpeechMenuResultData");
 		int lastAppMode=-1;
 		lastAppMode=runtime.getInt(getString(R.string.appModeKey), lastAppMode);
 		if(lastAppMode==-1)Log.e(logTag, "onSpeechMenuResultData: Error: There is no lastAppMode");
@@ -702,24 +735,30 @@ public class LamrimReaderActivity extends Activity implements
 		switch(lastAppMode){
 		case NORMAL_MODE:
 			int selected=intent.getIntExtra("index", 0);
-			if(selected==playingMediaIndex)return;
-			playingMediaIndex = selected;
-			playerStartPosition = 0;
+			if(selected==playingMediaIndex&&mediaPlayer!=null&&mediaPlayer.isPlaying()){
+				Log.d(logTag, "The index of user selected is the same with playing one.="+selected);
+				return;
+			}
+			
+			newMediaTarget = selected;
+			newMediaPlayPosition = 0;
+			saveRuntime();
 			releasePlayer();
 			Log.d(logTag, "Get result from speech menu, select index="+selected);
-			preparePlayer(selected);break;
+//			preparePlayer(selected);
+			break;
 		// Search the page of theory from speech.
 		case READING_MODE:
 			
 			break;
 		}
-		
+		Log.d(logTag, "Leave onSpeechMenuResultData");
 	}
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 		
 
-		Log.d(logTag, "Get result from: "+requestCode);
+		Log.d(logTag, "Into onActivityResult: Get result from: "+requestCode);
 		
 		switch(requestCode){
 		case SPEECH_MENU_RESULT:
@@ -730,7 +769,7 @@ public class LamrimReaderActivity extends Activity implements
 		case OPT_MENU_RESULT:onOptResultData(resultCode, intent);break;
 		}
 		
-
+		Log.d(logTag, "Leave onActivityResult");
 	}
 
 	private static int subtitleBSearch(SubtitleElement[] a, int key) {
@@ -849,8 +888,7 @@ public class LamrimReaderActivity extends Activity implements
 				}
 //				playBar.setProgress(mediaPosition);
 				synchronized (playBarTimer) {
-					if (currentPlayedSubtitleIndex < subtitle.length - 1
-							&& mediaPosition >= subtitle[currentPlayedSubtitleIndex + 1].startTimeMs) {
+					if (currentPlayedSubtitleIndex < subtitle.length - 1 && mediaPosition >= subtitle[currentPlayedSubtitleIndex + 1].startTimeMs) {
 						final char[] text = subtitle[++currentPlayedSubtitleIndex].text.toCharArray();
 						runOnUiThread(new Runnable() {
 							public void run() {
@@ -875,7 +913,7 @@ public class LamrimReaderActivity extends Activity implements
 	 */
 	private void preparePlayer(final int index){
 		if(index<0){
-			Log.d(logTag,"The user may not select the audio yet, preparePlayer("+index+")");
+			Log.d(logTag,Thread.currentThread().getName()+": The user may not select the audio yet, preparePlayer("+index+")");
 			return;
 		}
 		Thread t=new Thread("Player thread"){
@@ -887,31 +925,22 @@ public class LamrimReaderActivity extends Activity implements
 		t.start();
 	}
 	private synchronized void playAudio(final int index) {
-		Log.d(logTag,"Play "+ getResources().getStringArray(R.array.fileName)[index]);
-
+		Log.d(logTag,"Prepare media "+ getResources().getStringArray(R.array.fileName)[index] + " for play.");
 
 		AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 		int result = audioManager.requestAudioFocus( this,AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-		if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) { // could not
-																	// get audio
-																	// focus.}
-			AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
-			builder.setMessage(
-					"The audio device has been catched by another application(it may catched by another media player, browser or any apps which play sound in background), please close the app for release audio device.")
-					.setCancelable(false)
-					.setPositiveButton("Ok, I'll take it!", null);
-			builder.create();
+		if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) { // could not get audio focus.
+			setSubtitleViewText(getResources().getString(R.string.soundInUseError));
+			return;
 		}
-
 		
-
 		if (!FileSysManager.isFileValid(index)) {
-			// Here should show dialog to user that will be start download file
+			// Here should show dialog to user that will be start download file.
 			// from internet.
-			Log.d(logTag, "The file which alreadly in phone is not valid");
+			Log.d(logTag, "The file is not exist or which alreadly in phone is not valid.");
 			setSubtitleViewText(getResources().getString(R.string.downloadingDesc));
-			FileSysManager.downloadFileFromRemote(index);
-			Log.d(logTag, Thread.currentThread().getName()+ ": return to onStart()");
+			FileSysManager.downloadFileFromRemote(index,FileSysManager.MEDIA_FILE);
+			Log.d(logTag, Thread.currentThread().getName()+ ": Go to terminate");
 			return;
 		}
 		Log.d(logTag, "Found it!");
@@ -1038,6 +1067,7 @@ public class LamrimReaderActivity extends Activity implements
 			mediaController.setAnchorView(findViewById(R.id.rootLayout));
 			mediaController.setEnabled(true);
 			//if(!isFinishing())mediaController.show();
+			Log.d(logTag, "Call show control panel");
 			showMediaPlayerController();
 		}
 	}
@@ -1047,39 +1077,59 @@ public class LamrimReaderActivity extends Activity implements
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		Log.d(logTag,"Into onDestroy.");
 		// TODO Auto-generated method stub
 		if (mediaPlayer != null) {
 			mediaPlayer.release();
 			mediaPlayer = null;
 		}
+		Log.d(logTag,"Leave onDestroy.");
 	}
 
 	@Override
 	public void onBackPressed() {
-		saveRuntime();
+//		saveRuntime();
 		releasePlayer();
 		finish();
 	}
 
-	protected void onResume() {
-		super.onResume();
-		Log.d(logTag,"**** Into onResume() ****");
-		
 
+	protected void onStart() {
+		super.onStart();
+		Log.d(logTag,"**** Into onStart() ****");
+		
+		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+	    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, logTag);
+	    //SCREEN_DIM_WAKE_LOCK
+	    wl.acquire();
+	    
+		updateTextSizeFromRuntimRecord();
+		
+		if(newMediaTarget>=0 && newMediaPlayPosition>=0 && newMediaTarget!=playingMediaIndex){
+			Log.d(logTag,"The media target has changed, Prepare media index "+playingMediaIndex);
+			playingMediaIndex=newMediaTarget;
+			playerStartPosition=newMediaPlayPosition;
+			preparePlayer(playingMediaIndex);
+		}
+		
+		
 		int lastAppMode=-1;
 		lastAppMode = runtime.getInt(getString(R.string.appModeKey), lastAppMode);
-		if(lastAppMode==-1){
+		playingMediaIndex=runtime.getInt(getResources().getString(R.string.runtimeNormalPlayingIndex),playingMediaIndex);
+		if(lastAppMode==-1||playingMediaIndex==-1){
 			lastAppMode = getResources().getInteger(R.integer.defAppMode);
 			Log.d(logTag,"This is the first time launch LamrimReader, show select menu hint and switch to mode "+lastAppMode);
 			setSubtitleViewText(getResources().getString(R.string.selectIndexFromMenuDesc));
 			return;
 		}
+		
+//		Log.d(logTag,"Load last progress, change mode to "+lastAppMode);
+//		loadRuntime(lastAppMode);
+//		switchMode(lastAppMode);
 
-		updateTextSizeFromRuntimRecord();
-		Log.d(logTag,"Load last progress, change mode to "+lastAppMode);
-		loadRuntime(lastAppMode);
-		switchMode(lastAppMode);
-		Log.d(logTag,"Play media index "+playingMediaIndex);
+		
+		
+		
 //		if(lastAppMode==NORMAL_MODE) preparePlayer(playingMediaIndex);
 
 		
@@ -1115,14 +1165,12 @@ public class LamrimReaderActivity extends Activity implements
 		Log.d(logTag,"**** Leave onResume() ****");
 	}
 	
-	
-	protected void onSaveInstanceState (Bundle outState){
+/*	protected void onSaveInstanceState (Bundle outState){
 		super.onSaveInstanceState(outState);
-		Log.d(logTag,"**** Into onSaveInstanceState() ****");
-		saveRuntime();
-		Log.d(logTag,"**** Leave onSaveInstanceState() ****");
+		
+		
 	}
-	/*
+*/	/*
 	 * protected void onRestart(){}
 	 * 
 	 * protected void onResume(){}
@@ -1133,7 +1181,7 @@ public class LamrimReaderActivity extends Activity implements
 	 * 
 	 * protected void onDestroy(){}
 	 */
-	@Override
+/*	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 		// land
@@ -1143,7 +1191,7 @@ public class LamrimReaderActivity extends Activity implements
 		else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
 		}
 	}
-
+*/
 	/*
 	 * The function cause Thread hang on, it may not a correct version.
 	 * 

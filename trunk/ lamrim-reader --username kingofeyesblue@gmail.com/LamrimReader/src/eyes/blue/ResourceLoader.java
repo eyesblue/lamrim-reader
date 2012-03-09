@@ -37,9 +37,6 @@ public class ResourceLoader {
 	public static File checkURL(String fileName){
 		if(baseUrl==null||baseUrl.length==0)return null;
 		
-		
-		//if(httpConn==null)httpConn=new AndroidHttpClient[baseUrl.length];
-		
 		AndroidHttpClient c=AndroidHttpClient.newInstance("LamrimReader");
 		HttpGet httpGet = new HttpGet (baseUrl[0]+fileName);
 		try {
@@ -59,8 +56,6 @@ public class ResourceLoader {
 		File target=getLocation(fileName);
 		if(target!=null)return target;
 		
-		
-
 		return null;
 	}
 }

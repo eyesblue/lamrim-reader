@@ -73,6 +73,9 @@
     <string name="runtimeTvPlayingPosition">tvModePlayingPosition</string>
     
     <string name="selectIndexFromMenuDesc">請從選單選擇章節或錄音</string>
+    <string name="soundInUseError">音效裝置被其他軟體佔用中</string>
+    <string name="newMediaTarget">NewMediaTarget</string>
+    <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
     
 
 </resources>
