@@ -63,7 +63,7 @@ public class DownloadThread extends Thread{
             Log.d(logTag,"One percent is "+percent);
             for(int i=0;i<100;i++){
                     percentArray[i]=(i+1)*percent;
-                    Log.d(logTag,"Set array["+i+"] = "+percentArray[i]);
+//                    Log.d(logTag,"Set array["+i+"] = "+percentArray[i]);
             }
             
             try {
@@ -75,7 +75,7 @@ public class DownloadThread extends Thread{
             		checksum.update(buf,0,readLen);
             		if(percentIndex<=99&&counter>=percentArray[percentIndex]){
             			downloadProgressListener.setDownloadProgress(++percentIndex);
-            			Log.d(logTag,"Add one percent");
+//            			Log.d(logTag,"Add one percent");
             		}
             	}
 
