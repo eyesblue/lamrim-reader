@@ -12,6 +12,13 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
@@ -59,11 +66,54 @@ public class FileSysManager {
         	this.fileOperationFailListener=listener;
         } 
         
+        // For verify subtitle
+        public static boolean downloadSubtitleFromGoogle(int index){
+        	System.out.println("Download subtitle "+index);
+        	RemoteSource rs=remoteResources.get(0);
+        	String sitePath=rs.getSubtitleFileAddress(index);
+        	int respCode=-1;
+        	
+        	HttpClient httpclient = new DefaultHttpClient();
+    		HttpGet httpget = new HttpGet(sitePath);
+    		HttpResponse response=null;
+        	try {
+    			response = httpclient.execute(httpget);
+    			respCode=response.getStatusLine().getStatusCode();
+//    				For debug
+    			if(respCode!=200){
+    				System.out.println("CheckRemoteThread: check "+sitePath+" return "+respCode);
+    				return false;
+    			}
+    			
+            	InputStream is = response.getEntity().getContent();
+            	FileOutputStream fos=new FileOutputStream(FileSysManager.getLocalSubtitleFile(index));
+            	byte[] buf=new byte[16384];
+            	int readLen=-1;
+            	int counter=0;
+            	Log.d(logTag,"Start read stream from remote site, is="+((is==null)?"NULL":"exist")+", buf="+((buf==null)?"NULL":"exist"));
+            	while((readLen=is.read(buf))!=-1){
+            		counter+=readLen;
+            		fos.write(buf,0,readLen);
+            	}
+            	is.close();
+            	fos.close();
+        	}catch (ClientProtocolException e) {
+        		e.printStackTrace();
+        		return false;
+        	}catch (IOException e) {
+        		e.printStackTrace();
+        		return false;
+        	}
+        	
+        	return true;
+        }
+        
         public static void downloadFileFromRemote(int fileIndex,int resType){
                 Log.d(logTag,"Download file from remote "+context.getResources().getStringArray(R.array.fileName)[fileIndex]);
                 
                 InputStream is=null;
                 targetFileIndex=fileIndex;
+                File outputPath=null;
 
                 Log.d(logTag,"Create "+remoteResources.size()+" thread for check remote file.");
                 CheckRemoteThread[] crt=new CheckRemoteThread[remoteResources.size()];
@@ -71,12 +121,22 @@ public class FileSysManager {
                 	RemoteSource rs=remoteResources.get(i);
                 	String remotePath=null;
                 	switch(resType){
-                		case MEDIA_FILE:remotePath=rs.getMediaFileAddress(fileIndex);break;
-                		case SUBTITLE_FILE:remotePath=rs.getSubtitleFileAddress(fileIndex);break;
-                		case THEORY_FILE:remotePath=rs.getTheoryFileAddress(fileIndex);break;
+                		case MEDIA_FILE:
+                			remotePath=rs.getMediaFileAddress(fileIndex);
+                			outputPath=FileSysManager.getLocalMediaFile(fileIndex);
+                			break;
+                		case SUBTITLE_FILE:
+                			remotePath=rs.getSubtitleFileAddress(fileIndex);
+                			outputPath=FileSysManager.getLocalSubtitleFile(fileIndex);
+                			break;
+                		case THEORY_FILE:
+                			remotePath=rs.getTheoryFileAddress(fileIndex);
+                			outputPath=FileSysManager.getLocalTheoryFile(fileIndex);
+                			break;
                 	}
+                	Log.d(logTag,"Save file to "+outputPath.getAbsolutePath());
                 	crt[i]=new CheckRemoteThread(remotePath,remoteResources,i,("ChechThread"+i));
-                	Log.d(logTag,"Create Thread: "+("ChechThread"+i)+" for check ["+rs.getName()+"] source.");
+                	Log.d(logTag,"Create Thread: "+("ChechThread"+i)+" for check ["+rs.getName()+"] source, target: "+remotePath);
                     crt[i].start();
                 }
                 
@@ -114,7 +174,8 @@ public class FileSysManager {
                 Log.d(logTag,"Create thread for download file");
                 
                 int bufSize=context.getResources().getInteger(R.integer.downloadBufferSize);
-                DownloadThread dt=new DownloadThread(context,is,targetFileIndex, mp3FileCRC32[fileIndex], bufSize, downloadFinishListener,downloadProgressListener, downloadFailListener);
+                DownloadThread dt=new DownloadThread(context,is,targetFileIndex, mp3FileCRC32[fileIndex], outputPath,bufSize, downloadFinishListener,downloadProgressListener, downloadFailListener);
+                //DownloadThread dt=new DownloadThread(context,is,targetFileIndex,resType, outputPath,bufSize, downloadFinishListener,downloadProgressListener, downloadFailListener);
 /*                DownloadThread dt=new DownloadThread(context,is,targetFileIndex, mp3FileCRC32[fileIndex], bufSize, downloadFinishListener,downloadProgressListener, new DownloadFailListener(){
                 	public void downloadMediaFail(int index){
                 		Log.d(logTag,"Download "+context.getResources().getStringArray(R.array.fileName)[index]+" fail, Try to download from other site");
@@ -191,7 +252,6 @@ public class FileSysManager {
         	}
         	
         	int size=context.getResources().getIntArray(R.array.mediaFileSize)[i];
-        	
         	if(file.length()!=size){
         		Log.d(logTag,"The size of file is not correct, should be "+size+", but "+file.length());
         		return false;

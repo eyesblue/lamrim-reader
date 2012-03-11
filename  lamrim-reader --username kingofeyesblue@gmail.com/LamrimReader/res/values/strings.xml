@@ -16,8 +16,8 @@
     <string name="showAbout">關於</string>
     <string name="runtimeStateFile">runtime</string>
     <string name="optionFile">options</string>
-	<integer name="defBookFontSize">2</integer>
-    <integer name="defSubtitleFontSize">2</integer>
+	<integer name="defBookFontSize">1</integer>
+    <integer name="defSubtitleFontSize">1</integer>
     <integer name="subtitleMonInterval">100</integer>
     <string name="setupFontSizeStr">設定字型大小</string>
     <string name="setupTextSizeSample">廣論</string>
@@ -59,6 +59,7 @@
     <string name="defTheoryType">TXT</string>
     <string name="noSubtitleDesc">無字幕</string>
     
+    <string name="enablePlayerKey">EnablePlayer</string>
     <string name="runtimeNormalPlayerState">normalModePlayingState</string>
     <string name="runtimeNormalPlayingIndex">normalModePlayingIndex</string>
     <string name="runtimeNormalPlayingPosition">normalModePlayingPosition</string>
@@ -76,6 +77,7 @@
     <string name="soundInUseError">音效裝置被其他軟體佔用中</string>
     <string name="newMediaTarget">NewMediaTarget</string>
     <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
+    <string name="aboutUs"><![CDATA[]]></string>
     
 
 </resources>
