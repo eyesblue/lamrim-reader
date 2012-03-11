@@ -1,5 +1,6 @@
 package eyes.blue;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import android.util.Log;
 
 public class DownloadThread extends Thread{
 	Context context=null;
+	File outputPath=null;
     InputStream is=null;
     int bufLen=-1;
     DownloadFinishListener downloadFinishListener=null;
@@ -26,9 +28,10 @@ public class DownloadThread extends Thread{
     long crc32=-1;
 //    String fileName=null;
     
-    public DownloadThread(Context context,InputStream is,int fileIndex,long crc32,int bufLen,DownloadFinishListener downloadFinishListener,DownloadProgressListener downloadProgressListener,DownloadFailListener downloadFailListener){
+    public DownloadThread(Context context,InputStream is,int fileIndex,long crc32,File outputPath,int bufLen,DownloadFinishListener downloadFinishListener,DownloadProgressListener downloadProgressListener,DownloadFailListener downloadFailListener){
     	this.context=context;
             this.is=is;
+            this.outputPath=outputPath;
             this.bufLen=bufLen;
             this.downloadFinishListener=downloadFinishListener;
             this.downloadFailListener=downloadFailListener;
@@ -54,7 +57,8 @@ public class DownloadThread extends Thread{
             if(context==null)Log.d(logTag,"The context is NULL");
 
             try {
-            	fos=new FileOutputStream( FileSysManager.getLocalMediaFile(fileIndex));
+            	//fos=new FileOutputStream( FileSysManager.getLocalMediaFile(fileIndex));
+            	fos=new FileOutputStream(outputPath);
             } catch (FileNotFoundException e1) {
             	Log.e(logTag,"File not found Exception happen while open the "+FileSysManager.getLocalMediaFile(fileIndex));
             	e1.printStackTrace();
@@ -90,6 +94,7 @@ public class DownloadThread extends Thread{
             Log.d(logTag,"Download finish, notify downloadFinishListener");
             long sum = checksum.getValue();
             boolean isCorrect=(crc32==sum);
+//            boolean isCorrect=rs.isValid(crc32, type, fileIndex);
             int spend=(int) (System.currentTimeMillis()-startTime);
             Log.d(logTag,this.getName()+":File index: "+fileIndex+" Read length: "+counter+", CRC32 check: "+((isCorrect)?" Correct!":" Error!"+" ("+sum+"/"+crc32)+"), spend time: "+spend+"ms");
             if(!isCorrect)downloadFailListener.downloadMediaFail(fileIndex);
