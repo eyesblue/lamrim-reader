@@ -143,7 +143,6 @@ public class LamrimReaderActivity extends Activity implements
 	// int fontSizeArraylength=0;
 	FileSysManager fileSysManager = null;
 	LinearLayout rootLayout=null;
-	TranslateAnimation hideController=null;
 	boolean enablePlayer=true;
 	boolean prepareFromDownloadFinish=false;
 	boolean mediaChanged=false;
@@ -167,7 +166,8 @@ public class LamrimReaderActivity extends Activity implements
 			powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	    	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
 	    }
-		
+
+						
 		
 		// remoteSite=getResources().getStringArray(R.array.remoteSite);
 		if(remoteSource == null){
@@ -226,6 +226,8 @@ public class LamrimReaderActivity extends Activity implements
 			});
 		}
 
+		
+				
 		// subtitleMonInterval=getResources().getInteger(R.integer.subtitleMonInterval);
 /*		playBar = (SeekBar) findViewById(R.id.playBar);
 		playBar.setEnabled(false);
@@ -475,11 +477,31 @@ public class LamrimReaderActivity extends Activity implements
 		runOnUiThread(new Runnable() {	public void run() {	subtitleView.setText(b, 0, b.length);	}});
 	}
 	
-
+	private TranslateAnimation getShowControllerAnimation(){
+		TranslateAnimation showController = new TranslateAnimation(
+				Animation.RELATIVE_TO_SELF, 0.0f,
+				Animation.RELATIVE_TO_SELF, 0.0f,
+				Animation.RELATIVE_TO_SELF,1.0f,
+				Animation.RELATIVE_TO_SELF, 0.0f);
+		showController.setDuration(100);
+		return showController;
+	}
+	
+	private TranslateAnimation getHideControllerAnimation(){
+		TranslateAnimation hideController = new TranslateAnimation(
+			Animation.RELATIVE_TO_SELF,0.0f,
+			Animation.RELATIVE_TO_SELF,0.0f,
+			Animation.RELATIVE_TO_SELF, 0.0f,
+			Animation.RELATIVE_TO_SELF, 1.0f); 
+		hideController.setDuration(100);
+		return hideController;
+	}
+	
 	synchronized private void showMediaPlayerController(){
 		runOnUiThread(new Runnable() {
 			public void run() {
 				Log.d(logTag,"Show media controller.");
+				mediaController.setAnimation(getShowControllerAnimation());
 				mediaController.show();
 			}
 		});
