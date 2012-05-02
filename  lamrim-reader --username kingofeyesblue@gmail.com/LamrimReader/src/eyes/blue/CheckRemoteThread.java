@@ -19,16 +19,21 @@ public class CheckRemoteThread extends StopableThread{
     String sitePath=null;
     HttpEntity httpEntity=null;
     int respCode=-1;
+    long contentLength=-1;
     int index=-1;
+    long startTime=-1;
+    long waitTime=-1;
     
-    public CheckRemoteThread(String sitePath,Object lockKey,int index,String threadName){
+    public CheckRemoteThread(String sitePath,Object lockKey,int index,String threadName,long waitTime){
     	setName(threadName);
             this.lockKey=lockKey;
             this.sitePath=sitePath;
             this.index=index;
+            this.waitTime=waitTime;
     }
     
     public void run(){
+    	startTime=System.currentTimeMillis();
 /*            URL conn=null;
             try {
                             conn=new URL(sitePath);
@@ -56,7 +61,7 @@ public class CheckRemoteThread extends StopableThread{
 			response = httpclient.execute(httpget);
 			respCode=response.getStatusLine().getStatusCode();
 //				For debug
-			if(respCode!=200)System.out.println("CheckRemoteThread: check "+sitePath+" return "+respCode);
+			if(respCode!=200)System.out.println("CheckRemoteThread: Return code not equal 200! check "+sitePath+" return "+respCode);
     	}catch (ClientProtocolException e) {
     		e.printStackTrace();
     		notifyWaiter();
@@ -67,14 +72,21 @@ public class CheckRemoteThread extends StopableThread{
     		return;
     	}
     	httpEntity=response.getEntity();
-    	notifyWaiter();
+    	contentLength=httpEntity.getContentLength();
+    	// After waitTime, the mainly download thread has give up the download, don't wake up download thread, or cause next error notify for next download.
+    	
+    	long endTime=System.currentTimeMillis();
+    	long spendTime=endTime-startTime;
+    	Log.d("LamrimReader","Check spend time: File exist, ready for download, start="+startTime+", endTime="+endTime+", SpendTime="+spendTime);
+    	if(spendTime<waitTime)notifyWaiter();
     	System.out.println("Thread stoped.");
     }
-    private void notifyWaiter(){synchronized(lockKey){lockKey.notify();}}
+    private void notifyWaiter(){synchronized(lockKey){lockKey.notify();Log.d("CheckRemoteThread","Check thread notify "+sitePath+" at "+System.currentTimeMillis());}}
     
     public int getResponseCode(){return respCode;}
     public InputStream getInputStream() throws IllegalStateException, IOException{return httpEntity.getContent();}
     public int getFromSite(){return index;}
+    public long getContentLength(){return contentLength;}
     public void release(){
     	if(httpEntity!=null)
 		try {

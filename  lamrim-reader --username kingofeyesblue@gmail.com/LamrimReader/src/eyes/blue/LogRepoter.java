@@ -18,24 +18,37 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.util.Log;
 
 public class LogRepoter {
-	static String id=null;
+	public final int version=1;
+	static long id=1;	// Put your project ID here
 	static String tag=null;
 	static URI respURI=null;
 	static JSONObject jobj=new JSONObject();
-//	static ArrayList<String> msgList=new ArrayList<String>();
 	static JSONArray msg=null;
+	static long dev=-1;
+	static boolean enable=true;
+	static boolean reporting=false;
+	static Object lockey=new Object();
 
-	public static void setRecever(String respURLPath,String ida,String taga) throws MalformedURLException, URISyntaxException{
+	/*
+	 * Set the report information, you must have a account of coolyou log project before you use it, after you create a project, you will receive a project ID, set the project ID in the ida field and receiver URI for the reporter.
+	 * */
+	public static void setRecever(Context context,String respURLPath,long ida,String taga) throws MalformedURLException, URISyntaxException{
 		msg=new JSONArray();
 		id=ida;
 		tag=taga;
+		String UID=android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+		Log.d("LamrimReader","Android ID="+UID);
+		dev=UID.hashCode();
 		respURI=new URI(respURLPath);
 	}
 
-	
+	/*
+	 * Report the machine type of the target device, it recommend send once in whole life cycle.
+	 * */
 	public static void reportMachineType(){
 		StringBuffer sb=new StringBuffer();
 		sb.append("BOARD:"+android.os.Build.BOARD+"\n");
@@ -60,11 +73,27 @@ public class LogRepoter {
 		log(sb.toString());
 	}
 	
+	/*
+	 * Send log message to remote.
+	 * */
 	public static void log(String log){
+		if(!enable)return;
+		
 		msg.put(log);
-		flush();
+		synchronized(lockey){
+			if(!reporting)reporting=true;
+			Thread t=new Thread(){
+				public void run(){
+					flush();
+				}
+			};
+			t.start();
+		}
 	}
 	
+	/*
+	 * Flush the message buffer.
+	 * */
 	private static void flush(){
 		int respCode=-1;
 		
@@ -72,13 +101,14 @@ public class LogRepoter {
 		JSONObject param = new JSONObject();
 		try {
 			param.put("ID", id);
+			param.put("DEV", dev);
 			param.put("TAG", tag);
 			param.put("MSG", msg);
 			param.put("TIME", System.currentTimeMillis());
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		
+		synchronized(lockey){reporting=false;}
 		Log.d("LamrimReader","gson="+param.toString());
 		
 		StringEntity se;
@@ -87,17 +117,31 @@ public class LogRepoter {
 			request.setEntity(se);
 			HttpResponse httpResp = new DefaultHttpClient().execute(request);
 			respCode=httpResp.getStatusLine().getStatusCode();
+			msg=new JSONArray();
+			
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		Log.d("LogRepoter","Write msg to remote host return: "+respCode);
 	}
+	
+	/*
+	 * Query is the report function is enable
+	 * */
+	public static boolean isEnable() {	return enable;}
+	
+	/*
+	 * Set enable/disable the report function.
+	 * */
+	public static void setEnable(boolean enable) {	LogRepoter.enable = enable;}
+	
+	/*
+	 * Set the tag of the log.
+	 * */
+	public static void setTag(String tag){LogRepoter.tag=tag;}
 }

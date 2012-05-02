@@ -78,6 +78,10 @@
     <string name="newMediaTarget">NewMediaTarget</string>
     <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
     <string name="aboutUs"><![CDATA[]]></string>
-    
+    <integer name="MEDIA_TYPE">0</integer>
+    <integer name="SUBTITLE_TYPE">1</integer>
+    <integer name="THEORY_TYPE">2</integer>
+	<string name="DL_TMP_PREFIX">DLtmp_</string>
+	<integer name="DL_WAIT_TIME">12000</integer>
 
 </resources>
