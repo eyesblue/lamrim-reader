@@ -77,11 +77,11 @@
     <string name="soundInUseError">音效裝置被其他軟體佔用中</string>
     <string name="newMediaTarget">NewMediaTarget</string>
     <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
-    <string name="aboutUs"><![CDATA[]]></string>
     <integer name="MEDIA_TYPE">0</integer>
     <integer name="SUBTITLE_TYPE">1</integer>
     <integer name="THEORY_TYPE">2</integer>
 	<string name="DL_TMP_PREFIX">DLtmp_</string>
 	<integer name="DL_WAIT_TIME">12000</integer>
+	<string name="aboutDesc"><![CDATA[<br>廣論為宗喀巴大師所造，本App內容為<small>上</small>日<small>下</small>常法師講譯的內容。本App內容若有錯誤的部份，請至<a href="https://lamrimreader.eyes-blue.com/">本計畫網站</a>反應，也歡迎各界人士發心加入字幕標記的工作。</br><br></br><br>指導：馮垂中</br><br>計畫主持：李嵩興</br><br>字幕編輯：</br><br>陳冠今</br><br>林信宏</br><br>楊伯翰</br><br>謝宗榮</br><br>謝杭霖</br><br>林政由</br><br>古登云</br><br>尤冠人</br><br>劉穎南</br><br>黃仁甫</br><br>陳悅其</br><br>黃逸平</br><br>吳采柔</br><br>楊雅清</br><br>林鴻志</br><br>黃子淇</br>]]></string>
 
 </resources>

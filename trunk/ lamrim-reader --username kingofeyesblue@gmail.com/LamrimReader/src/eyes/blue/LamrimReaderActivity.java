@@ -133,6 +133,8 @@ public class LamrimReaderActivity extends Activity{
 	DownloadService downloaderService=null;
 	DownloaderBinder downloadBinder=null;
 	ServiceConnection dlConn=null;
+	
+	Intent aboutIntent;
 //	protected MediaPlayer mediaPlayer = null;
 //	final MediaPlayerOnPreparedListener onPreparedListener=new MediaPlayerOnPreparedListener();
 //	final DownloadEventListener downloadListener=new DownloadEventListener();
@@ -869,6 +871,8 @@ public class LamrimReaderActivity extends Activity{
 				break;
 			case R.id.showAbout:
 				saveRuntime();
+				final Intent aboutPanel=new Intent(LamrimReaderActivity.this,AboutActivity.class);
+				this.startActivity(aboutPanel);
 				break;
 //			default:
 //				return super.onContextItemSelected(item);
