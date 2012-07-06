@@ -69,7 +69,6 @@ public class OptCtrlPanel extends Activity {
         int uiSubtitleFontSize=subtitleFontSizeBar.getProgress();
         Log.d(logTag,"Get book font size: "+bookFontSize+", subtitle font size: "+uiSubtitleFontSize);
         
-        
         SharedPreferences.Editor editor =options.edit();
         if(bookFontSize!=uiBookFontSize)
         	editor.putInt(bookFontSizeKey, uiBookFontSize);
