@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry excluding="eyes/blue/TestStreamingPlayer.java|eyes/blue/DownloadThread.java|eyes/blue/StreamingMp3Player.java|eyes/blue/StreamingMediaPlayer.java|eyes/blue/ResourceLoader.java" kind="src" path="src"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="lib" path="E:/Documents/Desktop/語音樣本測試/JLayer1.0.1/jl1.0.1.jar"/>
+	<classpathentry kind="output" path="bin/classes"/>
+</classpath>
