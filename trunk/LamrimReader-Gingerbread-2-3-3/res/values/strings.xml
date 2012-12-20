@@ -47,6 +47,11 @@
     <string name="appExtMemDirName">LamrimReaderTemp</string>
     <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
     <string name="downloadingDesc">資源下載中，請稍候</string>
+    <string name="prepareSubtitleDesc">字幕準備中，請稍候</string>
+    <string name="prepareSpeechDesc">音檔準備中，請稍候</string>
+    <string name="mpControllerHint">請點選此處顯示撥放選單</string>
+    <string name="mpControllerNoSubtitleHint">尚無字幕，請點選此處顯示撥放選單</string>
+    
     <integer name="downloadBufferSize">16384</integer>
     <string name="audioDirName">Audio</string>
     <string name="subtitleDirName">Subtitle</string>

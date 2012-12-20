@@ -1,19 +1,13 @@
 package eyes.blue;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import android.app.LauncherActivity;
 import android.app.ListActivity;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.LogPrinter;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -38,7 +32,6 @@ public class SpeechMenuActivity extends ListActivity {
 	}
 	 LogRepoter.reportMachineType();
 */	 
-	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);	//將螢幕轉成横式
 //	 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	 if(playWindow==null)

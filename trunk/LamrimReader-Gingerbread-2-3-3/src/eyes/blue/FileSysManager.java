@@ -47,17 +47,19 @@ public class FileSysManager {
 
         DownloadListener downloadListener=null;
         static int downloadFromSite=-1;
+        static GoogleRemoteSource grs=null;
 //        static int bufLen=16384;
         
         public FileSysManager(Context context){
 //              statFs[0]=new StatFs(Environment.getRootDirectory().getAbsolutePath());
 //              statFs[1]=new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
 //                this.remoteSite=context.getResources().getStringArray(R.array.remoteSite);
-                FileSysManager.logTag=context.getString(R.string.app_name);
+                FileSysManager.logTag=getClass().getName();
 //                FileSysManager.fileName=context.getResources().getStringArray(R.array.fileName);
 //                FileSysManager.fileSize=context.getResources().getIntArray(R.array.mediaFileSize);
                 FileSysManager.context=context;
                 options = context.getSharedPreferences(context.getString(R.string.optionFile), 0);
+                grs=new GoogleRemoteSource(context);
         }
         
         public void setDownloadListener(DownloadListener listener){
@@ -65,26 +67,35 @@ public class FileSysManager {
         }
         
         // For verify subtitle
-        public static boolean downloadSubtitleFromGoogle(int index){
+        public static HttpEntity downloadSubtitleFromGoogle(int index) throws ClientProtocolException, IOException{
         	System.out.println("Download subtitle "+index);
-        	RemoteSource rs=remoteResources.get(0);
-        	String sitePath=rs.getSubtitleFileAddress(index);
+        	return downloadFromGoogle(grs.getSubtitleFileAddress(index),index);
+        }
+        public static HttpEntity  downloadMediaFromGoogle(int index) throws ClientProtocolException, IOException{
+        	System.out.println("Download subtitle "+index);
+        	return downloadFromGoogle(grs.getMediaFileAddress(index),index);
+        }
+        
+        private static HttpEntity downloadFromGoogle(String sitePath,int index) throws ClientProtocolException, IOException{
+        	Log.d("downloadFileFromGoogle","Start download "+sitePath);
         	int respCode=-1;
         	
         	HttpClient httpclient = new DefaultHttpClient();
     		HttpGet httpget = new HttpGet(sitePath);
     		HttpResponse response=null;
-        	try {
+//        	try {
     			response = httpclient.execute(httpget);
     			respCode=response.getStatusLine().getStatusCode();
 //    				For debug
     			if(respCode!=200){
     				System.out.println("CheckRemoteThread: check "+sitePath+" return "+respCode);
-    				return false;
+    				return null;
     			}
     			
-            	InputStream is = response.getEntity().getContent();
-            	FileOutputStream fos=new FileOutputStream(FileSysManager.getLocalSubtitleFile(index));
+    			return response.getEntity();
+ //       	}
+            	//InputStream is = response.getEntity().getContent();
+/*            	FileOutputStream fos=new FileOutputStream(FileSysManager.getLocalSubtitleFile(index));
             	byte[] buf=new byte[16384];
             	int readLen=-1;
             	int counter=0;
@@ -104,7 +115,7 @@ public class FileSysManager {
         	}
         	
         	return true;
-        }
+*/        }
         
         
         
