@@ -4,9 +4,9 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="fill"
-    android:orientation="vertical"
-    android:screenOrientation="landscape" >
-
+    android:orientation="vertical" >
+<!--android:screenOrientation="landscape" -->
+    	
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView1"
         android:layout_width="wrap_content"
