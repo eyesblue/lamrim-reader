@@ -25,7 +25,7 @@ public class OptCtrlPanel extends Activity {
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.options);
-		options = getSharedPreferences(getString(R.string.optionFile), 0);
+		options = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 		bookFontSizeBar=((SeekBar)findViewById(R.id.bookFontSize));
 		subtitleFontSizeBar=((SeekBar)findViewById(R.id.subtitleFontSize));
 		sizeSample=(TextView) findViewById(R.id.setupTextSizeSample);
@@ -69,14 +69,14 @@ public class OptCtrlPanel extends Activity {
         int uiSubtitleFontSize=subtitleFontSizeBar.getProgress();
         Log.d(logTag,"Get book font size: "+bookFontSize+", subtitle font size: "+uiSubtitleFontSize);
         
-        SharedPreferences.Editor editor =options.edit();
+/*        SharedPreferences.Editor editor =options.edit();
         if(bookFontSize!=uiBookFontSize)
         	editor.putInt(bookFontSizeKey, uiBookFontSize);
         if(subtitleFontSize!=uiSubtitleFontSize)
         	editor.putInt(subtitleFontSizeKey, uiSubtitleFontSize);
         
         editor.commit();
-        
+*/        
         Bundle b=new Bundle();
         b.putInt(bookFontSizeKey, uiBookFontSize);
         b.putInt(subtitleFontSizeKey, uiSubtitleFontSize);

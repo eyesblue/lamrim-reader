@@ -204,10 +204,12 @@ public class LamrimReaderActivity extends Activity {
 			editor.putInt("mediaIndex", mediaIndex);
 			editor.putInt("playerStatus", mpController.getMediaPlayerState());
 			editor.putInt("playPosition", mpController.getCurrentPosition());
-			editor.commit(); Log.d(funcLeave,"**** saveRuntime ****");
+			editor.commit();
+			setSubtitleViewText(getString(R.string.selectIndexFromMenuDesc));
+			Log.d(funcLeave,"**** saveRuntime ****");
 		}
 		
-		
+		updateTextSizeFromRuntimRecord();
 		final int bookPage=runtime.getInt("bookPage", 0);
 		Log.d(logTag,"Restore the theory to page "+bookPage);
 		bookView.post(new Runnable() {  public void run() {
@@ -415,7 +417,8 @@ public class LamrimReaderActivity extends Activity {
 				return;
 			}
 			final int selected = intent.getIntExtra("index", 0);
-			if( selected == mediaIndex){
+			// The code under test, after user selected a media then pause media player and into the idle mode, it do nothing if user select the same one.
+			if( selected == mediaIndex && mpController.getMediaPlayerState()!=MediaPlayerController.MP_IDLE){
 				Log.d(logTag, "The selected same as playing, do nothing.");
 				return;// selected same as playing
 			}
@@ -521,14 +524,10 @@ public class LamrimReaderActivity extends Activity {
 	}
 
 	private void updateTextSizeFromRuntimRecord() {
-		int subtitleTextSize = getResources().getInteger(
-				R.integer.defSubtitleFontSize);
-		subtitleTextSize = runtime.getInt(
-				getString(R.string.subtitleFontSizeKey), subtitleTextSize);
-		int theoryTextSize = getResources().getInteger(
-				R.integer.defBookFontSize);
-		theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),
-				theoryTextSize);
+		int subtitleTextSize = getResources().getInteger(R.integer.defSubtitleFontSize);
+		subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), subtitleTextSize);
+		int theoryTextSize = getResources().getInteger(R.integer.defBookFontSize);
+		theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),theoryTextSize);
 		updateTextSize(theoryTextSize, subtitleTextSize);
 	}
 

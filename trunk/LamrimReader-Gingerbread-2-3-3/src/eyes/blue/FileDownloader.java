@@ -227,7 +227,7 @@ public class FileDownloader {
 	        }
 
 	        	
-	        if(type==activity.getResources().getInteger(R.integer.MEDIA_TYPE)){
+	        if(type==activity.getResources().getInteger(R.integer.MEDIA_TYPE) && activity.getString(R.string.mediaCheckSum).equalsIgnoreCase("true")){
 	        	long sum = checksum.getValue();
 	        	boolean isCorrect=(FileSysManager.mp3FileCRC32[mediaIndex]==sum);
 	        	int spend=(int) (System.currentTimeMillis()-startTime);

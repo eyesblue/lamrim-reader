@@ -465,6 +465,9 @@ public class MediaPlayerController implements MediaPlayerControl {
 		return (SubtitleElement[]) subtitleList.toArray(new SubtitleElement[0]);
 	}
 	
+	/*
+	 * While start playing, there may not have subtitle yet, it will return -1, except array index n.
+	 * */
 	private int subtitleBSearch(SubtitleElement[] a, int key) {
 		int mid = a.length / 2;
 		int low = 0;
@@ -474,7 +477,9 @@ public class MediaPlayerController implements MediaPlayerControl {
 			// final int d = Collections.compare(a[mid], key, c);
 			int d = 0;
 			if (mid == 0) {
-//				System.out.println("Shift to the index 0, return 0");
+//				System.out.println("Shift to the index 0, Find out is -1(no subtitle start yet) or 0 or 1");
+				if( key < a[0].startTimeMs ) return -1;
+				if( a[1].startTimeMs <=  key) return 1;
 				return 0;
 			}
 			if (mid == a.length - 1) {

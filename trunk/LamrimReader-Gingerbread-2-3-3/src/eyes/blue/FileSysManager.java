@@ -58,7 +58,7 @@ public class FileSysManager {
 //                FileSysManager.fileName=context.getResources().getStringArray(R.array.fileName);
 //                FileSysManager.fileSize=context.getResources().getIntArray(R.array.mediaFileSize);
                 FileSysManager.context=context;
-                options = context.getSharedPreferences(context.getString(R.string.optionFile), 0);
+//               options = context.getSharedPreferences(context.getString(R.string.optionFile), 0);
                 grs=new GoogleRemoteSource(context);
         }
         

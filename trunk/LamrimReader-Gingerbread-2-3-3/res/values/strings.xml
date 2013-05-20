@@ -15,7 +15,7 @@
     <string name="showCtrlPanel">設定</string>
     <string name="showAbout">關於</string>
     <string name="runtimeStateFile">runtime</string>
-    <string name="optionFile">options</string>
+<!--     <string name="optionFile">options</string>  -->
 	<integer name="defBookFontSize">1</integer>
     <integer name="defSubtitleFontSize">1</integer>
     <integer name="subtitleMonInterval">100</integer>
@@ -29,7 +29,7 @@
     <integer name="NORMAL_MODE">0</integer>
     <integer name="READING_MODE">1</integer>
     <integer name="TV_MODE">2</integer>
-
+	<string name="mediaCheckSum">false</string>
     
     <integer-array name="fontSizeArray">
         <item>12</item>
