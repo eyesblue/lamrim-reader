@@ -65,6 +65,8 @@ public final class R {
         public static final int THEORY_TYPE=0x7f06000d;
         public static final int TV_MODE=0x7f060007;
         public static final int defAppMode=0x7f060004;
+        /**      <string name="optionFile">options</string>  
+         */
         public static final int defBookFontSize=0x7f060001;
         public static final int defSubtitleFontSize=0x7f060002;
         public static final int downloadBufferSize=0x7f060008;
@@ -87,7 +89,7 @@ public final class R {
         public static final int DL_TMP_PREFIX=0x7f050032;
         public static final int aboutDesc=0x7f050033;
         public static final int appExtMemDirName=0x7f050014;
-        public static final int appModeKey=0x7f050010;
+        public static final int appModeKey=0x7f05000f;
         public static final int app_name=0x7f050001;
         public static final int audioDirName=0x7f05001b;
         public static final int bookFontSize=0x7f050003;
@@ -100,16 +102,16 @@ public final class R {
         public static final int enablePlayerKey=0x7f050023;
         public static final int hello=0x7f050000;
         public static final int isInitKey=0x7f050002;
+        public static final int mediaCheckSum=0x7f050013;
         public static final int mpControllerHint=0x7f050019;
         public static final int mpControllerNoSubtitleHint=0x7f05001a;
         public static final int newMediaPlayPosition=0x7f050031;
         public static final int newMediaTarget=0x7f050030;
         public static final int noSubtitleDesc=0x7f050022;
-        public static final int normalModeDesc=0x7f050011;
-        public static final int optionFile=0x7f05000d;
+        public static final int normalModeDesc=0x7f050010;
         public static final int prepareSpeechDesc=0x7f050018;
         public static final int prepareSubtitleDesc=0x7f050017;
-        public static final int readingModeDesc=0x7f050012;
+        public static final int readingModeDesc=0x7f050011;
         public static final int runtimeNormalPlayerState=0x7f050024;
         public static final int runtimeNormalPlayingIndex=0x7f050025;
         public static final int runtimeNormalPlayingPosition=0x7f050026;
@@ -126,8 +128,8 @@ public final class R {
         public static final int selectFromTheoryMenu=0x7f050008;
         public static final int selectIndexFromMenuDesc=0x7f05002e;
         public static final int selectMenu=0x7f050007;
-        public static final int setupFontSizeStr=0x7f05000e;
-        public static final int setupTextSizeSample=0x7f05000f;
+        public static final int setupFontSizeStr=0x7f05000d;
+        public static final int setupTextSizeSample=0x7f05000e;
         public static final int showAbout=0x7f05000b;
         public static final int showCtrlPanel=0x7f05000a;
         public static final int soundInUseError=0x7f05002f;
@@ -135,7 +137,7 @@ public final class R {
         public static final int subtitleFontSize=0x7f050005;
         public static final int subtitleFontSizeKey=0x7f050006;
         public static final int theoryDirName=0x7f05001d;
-        public static final int tvModeDesc=0x7f050013;
+        public static final int tvModeDesc=0x7f050012;
     }
     public static final class styleable {
         /** Attributes that can be used with a TheoryPageView.
