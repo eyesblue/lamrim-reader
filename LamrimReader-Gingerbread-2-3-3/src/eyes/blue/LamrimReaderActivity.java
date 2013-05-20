@@ -50,6 +50,7 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 public class LamrimReaderActivity extends Activity {
 	/** Called when the activity is first created. */
 	final static String logTag = "LamrimReader";
