@@ -1,6 +1,5 @@
 package eyes.blue;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -50,7 +49,9 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
+/*
+ * $Id$
+ * */
 public class LamrimReaderActivity extends Activity {
 	/** Called when the activity is first created. */
 	final static String logTag = "LamrimReader";
