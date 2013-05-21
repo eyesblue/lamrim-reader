@@ -47,6 +47,8 @@ public class MediaPlayerController implements MediaPlayerControl {
 	private PowerManager.WakeLock wakeLock = null;
 	MediaPlayerControllerListener changedListener=null;
 	private SubtitleElement[] subtitle = null;
+	Object playingIndexKey=new Object();
+	int playingIndex=-2;
 //	long monInterval=100;
 	
 	/*
@@ -269,6 +271,44 @@ public class MediaPlayerController implements MediaPlayerControl {
 
 		mediaController = new MediaController(activity);
 		mediaController.setMediaPlayer(this);
+		mediaController.setPrevNextListeners(
+				// Next button hit.
+				new View.OnClickListener(){
+					@Override
+					public void onClick(View v) {
+						synchronized(playingIndexKey){
+							int index=playingIndex+1;
+						
+							// if the index over index of subtitle, do nothing.
+							if(index>subtitle.length-1)return;
+						
+							playingIndex=index;
+							seekTo(subtitle[playingIndex].startTimeMs);
+							changedListener.onSeek(subtitle[playingIndex]);
+							changedListener.onSubtitleChanged(subtitle[playingIndex]);
+							mediaController.show();
+						}
+					}}
+				,
+				// Prev button hit.
+				new View.OnClickListener(){
+
+					@Override
+					public void onClick(View v) {
+						synchronized(playingIndexKey){
+							int index=playingIndex-1;
+						
+							// if the index over index of subtitle, do nothing.
+							if(index<0){changedListener.startMoment();return;}
+						
+							playingIndex=index;
+							seekTo(subtitle[playingIndex].startTimeMs);
+							changedListener.onSeek(subtitle[playingIndex]);
+							changedListener.onSubtitleChanged(subtitle[playingIndex]);
+							mediaController.show();
+						}
+					}}
+		);
 		mediaController.setAnchorView(rootView);
 		mediaController.setEnabled(true);
 
@@ -364,19 +404,24 @@ public class MediaPlayerController implements MediaPlayerControl {
 	
 	private class SubtitleTimer extends AsyncTask<SubtitleElement, Void, Void> {
 		protected Void doInBackground(SubtitleElement... se) {
-			int playingIndex=-1;
+			playingIndex=-2;
 			int monInterval=activity.getResources().getInteger(R.integer.subtitleMonInterval);
 			while(true){
 				if(isCancelled())return null;	// playArrayIndex not last one
 				try{
 //					Log.d(getClass().getName(),"Subtitle index miss, search the index.");
-					int playPoint=mediaPlayer.getCurrentPosition();
-					int playArrayIndex=subtitleBSearch(se, playPoint);
-					if(playingIndex==playArrayIndex)continue;
-					changedListener.onSubtitleChanged(subtitle[playArrayIndex]);
-					
+					synchronized(playingIndexKey){
+						int playPoint=mediaPlayer.getCurrentPosition();
+						int playArrayIndex=subtitleBSearch(se, playPoint);
+						
+						if(playingIndex!=playArrayIndex){
+							playingIndex=playArrayIndex;
+							if(playArrayIndex==-1){changedListener.startMoment();}
+							else changedListener.onSubtitleChanged(subtitle[playArrayIndex]);
+						}
+					}
 					// The last of subtitle has reached.
-					if(playArrayIndex==se.length-1)return null;
+					//if(playArrayIndex==se.length-1)return null;
 					
 					Thread.sleep(monInterval);
 

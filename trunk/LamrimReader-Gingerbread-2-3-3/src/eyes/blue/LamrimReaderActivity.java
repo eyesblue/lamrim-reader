@@ -54,6 +54,7 @@ import android.widget.Toast;
  * */
 public class LamrimReaderActivity extends Activity {
 	/** Called when the activity is first created. */
+	private static final long serialVersionUID = 2L;
 	final static String logTag = "LamrimReader";
 	final static String funcInto = "Function Into";
 	final static String funcLeave = "Function Leave";
@@ -127,6 +128,12 @@ public class LamrimReaderActivity extends Activity {
 					setSubtitleViewText(subtitle.text);
 				}
 				@Override
+				public void onSeek(SubtitleElement subtitle){
+					setToastMsg(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs)+')');
+				}
+				@Override
+				public void startMoment(){setSubtitleViewText("");}
+				@Override
 				public void onMediaPrepared() {
 					Log.d(getClass().getName(),"MediaPlayer prepared, show controller.");
 					if(mpController.isSubtitleReady())setSubtitleViewText(getString(R.string.mpControllerHint));
@@ -134,7 +141,7 @@ public class LamrimReaderActivity extends Activity {
 					mpController.seekTo(seekPosition);
 					seekPosition=0;
 					mpController.start();
-					setTitle(getString(R.string.app_name) +" - "+ getResources().getStringArray(R.array.fileName)[mediaIndex]);
+					setTitle(getString(R.string.app_name) +" V"+serialVersionUID+" - "+ getResources().getStringArray(R.array.fileName)[mediaIndex]);
 					if(showPlayControllerWhilePrepared)mpController.showMediaPlayerController(LamrimReaderActivity.this.findViewById(android.R.id.content));
 					showPlayControllerWhilePrepared=true;
 				}
@@ -579,6 +586,15 @@ public class LamrimReaderActivity extends Activity {
 			}
 		});
 	}
+	
+	public void setToastMsg(String s){
+		toast.setText(s);
+		runOnUiThread(new Runnable() {
+			public void run() {
+				toast.show();
+			}
+		});
+	}
 
 	private TranslateAnimation getShowControllerAnimation() {
 		TranslateAnimation showController = new TranslateAnimation(
@@ -760,6 +776,9 @@ public class LamrimReaderActivity extends Activity {
 			setSubtitleViewText(getString(R.string.downloadFail));
 			Log.d(getClass().getName(),"**** Prepare files fail ****");
 		}
+		
+		
+		
 /*		@Override
 		public void fileOperationFail(JSONObject jobj) {
 			Log.e(getClass().getName(),
@@ -767,4 +786,25 @@ public class LamrimReaderActivity extends Activity {
 		}
 */	};
 
+	private String getMsToHMS(int ms){
+		String sub=""+(ms%1000);
+		if(sub.length()==1)sub="00"+sub;
+		else if(sub.length()==2)sub="0"+sub;
+	
+		int second=ms/1000;
+		int ht=second/3600;
+		second=second%3600;
+		int mt=second/60;
+		second=second%60;
+	
+		String hs=""+ht;
+		if(hs.length()==1)hs="0"+hs;
+		String mst=""+mt;
+		if(mst.length()==1)mst="0"+mst;
+		String ss=""+second;
+		if(ss.length()==1)ss="0"+ss;
+	
+//	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
+		return mst+'分'+ss+"."+sub+'秒';
+}
 }
