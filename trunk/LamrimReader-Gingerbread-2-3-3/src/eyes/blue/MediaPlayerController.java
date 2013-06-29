@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.MediaController;
 import android.widget.MediaController.MediaPlayerControl;
@@ -79,6 +80,14 @@ public class MediaPlayerController implements MediaPlayerControl {
 		});
 	}
 	
+	public boolean isShowing(){
+		if(mediaController==null)return false;
+		return mediaController.isShowing();
+	}
+	
+	public void hide(){
+		mediaController.hide();
+	}
 // =============== Function implements of MediaPlayercontroller =================
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
@@ -102,6 +111,11 @@ public class MediaPlayerController implements MediaPlayerControl {
 	public void seekTo(int pos) {
 		if(mpState>=MP_PREPARED){
 			mediaPlayer.seekTo(pos);
+			if(subtitle!=null){
+				int playArrayIndex=subtitleBSearch(subtitle, pos);
+				if(playArrayIndex==-1)changedListener.startMoment();
+				else changedListener.onSeek(subtitle[playArrayIndex]);
+			}
 		}
 	}
 	
@@ -110,7 +124,11 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * */
 	@Override
 	public void start() {
-		if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
+		if(!wakeLock.isHeld()){
+			Log.d(logTag,"Play media and Lock screen.");
+			wakeLock.acquire();
+		}
+		
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(true);
 			subtitleTimer=null;
@@ -271,6 +289,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 
 		mediaController = new MediaController(activity);
 		mediaController.setMediaPlayer(this);
+		
 		mediaController.setPrevNextListeners(
 				// Next button hit.
 				new View.OnClickListener(){
