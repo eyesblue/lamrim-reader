@@ -44,12 +44,13 @@ public class SpeechMenuActivity extends ListActivity {
 	 //setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, R.array.fileName));
 	 speechMenu = (ListView) findViewById(R.layout.speech_menu);
 	 String[] speechTitle=getResources().getStringArray(R.array.fileName);
+	 String[] speechDesc=getResources().getStringArray(R.array.mediaDesc);
 //	 String[] speechDesc=getResources().getStringArray(R.array.speechDesc);
 
-	 for(String value:speechTitle){
+	 for(int i=0;i<speechDesc.length;i++){
 		 HashMap<String,String> item = new HashMap<String,String>();
-		 item.put("title", value);
-		 item.put("desc", "Descript here");
+		 item.put("title", speechTitle[i]);
+		 item.put("desc", speechDesc[i]);
 		 list.add( item );
 		}
 

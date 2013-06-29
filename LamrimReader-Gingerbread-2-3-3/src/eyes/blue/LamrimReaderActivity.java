@@ -1,35 +1,19 @@
 package eyes.blue;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONException;
-import org.json.JSONObject;
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.media.AudioManager;
-import android.media.AudioManager.OnAudioFocusChangeListener;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnPreparedListener;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.PowerManager;
-import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,9 +25,9 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -54,7 +38,7 @@ import android.widget.Toast;
  * */
 public class LamrimReaderActivity extends Activity {
 	/** Called when the activity is first created. */
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 3L;
 	final static String logTag = "LamrimReader";
 	final static String funcInto = "Function Into";
 	final static String funcLeave = "Function Leave";
@@ -98,6 +82,8 @@ public class LamrimReaderActivity extends Activity {
 	FileDownloader fileDownloader = null;
 	LinearLayout rootLayout = null;
 
+	Typeface educFont = null;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -115,9 +101,13 @@ public class LamrimReaderActivity extends Activity {
 		if (savedInstanceState != null){
 			Log.d(logTag, "The savedInstanceState is not null!");
 		}
+		
+		
+		
 		Log.d(getClass().getName(), "mediaIndex=" + mediaIndex);
 		powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,logTag);
+		educFont=Typeface.createFromAsset(this.getAssets(), "EUDC.TTF");
 		fileSysManager = new FileSysManager(this);
 
 			mpController = new MediaPlayerController(LamrimReaderActivity.this,			
@@ -158,24 +148,41 @@ public class LamrimReaderActivity extends Activity {
 		// bookView.setMovementMethod(new ScrollingMovementMethod());
 		// bookView.setTextSize(getResources().getIntArray(R.array.fontSizeArray)[bookFontSize]);
 		if(fileDownloader==null)fileDownloader = new FileDownloader(LamrimReaderActivity.this,downloadListener);
-		if (toast == null)
-			toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+		
 
 		if (subtitleView == null) {
 			subtitleView = (TextView) findViewById(R.id.subtitleView);
+			subtitleView.setTypeface(educFont);
 			subtitleView.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					Log.d(logTag, v
-							+ " been clicked, Show media plyaer control panel.");
+					Log.d(logTag, v	+ " been clicked, Show media plyaer control panel.");
 					if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
 						mpController.showMediaPlayerController(findViewById(R.id.rootLayout));
 				}
 			});
 		}
 
-		if (bookView == null)
+		if (toast == null){
+			toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+			//TextView toastText=new TextView(this);
+			//toastText.setTypeface(educFont);
+			// For show Hard word
+			//toast.setView(toastText);
+		}
+		
+		if (bookView == null){
 			bookView = (ListView) findViewById(R.id.bookPageGrid);
+/*			bookView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					Log.d(logTag, "Book view been clicked, Hide media plyaer control panel if showing.");
+					if (mpController!=null && mpController.isShowing())
+						mpController.hide();
+				}});
+*/		}
 
 		if (progressBar == null) {
 			progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -232,6 +239,11 @@ public class LamrimReaderActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		// The app will restart when screen blank, check is screen blank before play.
+		if(!powerManager.isScreenOn()){
+			Log.d(logTag, "LamrimReaderActivity: onResume: The screen has blank, skip start.");
+			return;
+		}
 		Log.d(logTag,"Into onResume");
 		try {
 			if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED){
@@ -247,6 +259,7 @@ public class LamrimReaderActivity extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+				
 		try {
 			if(mpController.getMediaPlayerState()==MediaPlayerController.MP_PLAYING)
 				mpController.pause();
@@ -292,6 +305,7 @@ public class LamrimReaderActivity extends Activity {
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
+				
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -343,6 +357,26 @@ public class LamrimReaderActivity extends Activity {
 	public void onBackPressed() {
 		Log.d(funcInto, "**** onBackPressed ****");
 
+		AlertDialog.Builder builder = new AlertDialog.Builder(LamrimReaderActivity.this);
+		builder.setMessage("確定關閉程式嗎？");
+		builder.setTitle("關閉提示");
+		
+		builder.setPositiveButton("確定", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				saveRuntime();
+				dialog.dismiss();
+				LamrimReaderActivity.this.finish();
+			}
+		});
+		
+		builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		builder.create().show();
 		// Log.d(logTag,"Check status: playerService="+playerService+", playIntent="+playIntent+", playerBinder="+playerBinder+", playerConn="+mConnection);
 		// saveRuntime();
 
@@ -350,8 +384,7 @@ public class LamrimReaderActivity extends Activity {
 		// !=null){playerService.releasePlayer();playerService.stopSelf();}
 
 		// Log.d(logTag,"Check status: playerService="+playerService+", playIntent="+playIntent+", playerBinder="+playerBinder+", playerConn="+mConnection);
-		saveRuntime();
-		finish();
+		
 		Log.d(funcLeave, "**** onBackPressed ****");
 	}
 
@@ -510,8 +543,8 @@ public class LamrimReaderActivity extends Activity {
 			}
 
 			// / Log.d(logTag, "row=" + row+", ConvertView="+convertView);
-			TheoryPageView bContent = (TheoryPageView) row
-					.findViewById(R.id.pageContentView);
+			TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
+			bContent.setTypeface(educFont);
 			// bContent.drawPoints(new int[0][0]);
 
 			if (bookList == null)

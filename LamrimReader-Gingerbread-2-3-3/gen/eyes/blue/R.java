@@ -10,11 +10,12 @@ package eyes.blue;
 public final class R {
     public static final class array {
         public static final int book=0x7f040000;
-        public static final int duration=0x7f040003;
+        public static final int duration=0x7f040004;
         public static final int fileName=0x7f040001;
-        public static final int fontSizeArray=0x7f040004;
-        public static final int mediaFileSize=0x7f040002;
-        public static final int remoteSite=0x7f040005;
+        public static final int fontSizeArray=0x7f040005;
+        public static final int mediaDesc=0x7f040002;
+        public static final int mediaFileSize=0x7f040003;
+        public static final int remoteSite=0x7f040006;
     }
     public static final class attr {
     }
