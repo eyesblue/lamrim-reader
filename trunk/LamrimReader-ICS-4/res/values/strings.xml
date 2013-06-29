@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, LamrimReaderActivity!</string>
+    <string name="app_name">LamrimReader</string>
+    <string name="isInitKey">isInit</string>
+    <integer name="isInit">0</integer>
+	<string name="bookFontSize">論文</string>
+	<string name="bookFontSizeKey">BookFontSize</string>
+    <string name="subtitleFontSize">字幕</string>
+    <string name="subtitleFontSizeKey">SubtitleFontSize</string>
+    <string name="selectMenu">選擇章節</string>
+    <string name="selectFromTheoryMenu">從科判</string>
+    <string name="selectFromSpeechMenu">從錄音</string>
+    <string name="showCtrlPanel">設定</string>
+    <string name="showAbout">關於</string>
+    <string name="runtimeStateFile">runtime</string>
+<!--     <string name="optionFile">options</string>  -->
+	<integer name="defBookFontSize">1</integer>
+    <integer name="defSubtitleFontSize">1</integer>
+    <integer name="subtitleMonInterval">100</integer>
+    <string name="setupFontSizeStr">設定字型大小</string>
+    <string name="setupTextSizeSample">廣論</string>
+    <string name="appModeKey">AppMode</string>
+    <integer name="defAppMode">0</integer>
+    <string name="normalModeDesc">一般模式</string>
+    <string name="readingModeDesc">閱讀模式</string>
+    <string name="tvModeDesc">電視模式</string>
+    <integer name="NORMAL_MODE">0</integer>
+    <integer name="READING_MODE">1</integer>
+    <integer name="TV_MODE">2</integer>
+	<string name="mediaCheckSum">false</string>
+    
+    <integer-array name="fontSizeArray">
+        <item>12</item>
+        <item>18</item>
+        <item>24</item>
+        <item>32</item>
+        <item>40</item>
+        <item>48</item>
+        <item>56</item>
+        <item>64</item>
+    </integer-array>
+    <string-array name="remoteSite">
+        <item>https://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/</item>
+    </string-array>
+    <string name="appExtMemDirName">LamrimReaderTemp</string>
+    <string name="downloadFail">下載資源失敗，請確認您所在區域的網路品質是否正常</string>
+    <string name="downloadingDesc">資源下載中，請稍候</string>
+    <string name="prepareSubtitleDesc">字幕準備中，請稍候</string>
+    <string name="prepareSpeechDesc">音檔準備中，請稍候</string>
+    <string name="mpControllerHint">請點選此處顯示撥放選單</string>
+    <string name="mpControllerNoSubtitleHint">尚無字幕，請點選此處顯示撥放選單</string>
+    
+    <integer name="downloadBufferSize">16384</integer>
+    <string name="audioDirName">Audio</string>
+    <string name="subtitleDirName">Subtitle</string>
+    <string name="theoryDirName">Theory</string>
+    <string name="searchingType">searchingTyep</string>
+    <integer name="PLAY_FROM_MEDIA">0</integer>
+    <integer name="PLAY_FROM_THEORY">1</integer>
+    <string name="defMediaType">MP3</string>
+    <string name="defSubtitleType">SRT</string>
+    <string name="defTheoryType">TXT</string>
+    <string name="noSubtitleDesc">無字幕</string>
+    
+    <string name="enablePlayerKey">EnablePlayer</string>
+    <string name="runtimeNormalPlayerState">normalModePlayingState</string>
+    <string name="runtimeNormalPlayingIndex">normalModePlayingIndex</string>
+    <string name="runtimeNormalPlayingPosition">normalModePlayingPosition</string>
+    <string name="runtimeNormalTheoryTop">normalModeTheoryTop</string>
+    <string name="runtimeNormalTheoryShift">normalModeTheoryShift</string>
+    
+    <string name="runtimeReadingTheoryTop">readingModeTheoryTop</string>
+    <string name="runtimeReadingTheoryShift">readingModeTheoryShift</string>
+    
+    <string name="runtimeTvPlayerState">tvModePlayingState</string>
+    <string name="runtimeTvPlayingIndex">tvModePlayingIndex</string>
+    <string name="runtimeTvPlayingPosition">tvModePlayingPosition</string>
+    
+    <string name="selectIndexFromMenuDesc">請從選單選擇章節或錄音</string>
+    <string name="soundInUseError">音效裝置被其他軟體佔用中</string>
+    <string name="newMediaTarget">NewMediaTarget</string>
+    <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
+    <integer name="MEDIA_TYPE">0</integer>
+    <integer name="SUBTITLE_TYPE">1</integer>
+    <integer name="THEORY_TYPE">2</integer>
+	<string name="DL_TMP_PREFIX">DLtmp_</string>
+	<integer name="DL_WAIT_TIME">12000</integer>
+	<string name="aboutDesc"><![CDATA[<br>廣論為宗喀巴大師所造，本App內容為<small>上</small>日<small>下</small>常法師講譯的內容。本App內容若有錯誤的部份，請至<a href="https://lamrimreader.eyes-blue.com/">本計畫網站</a>反應，也歡迎各界人士發心加入字幕標記的工作。</br><br></br><br>指導：馮垂中</br><br>計畫主持：李嵩興</br><br>字幕編輯：</br><br>陳冠今</br><br>林信宏</br><br>楊伯翰</br><br>謝宗榮</br><br>謝杭霖</br><br>林政由</br><br>古登云</br><br>尤冠人</br><br>劉穎南</br><br>黃仁甫</br><br>陳悅其</br><br>黃逸平</br><br>吳采柔</br><br>楊雅清</br><br>林鴻志</br><br>黃子淇</br>]]></string>
+
+</resources>
