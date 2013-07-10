@@ -1,5 +1,6 @@
 package eyes.blue;
 
+
 import android.app.Activity;
 
 import android.content.Intent;
@@ -19,8 +20,7 @@ public class OptCtrlPanel extends Activity {
 	SeekBar bookFontSizeBar=null;
 	SeekBar subtitleFontSizeBar=null;
 	TextView sizeSample=null;
-	int defBookFontSize=R.integer.defBookFontSize;
-	int[] fontSizeArray=null;
+//	int[] fontSizeArray=null;
 	
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
@@ -29,14 +29,14 @@ public class OptCtrlPanel extends Activity {
 		bookFontSizeBar=((SeekBar)findViewById(R.id.bookFontSize));
 		subtitleFontSizeBar=((SeekBar)findViewById(R.id.subtitleFontSize));
 		sizeSample=(TextView) findViewById(R.id.setupTextSizeSample);
-		fontSizeArray=getResources().getIntArray(R.array.fontSizeArray);
+//		fontSizeArray=getResources().getIntArray(R.array.fontSizeArray);
 		FontSizeIndicator indicator=new FontSizeIndicator((TextView) findViewById(R.id.textSizeIndicator));
 		
 		bookFontSizeKey=getString(R.string.bookFontSizeKey);
 		subtitleFontSizeKey=getString(R.string.subtitleFontSizeKey);
-		bookFontSizeBar.setMax(fontSizeArray.length-1);
+		bookFontSizeBar.setMax(getResources().getInteger(R.integer.bookFontSizeMax));
 		bookFontSizeBar.setOnSeekBarChangeListener(indicator);
-		subtitleFontSizeBar.setMax(fontSizeArray.length-1);
+		subtitleFontSizeBar.setMax(getResources().getInteger(R.integer.bookFontSizeMax));
 		subtitleFontSizeBar.setOnSeekBarChangeListener(indicator);
 		
 	}
@@ -46,13 +46,14 @@ public class OptCtrlPanel extends Activity {
 		
 		// Reload last options.
 		// Get options
-		int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
-        bookFontSize=options.getInt(bookFontSizeKey, bookFontSize);
-        int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
-        subtitleFontSize=options.getInt(subtitleFontSizeKey, subtitleFontSize);
+		int defBookFontSize=getResources().getInteger(R.integer.defBookFontSize);
+        int runtimeBookFontSize=options.getInt(bookFontSizeKey, defBookFontSize);
+        int defSubtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
+        int subtitleFontSize=options.getInt(subtitleFontSizeKey, defSubtitleFontSize);
         
+        Log.d(logTag,"Get book font size: def="+defBookFontSize+", runtime="+runtimeBookFontSize+", subtitle font size: def="+defSubtitleFontSize+", runtime="+subtitleFontSize);
         // Set options
-        bookFontSizeBar.setProgress(bookFontSize);
+        bookFontSizeBar.setProgress(runtimeBookFontSize);
         subtitleFontSizeBar.setProgress(subtitleFontSize);
     }
 	
@@ -60,14 +61,14 @@ public class OptCtrlPanel extends Activity {
 //		super.onBackPressed();
 		System.out.println("Into back pressed!!");
 		
-		int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
-        bookFontSize=options.getInt(bookFontSizeKey, bookFontSize);
-        int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
-        subtitleFontSize=options.getInt(subtitleFontSizeKey, subtitleFontSize);
+//		int bookFontSize=getResources().getInteger(R.integer.defBookFontSize);
+//        bookFontSize=options.getInt(bookFontSizeKey, bookFontSize);
+//        int subtitleFontSize=getResources().getInteger(R.integer.defSubtitleFontSize);
+//        subtitleFontSize=options.getInt(subtitleFontSizeKey, subtitleFontSize);
         
         int uiBookFontSize=bookFontSizeBar.getProgress();
         int uiSubtitleFontSize=subtitleFontSizeBar.getProgress();
-        Log.d(logTag,"Get book font size: "+bookFontSize+", subtitle font size: "+uiSubtitleFontSize);
+        Log.d(logTag,"Get book font size: "+uiBookFontSize+", subtitle font size: "+uiSubtitleFontSize);
         
 /*        SharedPreferences.Editor editor =options.edit();
         if(bookFontSize!=uiBookFontSize)
@@ -99,7 +100,7 @@ public class OptCtrlPanel extends Activity {
 			Log.d(logTag,"Change progress to "+progress);
 			runOnUiThread(new Runnable() {
 				public void run() {
-					tv.setTextSize(fontSizeArray[progress]);
+					tv.setTextSize(progress);
 				}});
 		}
 

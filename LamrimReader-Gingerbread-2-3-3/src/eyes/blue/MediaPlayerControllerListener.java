@@ -20,4 +20,11 @@ public class MediaPlayerControllerListener {
 	 * Call on media prepared.
 	 * */
 	public void onMediaPrepared(){}
+	
+	public void startRegionSeted(SubtitleElement subtitle){}
+	public void startRegionDeset(SubtitleElement subtitle){}
+	public void endRegionSeted(SubtitleElement subtitle){}
+	public void endRegionDeset(SubtitleElement subtitle){}
+	public void startRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){}
+	public void stopRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){}
 }
