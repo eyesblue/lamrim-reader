@@ -158,6 +158,10 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * */
 	@Override
 	public void start() {
+		// It will play mp3 in Android 4.1 while screen blank. this line solve the problem
+		// Not tested.
+		if(!powerManager.isScreenOn())return;
+		
 		if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(true);
