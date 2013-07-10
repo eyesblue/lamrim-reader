@@ -5,10 +5,11 @@
     android:layout_height="fill_parent"
     android:gravity="fill"
     android:orientation="vertical" >
-<!--android:screenOrientation="landscape" -->    	
+<!--android:screenOrientation="landscape" -->    	
+
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView1"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:layout_gravity="center"
         android:layout_weight="1"
@@ -17,39 +18,21 @@
 
     <ListView
         android:id="@+id/bookPageGrid"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:stretchMode="columnWidth"
-        android:layout_weight="0" >
+        android:layout_weight="0"
+        android:stretchMode="columnWidth" >
+
     </ListView>
     </HorizontalScrollView>
-
+
             <TextView
                 android:id="@+id/subtitleView"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
                 android:layout_weight="0"
                 android:gravity="center"
                 android:text="@string/app_name"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <LinearLayout
-                android:id="@+id/audioPanel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_weight="0"
-                android:gravity="center"
-                android:orientation="vertical" >
-
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone" />
-				
-        </LinearLayout>
 
 </LinearLayout>

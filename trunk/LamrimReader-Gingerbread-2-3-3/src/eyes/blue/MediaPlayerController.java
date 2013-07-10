@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.SystemClock;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -22,9 +24,10 @@ import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.PowerManager;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.MediaController;
+import android.widget.Toast;
 import android.widget.MediaController.MediaPlayerControl;
 /*
  * The class maintain the MediaPlayer, MediaPlayController and subtitle. There are many stage of MediaPlayer while play media, all stage maintain in the class, call functions of this function Instead of the functions of MediaPlayer,
@@ -49,9 +52,14 @@ public class MediaPlayerController implements MediaPlayerControl {
 	MediaPlayerControllerListener changedListener=null;
 	private SubtitleElement[] subtitle = null;
 	Object playingIndexKey=new Object();
+//	FileInputStream fis = null;
 	int playingIndex=-2;
 //	long monInterval=100;
+	Toast toast = null;
 	
+	boolean isPlayRegion = false;
+	int regionStart = -1;
+	int regionEnd = -1;
 	/*
 	 * Give The constructor the Activity and changedListener for build object. You can change the LamrimReaderActivity to your activity and modify the code of UI control to meet your logic. 
 	 * */
@@ -62,32 +70,22 @@ public class MediaPlayerController implements MediaPlayerControl {
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
 		this.changedListener=changedListener;
 		
+		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
 //		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
 		mediaPlayer.setOnPreparedListener(onPreparedListener);
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 			@Override
 			public boolean onError(MediaPlayer arg0, int arg1, int arg2) {
 				Log.d(logTag, "Error happen while play media");
-				try {
 					// 发生错误时也解除资源与MediaPlayer的赋值*
 					// mp.release();
 					// tv.setText("播放发生异常!");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 				return false;
 			}
 		});
 	}
 	
-	public boolean isShowing(){
-		if(mediaController==null)return false;
-		return mediaController.isShowing();
-	}
-	
-	public void hide(){
-		mediaController.hide();
-	}
 // =============== Function implements of MediaPlayercontroller =================
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
@@ -109,14 +107,50 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * */
 	@Override
 	public void seekTo(int pos) {
-		if(mpState>=MP_PREPARED){
+		Log.d(logTag,"SeekTo function been call.");
+		if(mpState<MP_PREPARED)return;
+		
+		if(subtitle==null){
 			mediaPlayer.seekTo(pos);
-			if(subtitle!=null){
-				int playArrayIndex=subtitleBSearch(subtitle, pos);
-				if(playArrayIndex==-1)changedListener.startMoment();
-				else changedListener.onSeek(subtitle[playArrayIndex]);
-			}
+			return;
 		}
+		
+		// Check is the seek event is fire by Rewind/Forward button
+		int shiftTime=pos-mediaPlayer.getCurrentPosition();
+		if(Math.abs(shiftTime)<15050){
+			int currentIndex;
+			synchronized(playingIndexKey){
+				currentIndex=playingIndex;
+			}
+			
+			// The seek is fire by button
+			if(shiftTime>0)
+				currentIndex++;
+			else currentIndex--;
+			
+			if(currentIndex<0){changedListener.startMoment();return;}
+			else if(currentIndex>subtitle.length-1)return;
+			
+			playingIndex=currentIndex;
+		}
+		else {
+			// The seek event is not fire by button
+			int index=subtitleBSearch(subtitle, pos);
+			if(index<0){
+				changedListener.startMoment();
+				mediaPlayer.seekTo(pos);
+				return;
+				}
+			else if(index>subtitle.length-1){
+				mediaPlayer.seekTo(pos);
+				return;
+			}
+			playingIndex=index;
+		}
+		
+		mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
+		changedListener.onSeek(subtitle[playingIndex]);
+		changedListener.onSubtitleChanged(subtitle[playingIndex]);
 	}
 	
 	/*
@@ -124,21 +158,22 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * */
 	@Override
 	public void start() {
-		if(!wakeLock.isHeld()){
-			Log.d(logTag,"Play media and Lock screen.");
-			wakeLock.acquire();
-		}
-		
+		if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(true);
 			subtitleTimer=null;
 		}
 		if(subtitle!=null){
-			Log.d(getClass().getName(),"The subtitle is not null, prepare subtitle timer.");
+			Log.d(getClass().getName(),"The subtitle exist, prepare subtitle timer.");
 			subtitleTimer = new SubtitleTimer();
 			subtitleTimer.execute(subtitle);
 		}
-			
+		
+		if(isPlayRegion && regionStart != -1 && regionEnd != -1){
+			mediaPlayer.seekTo(subtitle[regionStart].startTimeMs);
+			changedListener.startRegionPlay(subtitle[regionStart],subtitle[regionEnd]);
+		}
+		
 		synchronized(mediaPlayer){
 			mediaPlayer.start();
 			mpState=MP_PLAYING;
@@ -215,6 +250,8 @@ public class MediaPlayerController implements MediaPlayerControl {
 			mediaPlayer.reset();
 			mpState=MP_IDLE;
 		}
+		isPlayRegion=false;
+		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
@@ -227,37 +264,50 @@ public class MediaPlayerController implements MediaPlayerControl {
 			mediaPlayer.release();
 			mpState=MP_IDLE;
 		}
+		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	/*
 	 * Return is the subtitle ready.
 	 * */
 	public boolean isSubtitleReady(){
-		if(subtitle==null)return false;
-		return true;
+		return (subtitle!=null);
 	}
 	/*
 	 * Set data source of MediaPlayer, and parse the file of subtitle if exist.
 	 * */
 	public void setDataSource(Context context,int index) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException{
 		final File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
+		File speechFile=FileSysManager.getLocalMediaFile(index);
 		
-		if(subtitleFile.exists()){
-			Log.d(getClass().getName(),"The subtitle file exist, prepare the subtitle elements.");
-			new Thread(new Runnable(){
-				@Override
-				public void run() {
-					subtitle = loadSubtitle(subtitleFile);
-					if(subtitle.length==0)subtitle=null;
-				}}).run();
-		}else {
-			Log.d(getClass().getName(),"The subtitle file not exist, set the subtitle null.");
-			subtitle=null;
+		if(speechFile==null || !speechFile.exists()){
+			Log.d(getClass().getName(),"setDataSource: The speech file not exist, skip!!!");
+			return;
 		}
 		
+
 		synchronized(mediaPlayer){
-			mediaPlayer.setDataSource(context, Uri.fromFile(FileSysManager.getLocalMediaFile(index)));
+			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
+			//mediaPlayer.setDataSource(fis.getFD());
 			mpState=MP_INITED;
 		}
+		
+		
+		if( subtitleFile==null ||  !subtitleFile.exists()){
+			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
+			subtitle=null;
+			return;
+		}
+			
+		Log.d(getClass().getName(),"The subtitle file exist, prepare the subtitle elements.");
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				subtitle = loadSubtitle(subtitleFile);
+				if(subtitle.length==0)subtitle=null;
+		}}).run();
+
+		
+		
 	}
 	
 	/*
@@ -278,6 +328,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * Show the floating player bar on activity, given the rootView of Activity.
 	 * */
 	synchronized public void showMediaPlayerController(View rootView) {
+	//synchronized public void showMediaPlayerController(Activity rootView) {
 		if (activity.isFinishing()) {
 			Log.d(logTag,"The activity not prepare yet, skip show media controller.");
 			return;
@@ -289,24 +340,12 @@ public class MediaPlayerController implements MediaPlayerControl {
 
 		mediaController = new MediaController(activity);
 		mediaController.setMediaPlayer(this);
-		
 		mediaController.setPrevNextListeners(
 				// Next button hit.
 				new View.OnClickListener(){
 					@Override
 					public void onClick(View v) {
-						synchronized(playingIndexKey){
-							int index=playingIndex+1;
-						
-							// if the index over index of subtitle, do nothing.
-							if(index>subtitle.length-1)return;
-						
-							playingIndex=index;
-							seekTo(subtitle[playingIndex].startTimeMs);
-							changedListener.onSeek(subtitle[playingIndex]);
-							changedListener.onSubtitleChanged(subtitle[playingIndex]);
-							mediaController.show();
-						}
+						onNextClick();
 					}}
 				,
 				// Prev button hit.
@@ -314,18 +353,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 
 					@Override
 					public void onClick(View v) {
-						synchronized(playingIndexKey){
-							int index=playingIndex-1;
-						
-							// if the index over index of subtitle, do nothing.
-							if(index<0){changedListener.startMoment();return;}
-						
-							playingIndex=index;
-							seekTo(subtitle[playingIndex].startTimeMs);
-							changedListener.onSeek(subtitle[playingIndex]);
-							changedListener.onSubtitleChanged(subtitle[playingIndex]);
-							mediaController.show();
-						}
+						onPreviousClick();
 					}}
 		);
 		mediaController.setAnchorView(rootView);
@@ -338,15 +366,99 @@ public class MediaPlayerController implements MediaPlayerControl {
 		});
 	}
 	
+	// ================================ Functions for region play ================================
+	private void onPreviousClick(){
+		if(subtitle==null)return;
+		// Set or deSet
+		if(regionStart!=-1){
+			changedListener.startRegionDeset(subtitle[regionStart]);
+			regionStart=-1;
+			isPlayRegion = false;
+			return;
+		}
+		if(regionEnd!=-1 && playingIndex>regionEnd){
+			//showToastMsg("標記錯誤，開始標記小於結束標記");
+			Log.d(logTag,"User operation error: the region start < region end!");
+			return;
+		}
+			
+		int currentIndex;
+		synchronized(playingIndexKey){
+			currentIndex=playingIndex;
+		}
+		if(currentIndex<0)currentIndex=0;
+		if(currentIndex>subtitle.length-1)currentIndex=subtitle.length-1;
+		
+		regionStart=currentIndex;
+		if(regionStart != -1 && regionEnd != -1)isPlayRegion = true;
+		changedListener.startRegionSeted(subtitle[regionStart]);
+	}
+	
+	/*
+	 * 
+	 * 
+	 * */
+	private void onNextClick(){
+		if(subtitle==null)return;
+		// Set or deSet
+		if(regionEnd!=-1){
+			changedListener.endRegionDeset(subtitle[regionEnd]);
+			regionEnd=-1;
+			isPlayRegion = false;
+			//showToastMsg("已取消標記");
+			return;
+		}
+		if(regionStart!=-1 && playingIndex<regionStart){
+			//showToastMsg("標記錯誤，結束標記大於開始標記");
+			Log.d(logTag,"User operation error: the region end  < region start !");
+			return;
+		}
+		
+		int currentIndex;
+		synchronized(playingIndexKey){
+			currentIndex=playingIndex;
+		}
+		if(currentIndex<0)currentIndex=0;
+		if(currentIndex>subtitle.length-1)currentIndex=subtitle.length-1;
+		
+		regionEnd=currentIndex;
+		if(regionStart != -1 && regionEnd != -1)isPlayRegion = true;
+		//showToastMsg("已設定標記");
+		changedListener.endRegionSeted(subtitle[regionEnd]);
+	}
+	
+	public void setPlayRegion(boolean b){
+		isPlayRegion=b;
+		if(!b){
+			regionStart=-1;
+			regionEnd=-1;
+			isPlayRegion = false;
+		}
+	}
+	
+	public boolean isPlayRegion(){return isPlayRegion;}
+	public void setPlayRegion(int start,int end){
+		regionStart=start;
+		regionEnd=end;
+	}
+	
+	// ===========================================================================================
+	
+	public void showToastMsg(final String s){
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				toast.setText(s);
+				toast.show();
+			}
+		});
+	}
+	
 	final protected OnPreparedListener onPreparedListener = new OnPreparedListener() {
 		public void onPrepared(MediaPlayer mp) {
 			Log.d(getClass().getName(), "**** Into onPreparedListener of MediaPlayer ****");
 			synchronized(mediaPlayer){
 				mpState = MP_PREPARED;
 			}
-			
-			if (!wakeLock.isHeld())
-				wakeLock.acquire();
 			
 			AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 			int result = audioManager.requestAudioFocus(
@@ -372,18 +484,18 @@ public class MediaPlayerController implements MediaPlayerControl {
 			switch (focusChange) {
 			// Gaint the audio device
 			case AudioManager.AUDIOFOCUS_GAIN:
-				if (getCurrentPosition() > 0)
+				/*if (getCurrentPosition() > 0)
 					try {
 						start();
 					} catch (IllegalStateException e) {
 						e.printStackTrace();
 					}
+				*/
 				// mpController.start();
 				break;
 			// lost audio focus long time, release resource here.
 			case AudioManager.AUDIOFOCUS_LOSS:
-				Log.d("onAudioFocusChange",
-						"Loss of audio focus of unknown duration.");
+				Log.d("onAudioFocusChange",	"Loss of audio focus of unknown duration.");
 				try {
 					pause();
 				} catch (IllegalStateException e) {
@@ -433,6 +545,13 @@ public class MediaPlayerController implements MediaPlayerControl {
 						int playPoint=mediaPlayer.getCurrentPosition();
 						int playArrayIndex=subtitleBSearch(se, playPoint);
 						
+						// Play region function has set, and over the region, stop play.
+						if(isPlayRegion && regionStart != -1 && regionEnd != -1 && playArrayIndex > regionEnd){
+							pause();
+							changedListener.stopRegionPlay(subtitle[regionStart], subtitle[regionEnd]);
+							return null;
+						}
+						
 						if(playingIndex!=playArrayIndex){
 							playingIndex=playArrayIndex;
 							if(playArrayIndex==-1){changedListener.startMoment();}
@@ -443,7 +562,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 					//if(playArrayIndex==se.length-1)return null;
 					
 					Thread.sleep(monInterval);
-
+					if(this.isCancelled())return null;
 					
 					}catch(IllegalStateException e) {
 						e.printStackTrace();
@@ -455,6 +574,8 @@ public class MediaPlayerController implements MediaPlayerControl {
 				}
 		}
 	}
+	
+	
 		private static SubtitleElement[] loadSubtitle(File file) {
 		ArrayList<SubtitleElement> subtitleList = new ArrayList<SubtitleElement>();
 		try {
@@ -484,24 +605,41 @@ public class MediaPlayerController implements MediaPlayerControl {
 
 				// This may find the time description
 				else if (step == 1) {
-					if (stemp
-							.matches("[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} +-+> +[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}")) {
+					if (stemp.matches("[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} +-+> +[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}")) {
+						String[] region=stemp.split(" +-+> +");
+						region[0]=region[0].trim();
+						region[1]=region[1].trim();
 						// System.out.println("Get time string: "+stemp);
-						int startTimeMs;
-						String ts = stemp.substring(0, 2);
+						int timeMs;
+						
+						String ts = region[0].substring(0, 2);
 						// System.out.println("Hour: "+ts);
-						startTimeMs = Integer.parseInt(ts) * 3600000;
-						ts = stemp.substring(3, 5);
+						timeMs = Integer.parseInt(ts) * 3600000;
+						ts = region[0].substring(3, 5);
 						// System.out.println("Min: "+ts);
-						startTimeMs += Integer.parseInt(ts) * 60000;
-						ts = stemp.substring(6, 8);
+						timeMs += Integer.parseInt(ts) * 60000;
+						ts = region[0].substring(6, 8);
 						// System.out.println("Sec: "+ts);
-						startTimeMs += Integer.parseInt(ts) * 1000;
-						ts = stemp.substring(9, 12);
+						timeMs += Integer.parseInt(ts) * 1000;
+						ts = region[0].substring(9, 12);
 						// System.out.println("Sub: "+ts);
-						startTimeMs += Integer.parseInt(ts);
+						timeMs += Integer.parseInt(ts);
 						// System.out.println("Set time: "+startTimeMs);
-						se.startTimeMs = startTimeMs;
+						se.startTimeMs = timeMs;
+						
+						ts = region[1].substring(0, 2);
+						// System.out.println("Hour: "+ts);
+						timeMs = Integer.parseInt(ts) * 3600000;
+						ts = region[1].substring(3, 5);
+						// System.out.println("Min: "+ts);
+						timeMs += Integer.parseInt(ts) * 60000;
+						ts = region[1].substring(6, 8);
+						// System.out.println("Sec: "+ts);
+						timeMs += Integer.parseInt(ts) * 1000;
+						ts = region[1].substring(9, 12);
+						// System.out.println("Sub: "+ts);
+						timeMs += Integer.parseInt(ts);
+						se.endTimeMs = timeMs;
 						step = 2;
 					} else {
 						// System.err.println("Find a bad format subtitle element at line "+lineCounter+": Serial: "+serial+", Time: "+stemp);
@@ -575,5 +713,25 @@ public class MediaPlayerController implements MediaPlayerControl {
 		return -1;
 	}
 	
+	private String getMsToHMS(int ms){
+		String sub=""+(ms%1000);
+		if(sub.length()==1)sub="00"+sub;
+		else if(sub.length()==2)sub="0"+sub;
 	
+		int second=ms/1000;
+		int ht=second/3600;
+		second=second%3600;
+		int mt=second/60;
+		second=second%60;
+	
+		String hs=""+ht;
+		if(hs.length()==1)hs="0"+hs;
+		String mst=""+mt;
+		if(mst.length()==1)mst="0"+mst;
+		String ss=""+second;
+		if(ss.length()==1)ss="0"+ss;
+	
+//	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
+		return mst+'分'+ss+"."+sub+'秒';
+	}
 }

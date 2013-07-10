@@ -81,9 +81,9 @@ public class Util {
 		long sum = checksum.getValue();
 		boolean isCorrect=(crc32==sum);
 		int spend=(int) (System.currentTimeMillis()-startTime);
-		Log.d(logTag,"Utility Check file: File index: "+file.getAbsolutePath()+", length: "+file.length()+", CRC32 check: "+((isCorrect)?" Correct!":" Error!"+" ("+sum+"/"+crc32)+"), spend time: "+spend+"ms");
+		Log.d(logTag,"CRC Check result: "+((isCorrect)?"Correct!":"Incorrect!")+", ( Sum="+sum+", record="+crc32+"), length: "+file.length()+", spend time: "+spend+"ms, File path: "+file.getAbsolutePath());
 		return isCorrect;
-	   }
+	}
 	
 	public static SubtitleElement[] loadSubtitle(File file) {
 		ArrayList<SubtitleElement> subtitleList = new ArrayList<SubtitleElement>();

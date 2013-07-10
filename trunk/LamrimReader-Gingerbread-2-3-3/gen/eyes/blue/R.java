@@ -10,135 +10,249 @@ package eyes.blue;
 public final class R {
     public static final class array {
         public static final int book=0x7f040000;
-        public static final int duration=0x7f040004;
-        public static final int fileName=0x7f040001;
-        public static final int fontSizeArray=0x7f040005;
-        public static final int mediaDesc=0x7f040002;
-        public static final int mediaFileSize=0x7f040003;
-        public static final int remoteSite=0x7f040006;
+        public static final int desc=0x7f040001;
+        public static final int duration=0x7f040003;
+        public static final int mediaFileSize=0x7f040002;
+        public static final int remoteSite=0x7f040004;
     }
     public static final class attr {
+    }
+    public static final class color {
+        public static final int gray=0x7f080000;
+    }
+    public static final class dimen {
+        /**  Default screen margins, per the Android Design guidelines. 
+         */
+        public static final int activity_horizontal_margin=0x7f050000;
+        public static final int activity_vertical_margin=0x7f050001;
     }
     public static final class drawable {
         public static final int btn_off=0x7f020000;
         public static final int btn_on=0x7f020001;
-        public static final int ic_launcher=0x7f020002;
-        public static final int type_off=0x7f020003;
-        public static final int type_on=0x7f020004;
-        public static final int ui_bg=0x7f020005;
+        public static final int file=0x7f020002;
+        public static final int folder=0x7f020003;
+        public static final int ic_launcher=0x7f020004;
+        public static final int info_icon=0x7f020005;
+        public static final int open=0x7f020006;
+        public static final int speech=0x7f020007;
+        public static final int subtitle=0x7f020008;
+        public static final int type_off=0x7f020009;
+        public static final int type_on=0x7f02000a;
+        public static final int ui_bg=0x7f02000b;
     }
     public static final class id {
-        public static final int BookFontSizeDesc=0x7f08000c;
-        public static final int aboutTextContent=0x7f080001;
-        public static final int aboutTextTitle=0x7f080000;
-        public static final int audioPanel=0x7f080006;
-        public static final int bookFontSize=0x7f08000d;
-        public static final int bookPageGrid=0x7f080004;
-        public static final int horizontalScrollView1=0x7f080003;
-        public static final int linearLayout1=0x7f08000b;
-        public static final int linearLayout2=0x7f08000e;
-        public static final int linearLayout7=0x7f080009;
-        public static final int list=0x7f080012;
-        public static final int pageContentView=0x7f080015;
-        public static final int pageNumView=0x7f080016;
-        public static final int progressBar=0x7f080007;
-        public static final int rootLayout=0x7f080002;
-        public static final int scrollView7=0x7f080008;
-        public static final int selectChapter=0x7f080017;
-        public static final int setupTextSizeSample=0x7f08000f;
-        public static final int showAbout=0x7f080019;
-        public static final int showCtrlPanel=0x7f080018;
-        public static final int speechDesc=0x7f080014;
-        public static final int speechTitle=0x7f080013;
-        public static final int subtitleFontSize=0x7f080010;
-        public static final int subtitleView=0x7f080005;
-        public static final int textSizeIndicator=0x7f080011;
-        public static final int textView4=0x7f08000a;
+        public static final int BookFontSizeDesc=0x7f090019;
+        public static final int RelativeLayout1=0x7f090024;
+        public static final int ScrollView1=0x7f09002e;
+        public static final int TextView01=0x7f090042;
+        public static final int TextView02=0x7f090050;
+        public static final int TextView03=0x7f090040;
+        public static final int aboutTextContent=0x7f090001;
+        public static final int aboutTextTitle=0x7f090000;
+        public static final int bookFontSize=0x7f09001a;
+        public static final int bookPageGrid=0x7f090011;
+        public static final int btnChoicePath=0x7f09004f;
+        public static final int btnDelExtFiles=0x7f090045;
+        public static final int btnDelIntFiles=0x7f090047;
+        public static final int btnDownloadAll=0x7f09001f;
+        public static final int btnMaintain=0x7f090020;
+        public static final int btnManageStorage=0x7f090021;
+        public static final int btnMoveAllToExt=0x7f090044;
+        public static final int btnMoveAllToInt=0x7f090046;
+        public static final int btnOk=0x7f090052;
+        public static final int dlgSrcManageDlgCancel=0x7f09002d;
+        public static final int dlgSrcManageDlgDel=0x7f09002c;
+        public static final int dlgSrcManageDlgPlay=0x7f09002a;
+        public static final int dlgSrcManageDlgUpdate=0x7f09002b;
+        public static final int extAppUsagePercent=0x7f090037;
+        public static final int extAppUseage=0x7f090041;
+        public static final int extFree=0x7f09003c;
+        public static final int extFreePercent=0x7f090017;
+        public static final int extUsageText=0x7f090032;
+        public static final int fdButtonCancel=0x7f09000a;
+        public static final int fdButtonCreate=0x7f09000b;
+        public static final int fdButtonNew=0x7f090005;
+        public static final int fdButtonSelect=0x7f090006;
+        public static final int fdEditTextFile=0x7f090009;
+        public static final int fdLinearLayoutCreate=0x7f090007;
+        public static final int fdLinearLayoutList=0x7f090003;
+        public static final int fdLinearLayoutSelect=0x7f090004;
+        public static final int fdrowimage=0x7f09000d;
+        public static final int fdrowtext=0x7f09000e;
+        public static final int fieldPathInput=0x7f09004e;
+        public static final int horizontalScrollView1=0x7f090010;
+        public static final int imageView=0x7f090056;
+        public static final int intAppUsagePercent=0x7f090039;
+        public static final int intAppUseage=0x7f090043;
+        public static final int intFree=0x7f09003e;
+        public static final int intFreePercent=0x7f090034;
+        public static final int intUsageText=0x7f090033;
+        public static final int labelChoicePath=0x7f09004d;
+        public static final int layout_root=0x7f090013;
+        public static final int linearLayout1=0x7f090018;
+        public static final int linearLayout2=0x7f09001b;
+        public static final int linearLayout7=0x7f090016;
+        public static final int list=0x7f090022;
+        public static final int mediaSign=0x7f090028;
+        public static final int pageContentView=0x7f090053;
+        public static final int pageNumView=0x7f090054;
+        public static final int path=0x7f09000c;
+        public static final int radioAutoMgnStorage=0x7f09004a;
+        public static final int radioMgnType=0x7f090049;
+        public static final int radioUserMgnStorage=0x7f09004b;
+        public static final int relativeLayout01=0x7f090002;
+        public static final int rootLayout=0x7f09000f;
+        public static final int rootView=0x7f090023;
+        public static final int scrollView7=0x7f090015;
+        public static final int setupTextSizeSample=0x7f09001c;
+        public static final int skip=0x7f090014;
+        public static final int speechDesc=0x7f090027;
+        public static final int subject=0x7f090025;
+        public static final int subtitleFontSize=0x7f09001d;
+        public static final int subtitleSign=0x7f090029;
+        public static final int subtitleView=0x7f090012;
+        public static final int tableRow1=0x7f090031;
+        public static final int tableRow2=0x7f090035;
+        public static final int tableRow3=0x7f09003a;
+        public static final int tableRow4=0x7f09003f;
+        public static final int text=0x7f090057;
+        public static final int textSizeIndicator=0x7f09001e;
+        public static final int textView=0x7f09002f;
+        public static final int textView2=0x7f090030;
+        public static final int textView3=0x7f090051;
+        public static final int textView4=0x7f090038;
+        public static final int textView5=0x7f090036;
+        public static final int textView6=0x7f09003b;
+        public static final int textView8=0x7f090048;
+        public static final int textView9=0x7f09003d;
+        public static final int textViewFilename=0x7f090008;
+        public static final int title=0x7f090026;
+        public static final int toastLayout=0x7f090055;
+        public static final int userAsignRow=0x7f09004c;
     }
     public static final class integer {
-        public static final int DL_WAIT_TIME=0x7f06000e;
-        public static final int MEDIA_TYPE=0x7f06000b;
-        public static final int NORMAL_MODE=0x7f060005;
-        public static final int PLAY_FROM_MEDIA=0x7f060009;
-        public static final int PLAY_FROM_THEORY=0x7f06000a;
-        public static final int READING_MODE=0x7f060006;
-        public static final int SUBTITLE_TYPE=0x7f06000c;
-        public static final int THEORY_TYPE=0x7f06000d;
-        public static final int TV_MODE=0x7f060007;
-        public static final int defAppMode=0x7f060004;
-        /**      <string name="optionFile">options</string>  
+        public static final int MEDIA_TYPE=0x7f070007;
+        public static final int SUBTITLE_TYPE=0x7f070008;
+        public static final int THEORY_TYPE=0x7f070009;
+        /**  Default Value 
          */
-        public static final int defBookFontSize=0x7f060001;
-        public static final int defSubtitleFontSize=0x7f060002;
-        public static final int downloadBufferSize=0x7f060008;
-        public static final int isInit=0x7f060000;
-        public static final int subtitleMonInterval=0x7f060003;
+        public static final int bookFontSizeMax=0x7f070001;
+        public static final int bookFontSizeMin=0x7f070002;
+        public static final int defBookFontSize=0x7f070003;
+        public static final int defSubtitleFontSize=0x7f070004;
+        public static final int downloadBufferSize=0x7f070006;
+        public static final int isInit=0x7f070000;
+        /**  FileSysManager 
+         */
+        public static final int reservSpacePercent=0x7f07000a;
+        public static final int subtitleMonInterval=0x7f070005;
+        public static final int subtitleReservSizeK=0x7f07000b;
     }
     public static final class layout {
         public static final int about=0x7f030000;
-        public static final int book_menu=0x7f030001;
-        public static final int main=0x7f030002;
-        public static final int options=0x7f030003;
-        public static final int speech_menu=0x7f030004;
-        public static final int speech_row=0x7f030005;
-        public static final int theory_page_view=0x7f030006;
-    }
-    public static final class menu {
-        public static final int main=0x7f070000;
+        public static final int activity_file_dialog=0x7f030001;
+        public static final int activity_file_dialog_row=0x7f030002;
+        public static final int book_menu=0x7f030003;
+        public static final int main=0x7f030004;
+        public static final int net_access_warn_dialog=0x7f030005;
+        public static final int options=0x7f030006;
+        public static final int speech_menu=0x7f030007;
+        public static final int speech_row=0x7f030008;
+        public static final int src_manage_dialog=0x7f030009;
+        public static final int storage_manage=0x7f03000a;
+        public static final int theory_page_view=0x7f03000b;
+        public static final int toast_text_view=0x7f03000c;
     }
     public static final class string {
-        public static final int DL_TMP_PREFIX=0x7f050032;
-        public static final int aboutDesc=0x7f050033;
-        public static final int appExtMemDirName=0x7f050014;
-        public static final int appModeKey=0x7f05000f;
-        public static final int app_name=0x7f050001;
-        public static final int audioDirName=0x7f05001b;
-        public static final int bookFontSize=0x7f050003;
-        public static final int bookFontSizeKey=0x7f050004;
-        public static final int defMediaType=0x7f05001f;
-        public static final int defSubtitleType=0x7f050020;
-        public static final int defTheoryType=0x7f050021;
-        public static final int downloadFail=0x7f050015;
-        public static final int downloadingDesc=0x7f050016;
-        public static final int enablePlayerKey=0x7f050023;
-        public static final int hello=0x7f050000;
-        public static final int isInitKey=0x7f050002;
-        public static final int mediaCheckSum=0x7f050013;
-        public static final int mpControllerHint=0x7f050019;
-        public static final int mpControllerNoSubtitleHint=0x7f05001a;
-        public static final int newMediaPlayPosition=0x7f050031;
-        public static final int newMediaTarget=0x7f050030;
-        public static final int noSubtitleDesc=0x7f050022;
-        public static final int normalModeDesc=0x7f050010;
-        public static final int prepareSpeechDesc=0x7f050018;
-        public static final int prepareSubtitleDesc=0x7f050017;
-        public static final int readingModeDesc=0x7f050011;
-        public static final int runtimeNormalPlayerState=0x7f050024;
-        public static final int runtimeNormalPlayingIndex=0x7f050025;
-        public static final int runtimeNormalPlayingPosition=0x7f050026;
-        public static final int runtimeNormalTheoryShift=0x7f050028;
-        public static final int runtimeNormalTheoryTop=0x7f050027;
-        public static final int runtimeReadingTheoryShift=0x7f05002a;
-        public static final int runtimeReadingTheoryTop=0x7f050029;
-        public static final int runtimeStateFile=0x7f05000c;
-        public static final int runtimeTvPlayerState=0x7f05002b;
-        public static final int runtimeTvPlayingIndex=0x7f05002c;
-        public static final int runtimeTvPlayingPosition=0x7f05002d;
-        public static final int searchingType=0x7f05001e;
-        public static final int selectFromSpeechMenu=0x7f050009;
-        public static final int selectFromTheoryMenu=0x7f050008;
-        public static final int selectIndexFromMenuDesc=0x7f05002e;
-        public static final int selectMenu=0x7f050007;
-        public static final int setupFontSizeStr=0x7f05000d;
-        public static final int setupTextSizeSample=0x7f05000e;
-        public static final int showAbout=0x7f05000b;
-        public static final int showCtrlPanel=0x7f05000a;
-        public static final int soundInUseError=0x7f05002f;
-        public static final int subtitleDirName=0x7f05001c;
-        public static final int subtitleFontSize=0x7f050005;
-        public static final int subtitleFontSizeKey=0x7f050006;
-        public static final int theoryDirName=0x7f05001d;
-        public static final int tvModeDesc=0x7f050012;
+        public static final int aboutDesc=0x7f060026;
+        public static final int action_settings=0x7f060040;
+        /**   For LamrimReaderActivity 
+         */
+        public static final int app_name=0x7f060012;
+        public static final int audioDirName=0x7f060007;
+        /**  For Option Panel 
+         */
+        public static final int bookFontSize=0x7f06000c;
+        public static final int bookFontSizeKey=0x7f06000e;
+        public static final int cancel=0x7f060046;
+        public static final int cant_read_folder=0x7f060042;
+        public static final int create=0x7f060047;
+        /**  <string name="defMediaType">MP3</string> 
+         */
+        public static final int defSubtitleType=0x7f06000a;
+        public static final int defTheoryType=0x7f06000b;
+        public static final int dlgAllow=0x7f060031;
+        public static final int dlgCancel=0x7f060030;
+        public static final int dlgDelFileMsg=0x7f06003c;
+        public static final int dlgDelFileTitle=0x7f06003b;
+        public static final int dlgDescConnecting=0x7f06002a;
+        public static final int dlgDescDownloadFail=0x7f060028;
+        public static final int dlgDescDownloading=0x7f06002c;
+        public static final int dlgDescPrepareSpeech=0x7f06002e;
+        public static final int dlgDescPrepareSubtitle=0x7f06002d;
+        public static final int dlgDisallow=0x7f060032;
+        public static final int dlgDontShowThisWarnDesc=0x7f060033;
+        public static final int dlgExitMsg=0x7f060037;
+        public static final int dlgExitTitle=0x7f060036;
+        public static final int dlgHintMpController=0x7f06001b;
+        public static final int dlgHintMpControllerNoSubtitle=0x7f06001c;
+        public static final int dlgManageSrcDel=0x7f06003a;
+        public static final int dlgManageSrcPlay=0x7f060038;
+        public static final int dlgManageSrcUpdate=0x7f060039;
+        public static final int dlgMsgMaintaining=0x7f06003e;
+        public static final int dlgNetAccessMsg=0x7f060035;
+        public static final int dlgNetAccessTitle=0x7f060034;
+        public static final int dlgOk=0x7f06002f;
+        public static final int dlgTitleConnecting=0x7f060029;
+        /**  Dialogs 
+         */
+        public static final int dlgTitleDownloadFail=0x7f060027;
+        public static final int dlgTitleDownloading=0x7f06002b;
+        public static final int dlgTitleMaintaining=0x7f06003d;
+        public static final int downloadTmpPostfix=0x7f060006;
+        public static final int err=0x7f060049;
+        public static final int errIAEwhileSetPlayerSrc=0x7f06001e;
+        public static final int errIOEwhilePrepPlayer=0x7f060023;
+        public static final int errIOEwhileSetPlayerSrc=0x7f060021;
+        public static final int errISEwhilePrepPlayer=0x7f060022;
+        public static final int errISEwhileSetPlayerSrc=0x7f060020;
+        public static final int errSEwhileSetPlayerSrc=0x7f06001f;
+        public static final int errWhileReleasePlayer=0x7f06001d;
+        public static final int file_name=0x7f060045;
+        public static final int isAllowNetAccess=0x7f060001;
+        public static final int isShowNetAccessWarn=0x7f060002;
+        public static final int isUseThirdDir=0x7f060003;
+        /**  For file selector 
+         */
+        public static final int location=0x7f060041;
+        public static final int mediaCheckSumWhileDownload=0x7f060005;
+        public static final int menuStrAbout=0x7f060015;
+        public static final int menuStrOption=0x7f060014;
+        public static final int menuStrSelectSpeech=0x7f060013;
+        /**  For Speech Menu 
+         */
+        public static final int musicSign=0x7f060024;
+        public static final int newMediaPlayPosition=0x7f06001a;
+        public static final int newMediaTarget=0x7f060019;
+        public static final int nnew=0x7f060043;
+        public static final int noSubtitleDesc=0x7f060016;
+        public static final int no_data=0x7f060048;
+        /**  Runtime options 
+         */
+        public static final int runtimeStateFile=0x7f060000;
+        public static final int select=0x7f060044;
+        public static final int selectIndexFromMenuDesc=0x7f060017;
+        public static final int setupFontSizeStr=0x7f060010;
+        public static final int setupTextSizeSample=0x7f060011;
+        public static final int soundInUseError=0x7f060018;
+        public static final int subtitleDirName=0x7f060008;
+        public static final int subtitleFontSize=0x7f06000d;
+        public static final int subtitleFontSizeKey=0x7f06000f;
+        public static final int subtitleSign=0x7f060025;
+        public static final int theoryDirName=0x7f060009;
+        public static final int title_activity_file_dialog=0x7f06004a;
+        public static final int title_activity_storage_manage=0x7f06003f;
+        public static final int userSpecifySpeechDir=0x7f060004;
     }
     public static final class styleable {
         /** Attributes that can be used with a TheoryPageView.

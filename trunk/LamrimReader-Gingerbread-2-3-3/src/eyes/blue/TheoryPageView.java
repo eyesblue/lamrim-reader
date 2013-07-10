@@ -3,6 +3,7 @@ package eyes.blue;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,24 +12,40 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class TheoryPageView extends TextView {
 	boolean onCmd=false;
 	final static boolean debug=false;
 
+	// For onTouchListener
+	static final int NONE = 0;  
+	static final int ZOOM = 1;  
+	int mode = NONE;  
+	static final int MIN_FONT_SIZE = 20;  
+	static final int MAX_FONT_SIZE = 150;  
+	float orgDist = 1f;
+	float orgFontSize=0;
+	
 	
 	public TheoryPageView(Context context) {
 		super(context);
+		this.setOnTouchListener(touchListener);
 	}
 
 	public TheoryPageView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
+        this.setOnTouchListener(touchListener);
     }
 
 	public void setTextSize(float size){
 		super.setTextSize(size);
+//		this.setOnTouchListener(touchListener);
 		if(debug)Log.d("LamrimLeader","TheoryPageView.setTextSize() Set font size to "+size);
 	}
 	
@@ -39,7 +56,7 @@ public class TheoryPageView extends TextView {
         float orgTextSize=getTextSize();
         Rect bounds=new Rect();
         int pointSize=(int) (getTextSize()/7);
-        String text = (String) super.getText();
+        String text = (String) super.getText().toString();
         int lineCounter=0;
         int start=0,end=0;
         int y=getLineBounds(lineCounter, bounds);
@@ -138,4 +155,55 @@ public class TheoryPageView extends TextView {
         }
 //        canvas.drawLine(bounds.left, baseLine + 1, bounds.right, baseLine + 1, paint);
     }
+	
+	
+	OnTouchListener touchListener=new OnTouchListener(){
+		public boolean onTouch(View v, MotionEvent event) {
+			float x,y;
+//			editText = (EditText) findViewById(R.id.editText1);  
+			
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				
+				// return false for long click listener
+				Log.d(getClass().getName(),"First click event in to onTouchListener, return fals.");
+				return false;
+
+			case MotionEvent.ACTION_POINTER_DOWN:
+				
+				if(event.getActionIndex()==1){
+					Log.d(getClass().getName(),"Second click event in to onTouchListener.");
+				x = (event.getX(0) - event.getX(1));  
+				y = event.getY(0) - event.getY(1);  
+				orgDist = (float) Math.sqrt(x * x + y * y);
+				if (orgDist > 12f) {
+					mode = ZOOM;
+					orgFontSize=getTextSize();
+				}
+				return true;
+				}
+				
+				 
+				break;
+			case MotionEvent.ACTION_POINTER_UP:  
+				mode = NONE;  
+				break;  
+			case MotionEvent.ACTION_MOVE:  
+				if (mode == ZOOM && event.getActionIndex()==1) {
+					x = (event.getX(0) - event.getX(1));  
+				    y = event.getY(0) - event.getY(1);  
+					float newDist = (float) Math.sqrt(x * x + y * y);
+					float dp=(newDist - orgDist) * getResources().getDisplayMetrics().density;
+					float size = orgFontSize+dp/12;
+					Log.d(getClass().getName(),"OrgDist="+orgDist+", Dist= "+dp+"dp, scale="+size);
+	 
+					if ((size < MAX_FONT_SIZE && size > MIN_FONT_SIZE)) {  
+						setTextSize(TypedValue.COMPLEX_UNIT_PX, size);  
+					}  
+				}  
+				break;  
+			}  
+			return true;  
+		  }  	
+	};
 }
