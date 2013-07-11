@@ -183,6 +183,7 @@ public class SpeechMenuActivity extends Activity {
 		//fakeList=null;
 		playWindow.putExtra("index", position);
 		setResult(RESULT_OK,new Intent().putExtras(playWindow));
+		if(wakeLock.isHeld())wakeLock.release();
 		finish();
 	}
 	

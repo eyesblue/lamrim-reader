@@ -153,6 +153,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 		changedListener.onSubtitleChanged(subtitle[playingIndex]);
 	}
 	
+	
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer. create new subtitleTimer for subtitle changed event.
 	 * */
