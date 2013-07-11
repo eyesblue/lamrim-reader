@@ -132,6 +132,7 @@ public class FileDownloader {
 				
 				if(al.size()==0){
 					if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.dismiss();
+					if(wakeLock.isHeld())wakeLock.release();
 					listener.allPrepareFinish(index);
 					return null;
 				}
@@ -139,6 +140,7 @@ public class FileDownloader {
 				if(mkDlTaskDialog.isShowing())mkDlTaskDialog.dismiss();
 				Log.d(getClass().getName(),"Call checkNetAccessPermission()");
 				checkNetAccessPermission();
+				
 				return null;
 			}
 
@@ -171,8 +173,8 @@ public class FileDownloader {
 		if(isShowNetAccessWarn ||(!isShowNetAccessWarn && !isAllowAccessNet)){
 			activity.runOnUiThread(new Runnable() {
 				public void run() {
-					if(!wakeLock.isHeld()){wakeLock.acquire();}
 					if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
+						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						netAccessWarnDialog=getNetAccessDialog();
 						netAccessWarnDialog.setCanceledOnTouchOutside(false);
 						netAccessWarnDialog.show();
@@ -278,6 +280,7 @@ public class FileDownloader {
 		@Override
 		protected void onCancelled(){
 			try {
+				if(wakeLock.isHeld())wakeLock.release();
 				listener.userCancel(executing.getInt("mediaIndex"),executing.getInt("type"));
 			} catch (JSONException e) {e.printStackTrace();}
 		}
@@ -315,12 +318,11 @@ public class FileDownloader {
 //					return false;
 				}
 				listener.prepareFinish(mediaIndex,type);
-				
-				
 			}
 			
 			
 			dismissDlProgress();
+			if(wakeLock.isHeld())wakeLock.release();
 			listener.allPrepareFinish(mediaIndex);
 //			downloader=null;
 			return true;
