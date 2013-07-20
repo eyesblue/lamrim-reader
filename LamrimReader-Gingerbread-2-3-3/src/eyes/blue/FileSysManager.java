@@ -1,16 +1,23 @@
 package eyes.blue;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import org.apache.http.HttpEntity;
@@ -420,8 +427,9 @@ public class FileSysManager {
         		
         		// First check is the file from user specified dir, then no size or crc check,
         		// return true if file exist.
-        		// boolean isUseThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
+        		//boolean isUseThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
         		String userSpecDir=runtime.getString(context.getString(R.string.userSpecifySpeechDir), null);
+        		if(userSpecDir != null)
         		if(file.getAbsolutePath().startsWith(userSpecDir)){
         			Log.d(logTag,"The file is from user specified folder, no size or crc check.");
         			if(userSpecDir!=null && file.exists()){
@@ -464,7 +472,6 @@ public class FileSysManager {
         	Log.e(logTag,"FileSysManager.isFileValid(): Logical error: the resource type shouldn't "+resType);
         	return false;
         }
-        
         
         public static boolean isExtMemWritable(){
         	return (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));

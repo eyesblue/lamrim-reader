@@ -1,14 +1,21 @@
 package eyes.blue;
 
+import java.io.File;
 import java.io.IOException;
+
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
+
+import net.londatiga.android.ActionItem;
+import net.londatiga.android.QuickAction;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -16,13 +23,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaPlayer;
@@ -33,31 +46,59 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.SubMenu;
+
 import android.view.MenuInflater;
-import android.view.MenuItem;
+import com.actionbarsherlock.view.MenuItem;
+
+import android.view.Display;
+import android.view.DragEvent;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
+import android.view.inputmethod.EditorInfo;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.NumberPicker;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockActivity;
+
+import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 
 /*
  * $Id$
  * */
-public class LamrimReaderActivity extends Activity {
+public class LamrimReaderActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
 	private static final long serialVersionUID = 3L;
 	final static String logTag = "LamrimReader";
@@ -70,7 +111,8 @@ public class LamrimReaderActivity extends Activity {
 	final static int SPEECH_MENU_RESULT = 0;
 	final static int THEORY_MENU_RESULT = 1;
 	final static int OPT_MENU_RESULT = 2;
-
+	
+	
 	
 	static int mediaIndex = -1;
 	MediaPlayerController mpController;
@@ -80,10 +122,10 @@ public class LamrimReaderActivity extends Activity {
 	TextView subtitleView = null;
 	SharedPreferences runtime = null;
 
-	ArrayList<HashMap<String, String>> fakeList = null;
+	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter = null;
 	
-	
+	MenuItem speechMenu, setTextSize, saveRegion, playRegionRec,exitApp;
 
 	FileSysManager fileSysManager = null;
 	FileDownloader fileDownloader = null;
@@ -93,6 +135,22 @@ public class LamrimReaderActivity extends Activity {
 	View toastLayout = null;
 	TextView toastTextView = null;
 	Toast toast = null;
+	ImageView toastSubtitleIcon;
+	ImageView toastInfoIcon;
+	MenuItem rootMenuItem = null;
+	boolean playWhileMediaReady = false;
+//	ArrayList<RegionRecord> regionRecord = null;
+	
+	// the 3 object is paste on the popupwindow object, it not initial at startup.
+	SimpleAdapter regionRecordAdapter = null;
+	ArrayList<HashMap<String,String>> regionFakeList = null;
+	ListView regionListView = null;
+	
+	HashMap<String,String> fakeSample = new HashMap();
+	
+	View actionBarControlPanel = null;
+	EditText jumpPage = null;
+	SeekBar volumeController = null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -100,6 +158,8 @@ public class LamrimReaderActivity extends Activity {
 		// try{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+
+		getSupportActionBar();
 //		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 
@@ -112,6 +172,58 @@ public class LamrimReaderActivity extends Activity {
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,logTag);
 		educFont=Typeface.createFromAsset(this.getAssets(), "EUDC.TTF");
 
+		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
+		actionBarControlPanel = factory.inflate(R.layout.action_bar_control_panel, null);
+		jumpPage=(EditText) actionBarControlPanel.findViewById(R.id.jumpPage);
+		jumpPage.setGravity(Gravity.CENTER);
+		jumpPage.setOnEditorActionListener(new OnEditorActionListener() {        
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				Log.d(logTag,"User input jump page: "+jumpPage.getText().toString());
+				String input=jumpPage.getText().toString();
+				if(input == null || !input.matches("[0-9]+"))return false;
+				int num = Integer.parseInt(jumpPage.getText().toString());
+				if(num>0 && num<=bookList.size())
+					bookView.setSelection(num-1);
+				return false;
+			}
+		});
+		
+		
+		final AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+		int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+		volumeController = (SeekBar) actionBarControlPanel.findViewById(R.id.volumeController);
+		volumeController.setMax(maxVolume);
+		volumeController.setProgress(curVolume);
+		volumeController.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onStopTrackingTouch(SeekBar arg0) {}
+			@Override
+			public void onStartTrackingTouch(SeekBar arg0) {}
+			@Override
+			public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
+				audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, arg1, 0);
+			}
+		});
+		
+		fakeSample.put(null,null);
+		RegionRecord.init(this);
+		regionFakeList = new ArrayList<HashMap<String,String>>();
+		for( int i=0;i<RegionRecord.records.size() ; ++i) 
+        		regionFakeList.add(fakeSample);
+		
+		regionRecordAdapter=new RegionRecordAdapter(
+				this,
+				regionFakeList,
+                android.R.layout.simple_list_item_2,
+                new String[] { "title", "desc" },
+                new int[] { android.R.id.text1, android.R.id.text2}
+		);
+
+		
+		
+		
 		mpController = new MediaPlayerController(LamrimReaderActivity.this, new MediaPlayerControllerListener() {
 			@Override
 			public void onSubtitleChanged(SubtitleElement subtitle) {
@@ -120,7 +232,7 @@ public class LamrimReaderActivity extends Activity {
 			}
 			@Override
 			public void onSeek(SubtitleElement subtitle){
-				showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs)+')');
+				showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+')');
 			}
 			@Override
 			public void startMoment(){setSubtitleViewText("");}
@@ -133,32 +245,38 @@ public class LamrimReaderActivity extends Activity {
 				// If this time fire by user select a new speech, no need to seekTo(sometime), just play from 0, and set the newPlay flag to false.
 				int seekPosition=runtime.getInt("playPosition", -1);
 				if(seekPosition!=0)mpController.seekTo(seekPosition);
-				setTitle(getString(R.string.app_name) +" V"+serialVersionUID+" - "+ SpeechData.getNameId(mediaIndex));
+				getSupportActionBar().setTitle(getString(R.string.app_name) +" V"+serialVersionUID);
+				getSupportActionBar().setSubtitle(SpeechData.getNameId(mediaIndex));
 				Log.d(logTag,"Check media static before show controller: media player state: "+mpController.getMediaPlayerState()+", normal should equal or bigger then "+MediaPlayerController.MP_PREPARED);
-				mpController.showMediaPlayerController(LamrimReaderActivity.this.findViewById(android.R.id.content));
+				if(playWhileMediaReady)mpController.start();
+				else
+					mpController.showMediaPlayerController(LamrimReaderActivity.this.findViewById(android.R.id.content));
 			}
 			@Override
-			public void startRegionSeted(SubtitleElement subtitle){
-				showNarmalToastMsg("區段開始位置設定完成: "+getMsToHMS(subtitle.startTimeMs));
+			public void startRegionSeted(int position){
+				showNarmalToastMsg("區段開始位置設定完成: "+getMsToHMS(position,"\"","'",false));
 			}
 			@Override
-			public void startRegionDeset(SubtitleElement subtitle){
+			public void startRegionDeset(int position){
 				showNarmalToastMsg("區段開始位置已清除: ");
 			}
 			@Override
-			public void endRegionSeted(SubtitleElement subtitle){showNarmalToastMsg("區段結束位置設定完成: "+getMsToHMS(subtitle.endTimeMs));}
+			public void endRegionSeted(int position){showNarmalToastMsg("區段結束位置設定完成: "+getMsToHMS(position,"\"","'",false));}
 			@Override
-			public void endRegionDeset(SubtitleElement subtitle){showNarmalToastMsg("區段結束位置已清除: ");}
+			public void endRegionDeset(int position){showNarmalToastMsg("區段結束位置已清除: ");}
 			@Override
-			public void startRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){
-				showNarmalToastMsg("開始區段播放: "+getMsToHMS(startSubtitle.startTimeMs)+" - "+ getMsToHMS(endSubtitle.endTimeMs));
+			public void startRegionPlay(){
+				showNarmalToastMsg("開始區段播放");
 			}
 			@Override
-			public void stopRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){
-				showNarmalToastMsg("停止區段播放: "+getMsToHMS(startSubtitle.startTimeMs)+" - "+ getMsToHMS(endSubtitle.endTimeMs));
+			public void stopRegionPlay(){
+				showNarmalToastMsg("停止區段播放");
 			}
 		});
 
+
+		
+		
 		
 		LayoutInflater inflater = getLayoutInflater();
 		toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) findViewById(R.id.toastLayout));
@@ -188,6 +306,23 @@ public class LamrimReaderActivity extends Activity {
 		});
 		fileDownloader = new FileDownloader(LamrimReaderActivity.this,downloadListener);
 		bookView = (ListView) findViewById(R.id.bookPageGrid);
+		bookView.setOnScrollListener(new AbsListView.OnScrollListener() {
+			@Override
+			public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+				if(view == null) return;
+				int showNum=Integer.parseInt(jumpPage.getText().toString());
+				if(showNum==firstVisibleItem+1)return;
+				
+				Handler handler = new Handler(){};
+				handler.post(new Runnable(){
+					@Override
+					public void run() {
+						jumpPage.setText(String.valueOf(firstVisibleItem+1));
+					}});
+			}
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+			}});
 		setTheoryArea();
 //		bookView.setScrollingCacheEnabled( false );
 		rootLayout = (LinearLayout) findViewById(R.id.rootLayout);
@@ -203,6 +338,9 @@ public class LamrimReaderActivity extends Activity {
 
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
+		
+		
+
 		Log.d(funcLeave, "******* onCreate *******");
 		// LogRepoter.log("Leave OnCreate");
 	}
@@ -223,6 +361,9 @@ public class LamrimReaderActivity extends Activity {
 			
 			Log.d(funcLeave,"**** saveRuntime ****");
 		}
+		
+//		int bookPage = runtime.getInt("bookPage", 0);
+//		jumpPage.setText(bookPage);
 		Log.d(funcLeave, "**** onStart() ****");
 	}
 
@@ -269,7 +410,7 @@ public class LamrimReaderActivity extends Activity {
 		Log.d(funcInto, "**** onDestroy ****");
 		fileDownloader.finish();
 		mpController.release();
-		
+		toast.cancel();
 		Log.d(funcLeave, "**** onDestroy ****");
 	}
 	
@@ -289,8 +430,6 @@ public class LamrimReaderActivity extends Activity {
 
 	@Override
 	public void onBackPressed() {
-		Log.d(funcInto, "**** onBackPressed ****");
-
 		AlertDialog.Builder builder = new AlertDialog.Builder(LamrimReaderActivity.this);
 	    builder.setTitle(getString(R.string.dlgExitTitle));
 	    builder.setMessage(getString(R.string.dlgExitMsg));
@@ -307,48 +446,106 @@ public class LamrimReaderActivity extends Activity {
 	        }
 	    });
 		builder.create().show();
-		Log.d(funcLeave, "**** onBackPressed ****");
+		Log.d(funcInto, "**** onBackPressed ****");
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-        //參數1:群組id, 參數2:itemId, 參數3:item順序, 參數4:item名稱
-        menu.add(0, 0, 0, getString(R.string.menuStrSelectSpeech));
-        menu.add(0, 1, 1, getString(R.string.menuStrOption));
-        menu.add(0, 2, 2, getString(R.string.menuStrAbout));
+        //getSupportMenuInflater().inflate(R.menu.main, menu);
+        //return super.onCreateOptionsMenu(menu);
+		SubMenu rootMenu = menu.addSubMenu("");
+		speechMenu=rootMenu.add(getString(R.string.menuStrSelectSpeech));
+		speechMenu.setIcon(R.drawable.speech);
+		setTextSize=rootMenu.add(getString(R.string.menuStrTextSize));
+		setTextSize.setIcon(R.drawable.font_size);
+		saveRegion=rootMenu.add(getString(R.string.menuStrSavePlayRegion));
+		saveRegion.setIcon(R.drawable.save);
+		playRegionRec=rootMenu.add(getString(R.string.menuStrPlayRegionRec));
+		playRegionRec.setIcon(R.drawable.region);
+		exitApp=rootMenu.add(getString(R.string.exitApp));
+		exitApp.setIcon(R.drawable.exit_app);
+		
+        rootMenuItem = rootMenu.getItem();
+        //rootMenuItem.setIcon(R.drawable.menu_down_48x48);
+        rootMenuItem.setIcon(R.drawable.menu_down);
+        rootMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        
+        //LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
+	    //final View v = factory.inflate(R.layout.action_bar_control_panel, null);
+        
+        
+		
+        getSupportActionBar().setCustomView(actionBarControlPanel);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
         return super.onCreateOptionsMenu(menu);
     }
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.d(funcInto,	"****OptionsItemselected, select item=" + item.getItemId()	+ " ****");
+		Log.d(funcInto,	"****OptionsItemselected, select item=" + item.getItemId()	+ ", String="+item.getTitle()+", Order="+item.getOrder()+" ****");
 		
+		if(item.equals(rootMenuItem)){
+		Log.d(logTag,"Create menu: can save region? "+mpController.canPlayRegion());
+			if(mpController.canPlayRegion()){
+				saveRegion.setEnabled(true);
+				saveRegion.setIcon(R.drawable.save);
+			}
+			else{
+				saveRegion.setEnabled(false);
+				saveRegion.setIcon(R.drawable.save_d);
+				
+			}
+			if(RegionRecord.records.size()>0){
+				playRegionRec.setEnabled(true);
+				playRegionRec.setIcon(R.drawable.region);
+				}
+			else{
+				playRegionRec.setEnabled(false);
+				playRegionRec.setIcon(R.drawable.region_d);
+			}
+		}
+		
+		if(item.getTitle().equals(getString(R.string.menuStrSelectSpeech))){
+			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
+			if (wakeLock.isHeld())wakeLock.release();
+			startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
+		}else if(item.getTitle().equals(getString(R.string.menuStrTextSize))){
+			showSetTextSizeDialog();
+		}else if(item.getTitle().equals(getString(R.string.menuStrSavePlayRegion))){
+			showSaveRegionDialog();
+		}else if(item.getTitle().equals(getString(R.string.menuStrPlayRegionRec))){
+			showRecordListPopupMenu();
+		}else if(item.getTitle().equals(getString(R.string.exitApp))){
+			onBackPressed();
+			Log.d(funcLeave, "**** onBackPressed ****");
+		}
+/*		
 		switch (item.getItemId()) {
-		case SPEECH_MENU_RESULT:
+		case 1:
 			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
 			break;
-		case THEORY_MENU_RESULT:
+		case 2:
 			final Intent optCtrlPanel = new Intent(LamrimReaderActivity.this, OptCtrlPanel.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			startActivityForResult(optCtrlPanel, OPT_MENU_RESULT);
 			break;
-		case OPT_MENU_RESULT:
+		case 3:
 			final Intent aboutPanel = new Intent(LamrimReaderActivity.this,	AboutActivity.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			this.startActivity(aboutPanel);
 			break;
 		}
-
+*/
 		Log.d(funcLeave, "**** Into Options selected, select item=" + item.getItemId()	+ " ****");
 		return true;
 	}
 
 	private void onOptResultData(int resultCode, Intent intent) {
 		Log.d(funcInto, "onOptResultData");
-		final int bookFontSize = intent.getIntExtra(getString(R.string.bookFontSizeKey),getResources().getInteger(R.integer.defBookFontSize));
-		final int subtitleFontSize = intent.getIntExtra(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defSubtitleFontSize));
+		final int bookFontSize = intent.getIntExtra(getString(R.string.bookFontSizeKey),getResources().getInteger(R.integer.defFontSize));
+		final int subtitleFontSize = intent.getIntExtra(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize));
 
 		SharedPreferences.Editor editor = runtime.edit();
 		editor.putInt(getString(R.string.bookFontSizeKey), bookFontSize);
@@ -385,6 +582,8 @@ public class LamrimReaderActivity extends Activity {
 			editor.putInt("mediaIndex", selected);
 			editor.putInt("playPosition", 0);
 			editor.commit();
+			playWhileMediaReady=false;
+			mpController.desetPlayRegion();
 			mpController.reset();
 			
 			// After onActivityResult, the life-cycle will return to onStart, do start downloader in OnResume.
@@ -400,26 +599,27 @@ public class LamrimReaderActivity extends Activity {
 	}
 
 	private void setTheoryArea() {
-		int defTitleTextSize = getResources().getInteger(R.integer.defSubtitleFontSize);
+		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
-		int defTheoryTextSize = getResources().getInteger(R.integer.defBookFontSize);
+		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
 		final int bookPage=runtime.getInt("bookPage", 0);
 		final int bookPageShift=runtime.getInt("bookPageShift", 0);
 		String[] bookArray=getResources().getStringArray(R.array.book);
+
+		bookList = new ArrayList<HashMap<String, String>>();
+        int pIndex = 0;
+
+        for (String value : bookArray) {
+                HashMap<String, String> item = new HashMap<String, String>();
+                item.put("page", value);
+                item.put("desc", "第 " + (++pIndex) + " 頁");
+                bookList.add(item);
+        }
 		
-		fakeList = new ArrayList<HashMap<String, String>>();
-		for (int i=0;i<bookArray.length;i++) {
-			HashMap<String, String> item = new HashMap<String, String>();
-			item.put("page", bookArray[i]);
-			item.put("desc", "第 "+(i+1)+" 頁");
-			fakeList.add(item);
-		}
-		
-		adapter = new TheoryListAdapter(this, fakeList,
-				R.layout.theory_page_view, new String[] { "page", "desc" },
-				new int[] { R.id.pageContentView, R.id.pageNumView });
+		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
 		bookView.setAdapter(adapter);
+		adapter.notifyDataSetChanged();
 		
 		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
 		
@@ -429,26 +629,15 @@ public class LamrimReaderActivity extends Activity {
 				bookView.setSelectionFromTop(bookPage, bookPageShift);
 				adapter.notifyDataSetChanged();
 				subtitleView.setTextSize(subtitleTextSize);
+				jumpPage.setText(Integer.toString(bookPage));
 			}
 		});
-	}
-
-	private void setUIContent() {
-		Log.d(funcInto, "**** setUIContent ****");
-		if (fakeList == null)
-			setTheoryArea();
-		// Check is it initial state.
-		if (mediaIndex < 0)
-			return;
-		Log.d(funcLeave, "**** setUIContent ****");
 	}
 
 	class TheoryListAdapter extends SimpleAdapter {
 		float textSize = 0;
 
-		public TheoryListAdapter(Context context,
-				List<? extends Map<String, ?>> data, int resource,
-				String[] from, int[] to) {
+		public TheoryListAdapter(Context context,List<? extends Map<String, ?>> data, int resource,	String[] from, int[] to) {
 			super(context, data, resource, from, to);
 		}
 
@@ -467,12 +656,12 @@ public class LamrimReaderActivity extends Activity {
 			bContent.setTypeface(educFont);
 			if (bContent.getTextSize() != textSize)
 				bContent.setTextSize(textSize);
-			bContent.setText(fakeList.get(position).get("page"));
+			bContent.setText(bookList.get(position).get("page"));
 			// bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
 			TextView pNum = (TextView) row.findViewById(R.id.pageNumView);
 			if (pNum.getTextSize() != textSize)
 				pNum.setTextSize(textSize);
-			pNum.setText(fakeList.get(position).get("desc"));
+			pNum.setText(bookList.get(position).get("desc"));
 			return row;
 		}
 
@@ -482,11 +671,12 @@ public class LamrimReaderActivity extends Activity {
 	}
 
 	private void updateTextSize() {
-		int defTitleTextSize = getResources().getInteger(R.integer.defSubtitleFontSize);
+		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
-		int defTheoryTextSize = getResources().getInteger(R.integer.defBookFontSize);
+		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
 		
+		Log.d(logTag,"Default value: "+getResources().getInteger(R.integer.defFontSize)+", geted size: theory="+theoryTextSize+", subtitle="+subtitleTextSize);
 		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
 		runOnUiThread(new Runnable() {
 			public void run() {
@@ -502,6 +692,23 @@ public class LamrimReaderActivity extends Activity {
 
 	}
 
+	
+	private void updateTheoryTextSize(final int size) {
+
+		
+		Log.d(logTag,"Update theory font size: "+size);
+		runOnUiThread(new Runnable() {
+			public void run() {
+				if (adapter != null)
+					adapter.setTextSize(size);
+				bookView.destroyDrawingCache();
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
+				
+			}
+		});
+
+	}
 
 	/*
 	 * Set the message on the subtitle view, there should check the subtitleView
@@ -584,6 +791,344 @@ public class LamrimReaderActivity extends Activity {
 	}
 
 
+	private void showSetTextSizeDialog(){
+		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
+	    final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
+	    
+//	    Dialog dialog = new Dialog(this);
+//	    dialog.setContentView(R.layout.set_text_size_dialog_view);
+//	    dialog.setCancelable(true);
+	    
+	    
+//	    final TextView theorySample=(TextView) v.findViewById(R.id.theorySample);
+//	    final TextView subtitleSample=(TextView) v.findViewById(R.id.subtitleSample);
+	    final SeekBar theorySb=(SeekBar) v.findViewById(R.id.theorySizeBar);
+	    final SeekBar subtitleSb=(SeekBar) v.findViewById(R.id.subtitleSizeBar);
+	    final int orgTheorySize=runtime.getInt(getString(R.string.bookFontSizeKey), getResources().getInteger(R.integer.defFontSize));
+	    final int orgSubtitleSize=runtime.getInt(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize));
+	    
+	    
+
+	    runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+//				theorySample.setTextSize(orgTheorySize);
+//			    subtitleSample.setTextSize(orgSubtitleSize);
+				theorySb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
+			    subtitleSb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
+			    theorySb.setProgress(orgTheorySize-getResources().getInteger(R.integer.textMinSize));
+			    subtitleSb.setProgress(orgSubtitleSize-getResources().getInteger(R.integer.textMinSize));
+			}});
+
+
+	    OnSeekBarChangeListener sbListener=new OnSeekBarChangeListener(){
+			@Override
+			public void onProgressChanged(final SeekBar seekBar, final int progress, boolean fromUser) {
+				if(!fromUser)return;
+				final int prog = progress+getResources().getInteger(R.integer.textMinSize);
+				
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						Log.d(logTag,"Seek bar get progress: "+progress+", min size: "+getResources().getInteger(R.integer.textMinSize)+", add:"+(progress+getResources().getInteger(R.integer.textMinSize)));
+						if(seekBar.equals(theorySb))
+							updateTheoryTextSize(prog);
+							//theorySample.setTextSize;
+						else subtitleView.setTextSize(prog);
+							//subtitleSample.setTextSize(prog);
+	//					Log.d(logTag,"theorySample size: "+theorySample.getTextSize()+", subtitleSample size: "+subtitleSample.getTextSize());		
+						seekBar.setProgress(progress);
+					}});
+			}
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {}
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {}
+	    };
+	    theorySb.setOnSeekBarChangeListener(sbListener);
+	    subtitleSb.setOnSeekBarChangeListener(sbListener);
+	    
+//	    dialog.show();
+	    
+	    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    AlertDialog setTextSizeDialog=builder.create();
+	    setTextSizeDialog.setView(v);
+	    WindowManager.LayoutParams lp = setTextSizeDialog.getWindow().getAttributes();
+	    lp.alpha=0.7f;
+	    setTextSizeDialog.setOnDismissListener(new DialogInterface.OnDismissListener (){
+			@Override
+			public void onDismiss(DialogInterface dialog) {
+				SharedPreferences.Editor editor = runtime.edit();
+				Log.d(logTag,"Write theory size: "+(int)theorySb.getProgress()+", subtitle size: "+subtitleSb.getProgress() + " to runtime.");
+				editor.putInt(getString(R.string.bookFontSizeKey), theorySb.getProgress()+getResources().getInteger(R.integer.textMinSize));
+				editor.putInt(getString(R.string.subtitleFontSizeKey), subtitleSb.getProgress()+getResources().getInteger(R.integer.textMinSize));
+				editor.commit();
+				
+				Log.d(logTag,"Check size after write to db: theory size: "+runtime.getInt(getString(R.string.bookFontSizeKey), 0) + ", subtitle size: "+runtime.getInt(getString(R.string.subtitleFontSizeKey),0));
+//				updateTextSize();
+				dialog.dismiss();
+			}});
+	    setTextSizeDialog.setCanceledOnTouchOutside(true);
+	    setTextSizeDialog.show();
+	}
+	
+	private void showSaveRegionDialog(){
+		int regionStartMs=mpController.getRegionStartPosition();
+		int regionEndMs=mpController.getRegionEndPosition();
+	    final SubtitleElement startSubtitle=mpController.getSubtitle(regionStartMs);
+	    final SubtitleElement endSubtitle=mpController.getSubtitle(regionEndMs-1);
+	    String info=startSubtitle.text+" ~ "+endSubtitle.text;
+
+	    Log.d(logTag,"Check size of region list before: "+RegionRecord.records.size());
+		Runnable callBack=new Runnable(){
+			@Override
+			public void run() {
+				runOnUiThread(new Runnable(){
+				@Override
+				public void run() {
+					regionFakeList.add(fakeSample);
+					if(regionRecordAdapter!=null)Log.d(logTag,"Warring: the regionRecordAdapter = null !!!");
+					else regionRecordAdapter.notifyDataSetChanged();
+					Log.d(logTag,"Check size of region list after: "+RegionRecord.records.size());
+				}});
+			}};
+		
+			BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this,mediaIndex , regionStartMs, regionEndMs, null, info, -1, callBack);
+	}
+	
+	private void showRecordListPopupMenu(){
+		LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+		final View popupView = inflater.inflate(R.layout.popup_record_list, null);
+		
+		Rect rectgle= new Rect();
+		Window window= getWindow();
+		window.getDecorView().getWindowVisibleDisplayFrame(rectgle);
+		int StatusBarHeight= rectgle.top;
+		int contentViewTop= window.findViewById(Window.ID_ANDROID_CONTENT).getTop();
+		int titleBarHeight= contentViewTop - StatusBarHeight;
+
+		
+		int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+		
+		int subtitleViewHeight=((TextView)findViewById(R.id.subtitleView)).getHeight();
+		//int listViewHeight=screenHeight-titleBarHeight-subtitleViewHeight;
+		int listViewHeight=screenHeight-contentViewTop;
+		
+		Log.i(logTag, "StatusBar Height= " + StatusBarHeight + " , TitleBar Height = " + titleBarHeight);
+		final PopupWindow popupWindow = new PopupWindow(
+				//findViewById(R.layout.popup_record_list),
+				popupView,
+				//LayoutParams.WRAP_CONTENT, listViewHeight);  
+				LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(popupView);  
+        
+		regionListView=(ListView) popupView.findViewById(R.id.recordListView);
+		
+
+/*		final int DELETE = 0;
+		final int CANCEL =1;
+		final QuickAction mQuickAction 	= new QuickAction(LamrimReaderActivity.this);
+		mQuickAction.addActionItem(new ActionItem(DELETE, getString(R.string.dlgManageSrcDel), null));
+		mQuickAction.addActionItem(new ActionItem(CANCEL, getString(R.string.dlgCancel), null));
+		
+		mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
+			@Override
+			public void onItemClick(QuickAction quickAction, int pos, int actionId) {
+				File f;
+				switch(actionId){
+				case DELETE:
+		        	regionRecord.remove(pos);
+		        	list.removeViewAt(pos);
+		        	break;
+				case CANCEL:
+					// Do nothing.
+					break;
+				};
+			}
+		});
+		
+		mQuickAction.setOnDismissListener(new QuickAction.OnDismissListener() {
+			@Override
+			public void onDismiss() {}
+		});
+*/
+		
+
+/*         if(regionRecordAdapter == null)
+        	 regionRecordAdapter = new SimpleAdapter(
+                 this,
+                 regionFakeList,
+                 android.R.layout.simple_list_item_2,
+                 new String[] { "title", "desc" },
+                 new int[] { android.R.id.text1, android.R.id.text2})
+                 {
+
+             		@Override
+             		public View getView(final int position, View convertView, ViewGroup parent) {
+             			View row = convertView;
+             			if (row == null) {
+             				Log.d(getClass().getName(), "row=null, construct it.");
+             				LayoutInflater inflater = getLayoutInflater();
+             				row = inflater.inflate(R.layout.popup_record_list_row, parent, false);
+             			}
+
+             			RegionRecord record=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
+             			Log.d(getClass().getName(), "Set: "+record.title);
+             			TextView title = (TextView) row.findViewById(R.id.regionRowTitle);
+             			TextView desc = (TextView) row.findViewById(R.id.regionRowDesc);
+             			ImageButton editButton = (ImageButton) row.findViewById(R.id.editButton);
+             			ImageButton delButton = (ImageButton) row.findViewById(R.id.deleteButton);
+             			
+             			title.setText(record.title);
+             			desc.setText(getMsToHMS(record.startTimeMs)+" ~ "+getMsToHMS(record.endTimeMs));
+             			
+             			editButton.setFocusable(false);
+             			delButton.setFocusable(false);
+             			
+             			editButton.setOnClickListener(new View.OnClickListener(){
+             				@Override
+             				public void onClick(View v) {
+             					RegionRecord rr=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
+             					Runnable callBack=new Runnable(){
+             						@Override
+             						public void run() {
+             							runOnUiThread(new Runnable(){
+											@Override
+											public void run() {
+												regionRecordAdapter.notifyDataSetChanged();
+											}});
+             			        		
+             						}};
+             					BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this, mediaIndex , rr.startTimeMs, rr.endTimeMs, rr.title, position, callBack);
+             				}});
+             			
+             			delButton.setOnClickListener(new View.OnClickListener(){
+             				@Override
+             				public void onClick(View v) {
+             					BaseDialogs.showDelWarnDialog(
+             							LamrimReaderActivity.this,
+             							"記錄",
+             							null,
+             							new DialogInterface.OnClickListener(){
+             								@Override
+             								public void onClick(DialogInterface dialog,	int which) {
+             									RegionRecord.removeRecord(LamrimReaderActivity.this, position);
+             									regionFakeList.remove(position);
+             									regionRecordAdapter.notifyDataSetChanged();
+             								}},
+             							null,
+             							null);
+             				}});
+             			return row;
+             		}
+             	};
+             	
+*/
+         regionListView.setAdapter(regionRecordAdapter);
+         
+         regionListView.setOnItemClickListener(new OnItemClickListener(){
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
+				Log.d(logTag,"Region record menu: item "+RegionRecord.records.get(position).title+" clicked.");
+				
+				mpController.reset();
+				mpController.setPlayRegion(RegionRecord.records.get(position).startTimeMs, RegionRecord.records.get(position).endTimeMs);
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putInt("mediaIndex", RegionRecord.records.get(position).mediaIndex);
+				editor.putInt("playPosition", RegionRecord.records.get(position).startTimeMs);
+				editor.commit();
+				popupWindow.dismiss();
+				mediaIndex=RegionRecord.records.get(position).mediaIndex;
+				fileDownloader.start(mediaIndex);
+				playWhileMediaReady=true;
+				// The procedure will not return to onStart or onResume, start play media from here.
+			}});
+
+/*		regionListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, final View v2,int position, long id) {
+				final int DELETE = 0;
+				final int CANCEL =1;
+				final QuickAction mQuickAction 	= new QuickAction(popupWindow.getContentView().getContext());
+				mQuickAction.addActionItem(new ActionItem(DELETE, getString(R.string.dlgManageSrcDel), null));
+				mQuickAction.addActionItem(new ActionItem(CANCEL, getString(R.string.dlgCancel), null));
+				
+				mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
+					@Override
+					public void onItemClick(QuickAction quickAction, int pos, int actionId) {
+						switch(actionId){
+						case DELETE:
+				        	regionRecord.remove(pos);
+				        	regionListView.removeViewAt(pos);
+				        	break;
+						case CANCEL:
+							// Do nothing.
+							break;
+						};
+					}
+				});
+				
+				mQuickAction.setOnDismissListener(new QuickAction.OnDismissListener() {
+					@Override
+					public void onDismiss() {}
+				});
+				new Thread(new Runnable(){
+
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						
+						
+						regionListView.post(new Runnable() {
+							   public void run() {
+								   //popupWindow.dismiss();
+								   popupWindow.setFocusable(false);
+								   mQuickAction.show(v2);
+							   }
+							});
+
+					}}).start();
+				
+				return true;
+			}
+		});
+*/		
+		
+		
+		popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener (){
+			@Override
+			public void onDismiss() {
+				SharedPreferences.Editor editor = runtime.edit();
+				String pageKey=getString(R.string.regionRecordListViewPage);
+				String pageShiftKey=getString(R.string.regionRecordListViewPageShift);
+				int pageCount=regionListView.getFirstVisiblePosition();
+				View v=regionListView.getChildAt(0);  
+		        int shift=(v==null)?0:v.getTop();
+		        
+				editor.putInt(pageKey, pageCount);
+				editor.putInt(pageShiftKey, shift);
+				editor.commit();
+		}});
+        popupWindow.setFocusable(true);
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+//        popupWindow.setWidth((int) (getWindowManager().getDefaultDisplay().getWidth()*0.4));
+        
+
+//        popupWindow.setContentView(findViewById(R.id.rootLayout));
+        //AnimationUtils.loadAnimation(getApplicationContext(),R.anim.bounce);
+        popupWindow.setAnimationStyle(R.style.AnimationPopup);
+        popupWindow.update();
+        popupWindow.showAtLocation(findViewById(R.id.rootLayout), Gravity.LEFT|Gravity.TOP, 0, contentViewTop);
+        //popupWindow.showAsDropDown(findViewById(R.id.subtitleView),0, 0);
+        //popupWindow.showAsDropDown(findViewById(R.id.subtitleView));
+        
+        
+	}
+	
 	final protected DownloadListener downloadListener = new DownloadListener() {
 		boolean isSpeechReady=true;
 		boolean isSubtitleReady=true;
@@ -656,7 +1201,80 @@ public class LamrimReaderActivity extends Activity {
 		}
 	};
 
-	private String getMsToHMS(int ms){
+	
+	class RegionRecordAdapter extends SimpleAdapter{
+
+		public RegionRecordAdapter(Context context,	List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
+			super(context, data, resource, from, to);
+		}
+
+		@Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+        	View row = convertView;
+        	if (row == null) {
+        		Log.d(getClass().getName(), "row=null, construct it.");
+        		LayoutInflater inflater = getLayoutInflater();
+        		row = inflater.inflate(R.layout.popup_record_list_row, parent, false);
+        	}
+        	
+        	RegionRecord record=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
+        	Log.d(getClass().getName(), "Set: "+record.title);
+        	TextView title = (TextView) row.findViewById(R.id.regionRowTitle);
+        	TextView timeReg = (TextView) row.findViewById(R.id.timeRegion);
+ 
+        	
+        	TextView info = (TextView) row.findViewById(R.id.info);
+        	
+        	ImageButton editButton = (ImageButton) row.findViewById(R.id.editButton);
+        	ImageButton delButton = (ImageButton) row.findViewById(R.id.deleteButton);
+        	
+        	title.setText(record.title);
+      		timeReg.setText(SpeechData.getNameId(record.mediaIndex)+"    "+getMsToHMS(record.startTimeMs,"\"","'",false)+" ~ "+getMsToHMS(record.endTimeMs,"\"","'",false));
+      		info.setText(record.info);
+      		Log.d(logTag,"Info: "+record.info);
+      			
+      		editButton.setFocusable(false);
+      		delButton.setFocusable(false);
+      			
+      		editButton.setOnClickListener(new View.OnClickListener(){
+      		@Override
+      			public void onClick(View v) {
+      				RegionRecord rr=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
+      				Runnable callBack=new Runnable(){
+      					@Override
+      					public void run() {
+      						runOnUiThread(new Runnable(){
+							@Override
+							public void run() {
+								regionRecordAdapter.notifyDataSetChanged();
+							}});
+       					}};
+        				BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this, mediaIndex , rr.startTimeMs, rr.endTimeMs, rr.title, null, position, callBack);
+        			}});
+        			
+      		delButton.setOnClickListener(new View.OnClickListener(){
+      			@Override
+      			public void onClick(View v) {
+      				BaseDialogs.showDelWarnDialog(
+        				LamrimReaderActivity.this,
+        				"記錄",
+        				null,
+        				new DialogInterface.OnClickListener(){
+        					@Override
+        						public void onClick(DialogInterface dialog,	int which) {
+        							RegionRecord.removeRecord(LamrimReaderActivity.this, position);
+        							regionFakeList.remove(position);
+        							regionRecordAdapter.notifyDataSetChanged();
+        						}},
+        					null,
+        					null);
+      				}});
+      		return row;
+		}
+	};
+	
+	
+	private String getMsToHMS(int ms,String minuteSign,String secSign,boolean hasDecimal){
 		String sub=""+(ms%1000);
 		if(sub.length()==1)sub="00"+sub;
 		else if(sub.length()==2)sub="0"+sub;
@@ -675,6 +1293,6 @@ public class LamrimReaderActivity extends Activity {
 		if(ss.length()==1)ss="0"+ss;
 	
 //	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
-		return mst+'分'+ss+"."+sub+'秒';
+		return mst+minuteSign+ss+((hasDecimal)?"."+sub:"")+secSign;
 	}
 }

@@ -2,6 +2,7 @@ package eyes.blue;
 
 import java.io.BufferedReader;
 
+
 import android.net.Uri;
 import android.os.SystemClock;
 
@@ -16,24 +17,43 @@ import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ClipDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.GradientDrawable.Orientation;
+import android.graphics.drawable.InsetDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.NinePatchDrawable;
+import android.graphics.drawable.PaintDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.MediaController;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
+//import android.widget.MediaController;
 import android.widget.Toast;
-import android.widget.MediaController.MediaPlayerControl;
+//import android.widget.MediaController.MediaPlayerControl;
 /*
  * The class maintain the MediaPlayer, MediaPlayController and subtitle. There are many stage of MediaPlayer while play media, all stage maintain in the class, call functions of this function Instead of the functions of MediaPlayer,
  * Then you will get the better controller of MediaPlayer.
  * */
-public class MediaPlayerController implements MediaPlayerControl {
+public class MediaPlayerController {
 	final public static int MP_IDLE = 0; // after create()
 	final public static int MP_INITED = 1; // after setDataSource()
 	final public static int MP_PREPARING = 2; // prepare()
@@ -58,8 +78,9 @@ public class MediaPlayerController implements MediaPlayerControl {
 	Toast toast = null;
 	
 	boolean isPlayRegion = false;
-	int regionStart = -1;
-	int regionEnd = -1;
+	int regionStartMs = -1;
+	int regionEndMs = -1;
+
 	/*
 	 * Give The constructor the Activity and changedListener for build object. You can change the LamrimReaderActivity to your activity and modify the code of UI control to meet your logic. 
 	 * */
@@ -90,7 +111,6 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
-	@Override
 	public void pause() {
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
@@ -105,7 +125,6 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer.
 	 * */
-	@Override
 	public void seekTo(int pos) {
 		Log.d(logTag,"SeekTo function been call.");
 		if(mpState<MP_PREPARED)return;
@@ -114,40 +133,19 @@ public class MediaPlayerController implements MediaPlayerControl {
 			mediaPlayer.seekTo(pos);
 			return;
 		}
-		
-		// Check is the seek event is fire by Rewind/Forward button
-		int shiftTime=pos-mediaPlayer.getCurrentPosition();
-		if(Math.abs(shiftTime)<15050){
-			int currentIndex;
-			synchronized(playingIndexKey){
-				currentIndex=playingIndex;
-			}
-			
-			// The seek is fire by button
-			if(shiftTime>0)
-				currentIndex++;
-			else currentIndex--;
-			
-			if(currentIndex<0){changedListener.startMoment();return;}
-			else if(currentIndex>subtitle.length-1)return;
-			
-			playingIndex=currentIndex;
+	
+		int index=subtitleBSearch(subtitle, pos);
+		if(index<0){
+			changedListener.startMoment();
+			mediaPlayer.seekTo(pos);
+			return;
 		}
-		else {
-			// The seek event is not fire by button
-			int index=subtitleBSearch(subtitle, pos);
-			if(index<0){
-				changedListener.startMoment();
-				mediaPlayer.seekTo(pos);
-				return;
-				}
-			else if(index>subtitle.length-1){
-				mediaPlayer.seekTo(pos);
-				return;
-			}
-			playingIndex=index;
+		else if(index>subtitle.length-1){
+			mediaPlayer.seekTo(pos);
+			return;
 		}
-		
+
+		playingIndex=index;
 		mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
 		changedListener.onSeek(subtitle[playingIndex]);
 		changedListener.onSubtitleChanged(subtitle[playingIndex]);
@@ -157,7 +155,6 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer. create new subtitleTimer for subtitle changed event.
 	 * */
-	@Override
 	public void start() {
 		// It will play mp3 in Android 4.1 while screen blank. this line solve the problem
 		// Not tested.
@@ -174,9 +171,9 @@ public class MediaPlayerController implements MediaPlayerControl {
 			subtitleTimer.execute(subtitle);
 		}
 		
-		if(isPlayRegion && regionStart != -1 && regionEnd != -1){
-			mediaPlayer.seekTo(subtitle[regionStart].startTimeMs);
-			changedListener.startRegionPlay(subtitle[regionStart],subtitle[regionEnd]);
+		if(isPlayRegion && regionStartMs != -1 && regionEndMs != -1){
+			mediaPlayer.seekTo(regionStartMs);
+			changedListener.startRegionPlay();
 		}
 		
 		synchronized(mediaPlayer){
@@ -188,12 +185,10 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * The reader get content from local drive, always return 0;
 	 * */
-	@Override
 	public int getBufferPercentage() {return 0;}
 	/*
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
-	@Override
 	public int getCurrentPosition() {
 		try{
 		return mediaPlayer.getCurrentPosition();
@@ -204,7 +199,6 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
-	@Override
 	public int getDuration() {
 		try{
 			return mediaPlayer.getDuration();
@@ -216,7 +210,6 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Return is the MediaPlayer playing, but not throw IllegalStateException(return false).
 	 * */
-	@Override
 	public boolean isPlaying() {
 		try{
 			synchronized(mediaPlayer){
@@ -229,18 +222,15 @@ public class MediaPlayerController implements MediaPlayerControl {
 	/*
 	 * Always return true.
 	 * */
-	@Override
 	public boolean canPause() {return true;}
 	
 	/*
 	 * Always return true.
 	 * */
-	@Override
 	public boolean canSeekBackward() {return true;}
 	/*
 	 * Always return true.
 	 * */
-	@Override
 	public boolean canSeekForward() {return true;}
 // =================================================================
 
@@ -255,7 +245,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 			mediaPlayer.reset();
 			mpState=MP_IDLE;
 		}
-		isPlayRegion=false;
+//		isPlayRegion=false;
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	/*
@@ -343,8 +333,11 @@ public class MediaPlayerController implements MediaPlayerControl {
 			return;
 		}
 
+		if(mediaController == null){
 		mediaController = new MediaController(activity);
 		mediaController.setMediaPlayer(this);
+		mediaController.setSubtitle(subtitle);
+		
 		mediaController.setPrevNextListeners(
 				// Next button hit.
 				new View.OnClickListener(){
@@ -363,7 +356,7 @@ public class MediaPlayerController implements MediaPlayerControl {
 		);
 		mediaController.setAnchorView(rootView);
 		mediaController.setEnabled(true);
-
+		}
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				mediaController.show();
@@ -372,31 +365,61 @@ public class MediaPlayerController implements MediaPlayerControl {
 	}
 	
 	// ================================ Functions for region play ================================
+	
+	public void rewToLastSubtitle(){
+		synchronized(playingIndexKey){
+			int currentIndex=playingIndex-1;
+			if(currentIndex<0){seekTo(subtitle[0].startTimeMs);}
+			else seekTo(subtitle[currentIndex].startTimeMs);
+		}
+	}
+	
+	public void fwToNextSubtitle(){
+		synchronized(playingIndexKey){
+			int currentIndex=playingIndex+1;
+			if(currentIndex>=subtitle.length){seekTo(subtitle[subtitle.length-1].startTimeMs);}
+			else seekTo(subtitle[currentIndex].startTimeMs);
+		}
+	}
+	
 	private void onPreviousClick(){
 		if(subtitle==null)return;
-		// Set or deSet
-		if(regionStart!=-1){
-			changedListener.startRegionDeset(subtitle[regionStart]);
-			regionStart=-1;
-			isPlayRegion = false;
-			return;
-		}
-		if(regionEnd!=-1 && playingIndex>regionEnd){
-			//showToastMsg("標記錯誤，開始標記小於結束標記");
-			Log.d(logTag,"User operation error: the region start < region end!");
-			return;
-		}
-			
-		int currentIndex;
-		synchronized(playingIndexKey){
-			currentIndex=playingIndex;
-		}
-		if(currentIndex<0)currentIndex=0;
-		if(currentIndex>subtitle.length-1)currentIndex=subtitle.length-1;
 		
-		regionStart=currentIndex;
-		if(regionStart != -1 && regionEnd != -1)isPlayRegion = true;
-		changedListener.startRegionSeted(subtitle[regionStart]);
+		// delay the hide time of controller.
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				mediaController.show();
+			}
+		});
+		
+		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.prev);
+		
+		// Set or deSet
+		if(regionStartMs!=-1){
+			regionStartMs=-1;
+			isPlayRegion = false;
+			
+			ib.setImageResource(R.drawable.ic_media_rew_d);
+			changedListener.startRegionDeset(subtitle[playingIndex].startTimeMs);
+			updateSeekBar();
+			return;
+		}
+		if(regionEndMs!=-1 && subtitle[playingIndex].startTimeMs>regionEndMs){
+			BaseDialogs.showToast(activity, "標記錯誤，開始標記大於結束標記");
+			Log.d(logTag,"User operation error: the region start > region end!");
+			return;
+		}
+		
+		synchronized(playingIndexKey){
+			regionStartMs=subtitle[playingIndex].startTimeMs;
+		}
+		
+
+		if(regionStartMs != -1 && regionEndMs != -1)isPlayRegion = true;
+		ib.setImageResource(R.drawable.ic_media_rew);
+		changedListener.startRegionSeted(regionStartMs);
+
+		updateSeekBar();
 	}
 	
 	/*
@@ -405,48 +428,168 @@ public class MediaPlayerController implements MediaPlayerControl {
 	 * */
 	private void onNextClick(){
 		if(subtitle==null)return;
+		
+		// delay the hide time of controller.
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				mediaController.show();
+			}
+		});
+		
+		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.next);
+		
 		// Set or deSet
-		if(regionEnd!=-1){
-			changedListener.endRegionDeset(subtitle[regionEnd]);
-			regionEnd=-1;
+		if(regionEndMs!=-1){
+			regionEndMs=-1;
 			isPlayRegion = false;
-			//showToastMsg("已取消標記");
+			
+			ib.setImageResource(R.drawable.ic_media_ff_d);
+			changedListener.endRegionDeset(subtitle[playingIndex].endTimeMs);
+			updateSeekBar();
 			return;
 		}
-		if(regionStart!=-1 && playingIndex<regionStart){
-			//showToastMsg("標記錯誤，結束標記大於開始標記");
+		if(regionStartMs!=-1 && subtitle[playingIndex].endTimeMs<regionStartMs){
+			BaseDialogs.showToast(activity, "標記錯誤，結束標記小於開始標記");
 			Log.d(logTag,"User operation error: the region end  < region start !");
 			return;
 		}
 		
-		int currentIndex;
 		synchronized(playingIndexKey){
-			currentIndex=playingIndex;
+			regionEndMs=subtitle[playingIndex].endTimeMs;
 		}
-		if(currentIndex<0)currentIndex=0;
-		if(currentIndex>subtitle.length-1)currentIndex=subtitle.length-1;
 		
-		regionEnd=currentIndex;
-		if(regionStart != -1 && regionEnd != -1)isPlayRegion = true;
-		//showToastMsg("已設定標記");
-		changedListener.endRegionSeted(subtitle[regionEnd]);
+		if(regionStartMs != -1 && regionEndMs != -1)isPlayRegion = true;
+		ib.setImageResource(R.drawable.ic_media_ff);
+		changedListener.endRegionSeted(regionEndMs);
+		updateSeekBar();
 	}
 	
-	public void setPlayRegion(boolean b){
-		isPlayRegion=b;
-		if(!b){
-			regionStart=-1;
-			regionEnd=-1;
-			isPlayRegion = false;
+	public static Bitmap getNinepatch(int id,int x, int y, Context context){
+		//id is a resource id for a valid ninepatch
+
+		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), id);
+		byte[] chunk = bitmap.getNinePatchChunk();
+		NinePatchDrawable np_drawable = new NinePatchDrawable(context.getResources(),bitmap, chunk, new Rect(), null);
+		np_drawable.setBounds(0, 0,x, y);
+
+		Bitmap output_bitmap = Bitmap.createBitmap(x, y, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(output_bitmap);
+		np_drawable.draw(canvas);
+
+		return output_bitmap;
+	}
+
+	Bitmap seekBarFgBmap = null, seekBarBgBmap = null;
+	private void updateSeekBar(){
+		Bitmap fgBmap=null, bgBmap=null;
+		Canvas bgCanvas=null;
+		
+		final SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
+		final LayerDrawable layer = (LayerDrawable) sb.getProgressDrawable();
+		Drawable drawableFg = (Drawable)layer.findDrawableByLayerId(android.R.id.progress);
+		Drawable drawableBg = (Drawable)layer.findDrawableByLayerId(android.R.id.background);
+		
+		Log.d(logTag,"There are "+layer.getNumberOfLayers()+" layer in SeekBar object, forground: "+drawableFg+", background: "+drawableBg);
+		
+		final Rect fgBound=drawableFg.copyBounds();
+		final Rect bgBound=drawableBg.copyBounds();
+		
+		// initial the background and foreground
+		if(seekBarFgBmap == null){
+			Log.d(logTag,"Initial the forground width="+fgBound.right+", height="+fgBound.bottom);
+			seekBarFgBmap = getNinepatch(R.drawable.scrubber_primary_holo, fgBound.right, fgBound.bottom, activity);
+			Log.d(logTag,"Initial the background width="+bgBound.right+", height="+bgBound.bottom);
+			seekBarBgBmap = getNinepatch(R.drawable.scrubber_track_holo_light, bgBound.right, bgBound.bottom, activity);
 		}
+		
+		// Release the segment select.
+		if(regionStartMs==-1 && regionEndMs==-1 ){
+			Log.d(logTag,"Release the region select mode.");
+			BitmapDrawable drawable = new BitmapDrawable(activity.getResources(), seekBarFgBmap);
+			Drawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
+			progress.setBounds(0, 0, fgBound.right, fgBound.bottom);
+			layer.setDrawableByLayerId(android.R.id.progress, progress);
+			
+			drawable = new BitmapDrawable(activity.getResources(), seekBarBgBmap);
+			InsetDrawable background=  new InsetDrawable(drawable,5,5,5,5);
+			background.setBounds(0, 0, bgBound.right, bgBound.bottom);
+			layer.setDrawableByLayerId(android.R.id.background, background);
+			
+			sb.postInvalidate();
+
+			int value=sb.getProgress();
+			sb.setProgress(0);
+			sb.setProgress(value);
+			return;
+		}
+
+		// Add one pixel avoid while enableEnd = enableStart, there will throw exception while copy pixel.
+		Log.d(logTag,"Debug: drawableFg: "+drawableFg+", copyBounds(): "+ drawableFg.copyBounds()+", getIntrinsicWidth: "+drawableFg.getIntrinsicWidth());
+		float enableStart=((regionStartMs==-1)?0:(float)regionStartMs/mediaPlayer.getDuration()*fgBound.right);
+		float enableEnd=((regionEndMs==-1)?fgBound.right:(float)regionEndMs/mediaPlayer.getDuration()*fgBound.right)+1;
+		
+		Log.d(logTag,"Create forground rec: width="+Math.round(enableEnd-enableStart)+", height="+fgBound.bottom);
+		fgBmap=getNinepatch(R.drawable.scrubber_primary_holo, Math.round(enableEnd-enableStart),fgBound.bottom, activity);
+		bgBmap=getNinepatch(R.drawable.scrubber_track_holo_light, bgBound.right,bgBound.bottom, activity);
+		
+//		Canvas fgCanvas=new Canvas(fgBmap);
+		bgCanvas=new Canvas(bgBmap);
+		
+		Rect src = new Rect(0, 0, fgBmap.getWidth(), fgBmap.getHeight());
+		Rect dst = new Rect(Math.round(enableStart), 0, Math.round(enableEnd), fgBound.bottom);
+		
+		bgCanvas.drawBitmap(fgBmap, src, dst, null);
+
+		BitmapDrawable drawable = new BitmapDrawable(activity.getResources(), bgBmap);
+		final Drawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
+		final InsetDrawable background=  new InsetDrawable(drawable,5,5,5,5);
+		
+		//LayerDrawable mylayer = new LayerDrawable(new Drawable[]{background,progress});
+		//sb.setProgressDrawable(mylayer);
+		Handler handler=new Handler();
+		handler.post(new Runnable(){
+
+			@Override
+			public void run() {
+				progress.setBounds(fgBound);
+				background.setBounds(bgBound);
+				layer.setDrawableByLayerId(android.R.id.background, background);
+				layer.setDrawableByLayerId(android.R.id.progress, progress);
+				
+				sb.postInvalidate();
+				int value=sb.getProgress();
+				sb.setProgress(0);
+				sb.setProgress(value);
+			}
+		});
+		
+	}
+	
+	public void desetPlayRegion(){
+		Log.d(logTag,"Deset play region");
+			regionStartMs=-1;
+			regionEndMs=-1;
+//			isPlayRegion = false;
 	}
 	
 	public boolean isPlayRegion(){return isPlayRegion;}
-	public void setPlayRegion(int start,int end){
-		regionStart=start;
-		regionEnd=end;
+	public boolean canPlayRegion(){return (regionStartMs>=0 && regionEndMs >0);}
+	public void setPlayRegion(int startTimeMs,int endTimeMs){
+		isPlayRegion=true;
+		regionStartMs=startTimeMs;
+		regionEndMs=endTimeMs;
+		Log.d(logTag," Set play region: isPlayRegion="+isPlayRegion+", start="+regionStartMs+", end="+regionEndMs);
 	}
-	
+	public int getRegionStartPosition(){
+		return regionStartMs;
+	}
+	public int getRegionEndPosition(){
+		return regionEndMs;
+	}
+	public SubtitleElement getSubtitle(int position){
+		return subtitle[subtitleBSearch(subtitle, position)];
+	}
+
 	// ===========================================================================================
 	
 	public void showToastMsg(final String s){
@@ -550,10 +693,12 @@ public class MediaPlayerController implements MediaPlayerControl {
 						int playPoint=mediaPlayer.getCurrentPosition();
 						int playArrayIndex=subtitleBSearch(se, playPoint);
 						
+						Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
 						// Play region function has set, and over the region, stop play.
-						if(isPlayRegion && regionStart != -1 && regionEnd != -1 && playArrayIndex > regionEnd){
+						if(isPlayRegion && regionStartMs != -1 && regionEndMs != -1 && playPoint > regionEndMs){
+							Log.d(logTag,"Stop Play");
 							pause();
-							changedListener.stopRegionPlay(subtitle[regionStart], subtitle[regionEnd]);
+							changedListener.stopRegionPlay();
 							return null;
 						}
 						
@@ -718,25 +863,4 @@ public class MediaPlayerController implements MediaPlayerControl {
 		return -1;
 	}
 	
-	private String getMsToHMS(int ms){
-		String sub=""+(ms%1000);
-		if(sub.length()==1)sub="00"+sub;
-		else if(sub.length()==2)sub="0"+sub;
-	
-		int second=ms/1000;
-		int ht=second/3600;
-		second=second%3600;
-		int mt=second/60;
-		second=second%60;
-	
-		String hs=""+ht;
-		if(hs.length()==1)hs="0"+hs;
-		String mst=""+mt;
-		if(mst.length()==1)mst="0"+mst;
-		String ss=""+second;
-		if(ss.length()==1)ss="0"+ss;
-	
-//	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
-		return mst+'分'+ss+"."+sub+'秒';
-	}
 }

@@ -26,7 +26,7 @@
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
-                android:id="@+id/textView2"
+                android:id="@+id/endTimeTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
@@ -103,7 +103,7 @@
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <TextView
-                    android:id="@+id/textView4"
+                    android:id="@+id/startTimeTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
@@ -307,7 +307,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="2dp"
                 android:paddingRight="2dp"
-                android:src="@drawable/open" />
+                android:src="@drawable/folder" />
 
         </LinearLayout>
 

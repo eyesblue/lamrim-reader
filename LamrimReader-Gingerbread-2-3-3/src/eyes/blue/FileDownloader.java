@@ -54,6 +54,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.os.AsyncTask.Status;
 import android.util.Log;
@@ -137,7 +138,8 @@ public class FileDownloader {
 					return null;
 				}
 				downloadTasks=al.toArray(new JSONObject[0]);
-				if(mkDlTaskDialog.isShowing())mkDlTaskDialog.dismiss();
+				//if(mkDlTaskDialog.isShowing())
+					mkDlTaskDialog.dismiss();
 				Log.d(getClass().getName(),"Call checkNetAccessPermission()");
 				checkNetAccessPermission();
 				
@@ -146,23 +148,30 @@ public class FileDownloader {
 
 		};
 
-		mkDlTaskDialog.setTitle("準備下載");
-		mkDlTaskDialog.setMessage("檔案驗證中，請稍候 ...");
-		mkDlTaskDialog.setCanceledOnTouchOutside(false);
-		mkDlTaskDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-		mkDlTaskDialog.setMax(index.length);
-		mkDlTaskDialog.setButton(DialogInterface.BUTTON_NEGATIVE, activity.getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
-		    @Override
-		    public void onClick(DialogInterface dialog, int which) {
-		    	Log.d(getClass().getName(),"User cancel dialog mkDlTaskDialog.");
-		    	checkTask.cancel(false);
-		    	if(wakeLock.isHeld())wakeLock.release();
-		    	mkDlTaskDialog.dismiss();
-		    }
-		});
-		if(!wakeLock.isHeld()){wakeLock.acquire();}
-		//if (! activity.isFinishing())
-			if(!activity.isFinishing() && !mkDlTaskDialog.isShowing())mkDlTaskDialog.show();
+		// Do not show the prepare download dialog while short term, or may happen the thread finish before dialog show, then the dialog will not been close.
+		if(index.length>1){
+			mkDlTaskDialog.setTitle("準備下載");
+			mkDlTaskDialog.setMessage("檔案驗證中，請稍候 ...");
+			mkDlTaskDialog.setCanceledOnTouchOutside(false);
+			mkDlTaskDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			mkDlTaskDialog.setMax(index.length);
+			mkDlTaskDialog.setButton(DialogInterface.BUTTON_NEGATIVE, activity.getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					Log.d(getClass().getName(),"User cancel dialog mkDlTaskDialog.");
+					checkTask.cancel(false);
+					if(wakeLock.isHeld())wakeLock.release();
+					mkDlTaskDialog.dismiss();
+				}
+			});
+			if(!wakeLock.isHeld()){wakeLock.acquire();}
+			Handler handler=new Handler();	
+			handler.post(new Runnable(){
+				@Override
+				public void run() {
+					if(!activity.isFinishing() && !mkDlTaskDialog.isShowing())mkDlTaskDialog.show();
+			}});
+		}
 		checkTask.execute();
 	}
 	
