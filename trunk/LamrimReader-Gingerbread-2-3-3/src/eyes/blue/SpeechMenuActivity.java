@@ -1,11 +1,13 @@
 package eyes.blue;
 
 import java.io.File;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.londatiga.android.ActionItem;
+import net.londatiga.android.QuickAction;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +21,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -33,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -40,7 +44,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class SpeechMenuActivity extends Activity {
-	Button btnDownloadAll, btnMaintain,  btnManageStorage;
+	ImageButton btnDownloadAll, btnMaintain,  btnManageStorage;
 	boolean speechFlags[], subtitleFlags[]=null;
 	String[] descs, subjects;
 	ArrayList<HashMap<String,Boolean>> fakeList = new ArrayList<HashMap<String,Boolean>>();
@@ -53,7 +57,10 @@ public class SpeechMenuActivity extends Activity {
 	SharedPreferences runtime = null;
 	// The handle for close the dialog.
 	AlertDialog itemManageDialog = null;
+	int manageItemIndex=-1;
 	
+	final int PLAY=0,UPDATE=1,	DELETE=2, CANCEL=3;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		
@@ -62,9 +69,9 @@ public class SpeechMenuActivity extends Activity {
 
 	
 	speechList=(ListView) findViewById(R.id.list);
-	btnDownloadAll=(Button) findViewById(R.id.btnDownloadAll);
-	btnMaintain=(Button) findViewById(R.id.btnMaintain);
-	btnManageStorage=(Button) findViewById(R.id.btnManageStorage);
+	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
+	btnMaintain=(ImageButton) findViewById(R.id.btnMaintain);
+	btnManageStorage=(ImageButton) findViewById(R.id.btnManageStorage);
 	playWindow=new Intent(SpeechMenuActivity.this,LamrimReaderActivity.class);
 	 
 	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -74,7 +81,66 @@ public class SpeechMenuActivity extends Activity {
 	//if(wakeLock.isHeld())wakeLock.release();
 	fileSysManager=new FileSysManager(this);
 	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+    
 
+	
+	
+	final QuickAction mQuickAction 	= new QuickAction(this);
+	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
+	mQuickAction.addActionItem(new ActionItem(UPDATE, getString(R.string.dlgManageSrcUpdate), getResources().getDrawable(R.drawable.update)));
+	mQuickAction.addActionItem(new ActionItem(DELETE, getString(R.string.dlgManageSrcDel), getResources().getDrawable(R.drawable.delete)));
+	mQuickAction.addActionItem(new ActionItem(CANCEL, getString(R.string.dlgCancel), getResources().getDrawable(R.drawable.return_sign)));
+	
+	mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
+		@Override
+		public void onItemClick(QuickAction quickAction, int pos, int actionId) {
+			AlertDialog.Builder builder;
+			switch(actionId){
+			case PLAY:
+				resultAndPlay(manageItemIndex);
+				break;
+			case UPDATE:
+				DialogInterface.OnClickListener updateListener=new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
+						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
+			        	if(f!=null)f.delete();
+			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
+			        	if(f!=null)f.delete();
+			        	resultAndPlay(manageItemIndex);
+					}};
+	        	
+				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, updateListener, null, null);
+				break;
+			case DELETE:
+				DialogInterface.OnClickListener deleteListener=new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
+						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
+			        	if(f!=null)f.delete();
+			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
+			        	if(f!=null)f.delete();
+			        	refreshListView();
+					}};
+
+				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, deleteListener, null, null);
+	        	break;
+			case CANCEL:
+				// Do nothing.
+				break;
+			};
+		}
+	});
+	
+	mQuickAction.setOnDismissListener(new QuickAction.OnDismissListener() {
+		@Override
+		public void onDismiss() {
+			//Toast.makeText(getApplicationContext(), "Ups..dismissed", Toast.LENGTH_SHORT).show();
+		}
+	});
+	
 	String infos[]=getResources().getStringArray(R.array.desc);
 	descs=new String[infos.length];
 	subjects=new String[infos.length];
@@ -110,9 +176,10 @@ public class SpeechMenuActivity extends Activity {
 			// If there is no speech file, nor subtitle file, don't show the manage dialog.
 			if(!speechFlags[position]&&!subtitleFlags[position])
 				return false;
-			
-			itemManageDialog=getItemManageDialog(position);
-			itemManageDialog.show();
+			manageItemIndex=position;
+			mQuickAction.show(v);
+			//itemManageDialog=getItemManageDialog(position);
+			//itemManageDialog.show();
 //			if(!wakeLock.isHeld()){wakeLock.acquire();}
 			return true;
 		}
@@ -300,81 +367,18 @@ public class SpeechMenuActivity extends Activity {
 		runner.execute();
 	}
 	
-	
-	// These buttons of the dialog are short term process, no wake luck need, if destroy by blank screen, no effect for our logic. 
-	private AlertDialog getItemManageDialog(final int index){
-		LayoutInflater inflater = getLayoutInflater();
-		View v = inflater.inflate(R.layout.src_manage_dialog,null);
-		
+/*	private AlertDialog.Builder getConfirmDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//	    builder.setTitle(getString(R.string.dlgManageSrcTitle));
-	    
-
-	    ((Button)v.findViewById(R.id.dlgSrcManageDlgPlay)).setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				Log.d(getClass().getName(),"Source manage dialog: play pressed.");
-	        	resultAndPlay(index);
+		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int id) {
 	        	if(wakeLock.isHeld())wakeLock.release();
-	        	itemManageDialog.dismiss();
-		}});
-	    ((Button)v.findViewById(R.id.dlgSrcManageDlgUpdate)).setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				Log.d(getClass().getName(),"Check box check status: update pressed.");
-	        	File f;
-	        	f=FileSysManager.getLocalMediaFile(index);
-	        	if(f!=null)f.delete();
-	        	f=FileSysManager.getLocalSubtitleFile(index);
-	        	if(f!=null)f.delete();
-	        	resultAndPlay(index);
-	        	if(wakeLock.isHeld())wakeLock.release();
-	        	itemManageDialog.dismiss();
-		}});
-
-	    ((Button)v.findViewById(R.id.dlgSrcManageDlgDel)).setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				Log.d(getClass().getName(),"Check box check status: delete pressed.");
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(SpeechMenuActivity.this);
-				builder.setTitle(getString(R.string.dlgDelFileTitle));
-				builder.setMessage(getString(R.string.dlgDelFileMsg));
-				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {
-			        public void onClick(DialogInterface dialog, int id) {
-			        	File f;
-			        	f=FileSysManager.getLocalMediaFile(index);
-			        	if(f!=null)if(f.delete())speechFlags[index]=false;
-			        	f=FileSysManager.getLocalSubtitleFile(index);
-			        	if(f!=null)if(f.delete())subtitleFlags[index]=false;
-			        	refreshListView();
-			        	if(wakeLock.isHeld())wakeLock.release();
-			        	dialog.dismiss();
-			            
-			        }
-			    });
-			    builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
-			        public void onClick(DialogInterface dialog, int id) {
-
-			        	if(wakeLock.isHeld())wakeLock.release();
-			            dialog.cancel();
-			        }
-			    });
-			    builder.create().show();
-			    itemManageDialog.dismiss();
-		}});
-
-	    ((Button)v.findViewById(R.id.dlgSrcManageDlgCancel)).setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				if(wakeLock.isHeld())wakeLock.release();
-				itemManageDialog.dismiss();
-		}});
-
-	    
-	    builder.setView(v);
-	    return builder.create();
+	            dialog.cancel();
+	        }
+	    });
+		return builder;
 	}
+*/	// These buttons of the dialog are short term process, no wake luck need, if destroy by blank screen, no effect for our logic. 
+	
 	
 	class SpeechListAdapter extends SimpleAdapter {
 		float textSize = 0;
@@ -402,11 +406,15 @@ public class SpeechMenuActivity extends Activity {
 			TextView speechDesc = (TextView) row.findViewById(R.id.speechDesc);
 			
 			if(speechFlags[position])
-				mediaSign.setBackgroundColor(0xFFFFFFDF);
-			else mediaSign.setBackgroundColor(Color.BLACK);
+				mediaSign.setImageResource(R.drawable.speech);
+//				mediaSign.setBackgroundColor(0xFFFFFFDF);
+//			mediaSign.setBackgroundColor(Color.BLACK);				
+			else mediaSign.setImageResource(R.drawable.speech_d);
 			if(subtitleFlags[position])
-				subtitleSign.setBackgroundColor(0xFFFFFFDF);
-			else subtitleSign.setBackgroundColor(Color.BLACK);
+				//subtitleSign.setBackgroundColor(0xFFFFFFDF);
+				subtitleSign.setImageResource(R.drawable.subtitle);
+			//subtitleSign.setBackgroundColor(Color.BLACK);
+			else subtitleSign.setImageResource(R.drawable.subtitle_d); 
 			if(speechFlags[position]&&subtitleFlags[position]){
 				title.setTextColor(Color.BLACK);
 				subject.setTextColor(Color.BLACK);

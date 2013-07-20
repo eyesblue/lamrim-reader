@@ -133,8 +133,8 @@ public class StorageManageActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				AlertDialog.Builder builder=getConfirmDialog();
-				builder.setTitle(R.string.dlgDelFileTitle);
-				builder.setMessage(R.string.dlgDelFileMsg);
+				builder.setTitle(String.format(getString(R.string.dlgDelWarnTitle),"檔案"));
+				builder.setMessage(String.format(getString(R.string.dlgDelWarnMsg),"檔案"));
 				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -164,8 +164,8 @@ public class StorageManageActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				AlertDialog.Builder builder=getConfirmDialog();
-				builder.setTitle(R.string.dlgDelFileTitle);
-				builder.setMessage(R.string.dlgDelFileMsg);
+				builder.setTitle(String.format(getString(R.string.dlgDelWarnTitle),"檔案"));
+				builder.setMessage(String.format(getString(R.string.dlgDelWarnMsg),"檔案"));
 				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 					@Override
 					public void onClick(DialogInterface dialog, int which) {

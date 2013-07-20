@@ -23,6 +23,28 @@ import android.util.Log;
 public class Util {
 	static String logTag="LamrimReader";
 	
+	public static String getMsToHMS(int ms){
+		String sub=""+(ms%1000);
+		if(sub.length()==1)sub="00"+sub;
+		else if(sub.length()==2)sub="0"+sub;
+	
+		int second=ms/1000;
+		int ht=second/3600;
+		second=second%3600;
+		int mt=second/60;
+		second=second%60;
+	
+		String hs=""+ht;
+		if(hs.length()==1)hs="0"+hs;
+		String mst=""+mt;
+		if(mst.length()==1)mst="0"+mst;
+		String ss=""+second;
+		if(ss.length()==1)ss="0"+ss;
+	
+//	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
+		return mst+'分'+ss+"."+sub+'秒';
+	}
+	
 	public static boolean unZip( String zipname , String extractTo)
 	{       
 	     InputStream is;

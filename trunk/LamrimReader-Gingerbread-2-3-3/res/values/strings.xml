@@ -10,10 +10,9 @@
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
     
     <!-- Default Value -->
-    <integer name="bookFontSizeMax">128</integer>
+    <integer name="bookFontSizeMax">48</integer>
     <integer name="bookFontSizeMin">8</integer>
-    <integer name="defBookFontSize">18</integer> 
-    <integer name="defSubtitleFontSize">18</integer>
+    <integer name="defFontSize">18</integer> 
     <integer name="subtitleMonInterval">100</integer>
     <integer name="downloadBufferSize">16384</integer>
     <string name="mediaCheckSumWhileDownload">true</string>
@@ -27,6 +26,8 @@
     <!-- <string name="defMediaType">MP3</string> -->
     <string name="defSubtitleType">SRT</string>
     <string name="defTheoryType">TXT</string>
+    <string name="regionRecordFile">RegionRecord</string>
+    <string name="regionRecordColumeName">records</string>
     
 	<!-- For Option Panel -->
 	<string name="bookFontSize">論文</string>
@@ -40,8 +41,10 @@
     <!--  For LamrimReaderActivity -->
 	<string name="app_name">LamrimReader</string>
 	<string name="menuStrSelectSpeech">選擇音檔</string>
-    <string name="menuStrOption">設定</string>
-    <string name="menuStrAbout">關於</string>
+    <string name="menuStrTextSize">設定字體</string>
+    <string name="menuStrSavePlayRegion">儲存區段</string>
+    <string name="menuStrPlayRegionRec">播放區段</string>
+    <string name="exitApp">關閉</string>
     <string name="noSubtitleDesc">無字幕</string>
     <string name="selectIndexFromMenuDesc">請從選單選擇章節或錄音</string>
     <string name="soundInUseError">音效裝置被其他軟體佔用中</string>
@@ -56,8 +59,11 @@
     <string name="errIOEwhileSetPlayerSrc">開啟語音檔時發生輸出入錯誤!</string>
 	<string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhilePrepPlayer">準備語音檔時發生輸出入錯誤!</string>
-				
-    
+	<string name="inputTitleHint">請輸入標題！</string>
+    <integer name="textMaxSize">100</integer>
+    <integer name="textMinSize">8</integer>
+    <string name="regionRecordListViewPage">regionListPage</string>
+    <string name="regionRecordListViewPageShift">regionListPageShift</string>
     <!-- For Speech Menu -->
     <string name="musicSign">♬</string>
     <string name="subtitleSign">❏</string>
@@ -99,8 +105,8 @@
     <string name="dlgManageSrcPlay">播放</string>
     <string name="dlgManageSrcUpdate">更新</string>
     <string name="dlgManageSrcDel">刪除</string>
-    <string name="dlgDelFileTitle">刪除檔案</string>
-    <string name="dlgDelFileMsg">檔案即將被刪除，您確定要刪除檔案嗎？</string>
+    <string name="dlgDelWarnTitle">刪除%1$s</string>
+    <string name="dlgDelWarnMsg">%1$s即將被刪除，您確定要刪除%1$s嗎？</string>
     <string name="dlgTitleMaintaining">維護檔案</string>
     <string name="dlgMsgMaintaining">維護檔案中，請稍候...</string>
     <string name="title_activity_storage_manage">StorageManageActivity</string>

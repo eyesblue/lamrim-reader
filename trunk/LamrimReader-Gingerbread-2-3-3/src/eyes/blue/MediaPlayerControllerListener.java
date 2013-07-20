@@ -21,10 +21,10 @@ public class MediaPlayerControllerListener {
 	 * */
 	public void onMediaPrepared(){}
 	
-	public void startRegionSeted(SubtitleElement subtitle){}
-	public void startRegionDeset(SubtitleElement subtitle){}
-	public void endRegionSeted(SubtitleElement subtitle){}
-	public void endRegionDeset(SubtitleElement subtitle){}
-	public void startRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){}
-	public void stopRegionPlay(SubtitleElement startSubtitle,SubtitleElement endSubtitle){}
+	public void startRegionSeted(int position){}
+	public void startRegionDeset(int position){}
+	public void endRegionSeted(int position){}
+	public void endRegionDeset(int position){}
+	public void startRegionPlay(){}
+	public void stopRegionPlay(){}
 }

@@ -17,26 +17,44 @@
             android:gravity="center"
             android:orientation="vertical" >
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnDownloadAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="2dp"
-                android:text="全部\n下載" />
+                android:src="@drawable/download" />
 
-            <Button
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="全部下載"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <ImageButton
                 android:id="@+id/btnMaintain"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="2dp"
-                android:text="檔案\n維護" />
+                android:src="@drawable/maintain" />
 
-            <Button
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="檔案維護"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <ImageButton
                 android:id="@+id/btnManageStorage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="2dp"
-                android:text="空間\n管理" />
+                android:src="@drawable/options" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="儲存管理"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
