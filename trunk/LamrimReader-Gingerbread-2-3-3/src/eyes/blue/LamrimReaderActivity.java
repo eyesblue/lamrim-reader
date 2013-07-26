@@ -112,8 +112,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 	final static int THEORY_MENU_RESULT = 1;
 	final static int OPT_MENU_RESULT = 2;
 	
-	
-	
 	static int mediaIndex = -1;
 	MediaPlayerController mpController;
 	private PowerManager powerManager = null;
@@ -138,7 +136,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	ImageView toastSubtitleIcon;
 	ImageView toastInfoIcon;
 	MenuItem rootMenuItem = null;
-	boolean playWhileMediaReady = false;
+	int regionPlayIndex = -1;
 //	ArrayList<RegionRecord> regionRecord = null;
 	
 	// the 3 object is paste on the popupwindow object, it not initial at startup.
@@ -221,10 +219,7 @@ public class LamrimReaderActivity extends SherlockActivity {
                 new int[] { android.R.id.text1, android.R.id.text2}
 		);
 
-		
-		
-		
-		mpController = new MediaPlayerController(LamrimReaderActivity.this, new MediaPlayerControllerListener() {
+		mpController = new MediaPlayerController(LamrimReaderActivity.this, LamrimReaderActivity.this.findViewById(android.R.id.content), new MediaPlayerControllerListener() {
 			@Override
 			public void onSubtitleChanged(SubtitleElement subtitle) {
 //				Log.d(getClass().getName(), "Set subtitle: "+ subtitle.text);
@@ -243,27 +238,37 @@ public class LamrimReaderActivity extends SherlockActivity {
 				else setSubtitleViewText(getString(R.string.dlgHintMpControllerNoSubtitle));
 				
 				// If this time fire by user select a new speech, no need to seekTo(sometime), just play from 0, and set the newPlay flag to false.
-				int seekPosition=runtime.getInt("playPosition", -1);
-				if(seekPosition!=0)mpController.seekTo(seekPosition);
+				int seekPosition=runtime.getInt("playPosition",0);
+					Log.d(logTag,"Seek to last play positon "+seekPosition);
+					mpController.seekTo(seekPosition);
+
+
 				getSupportActionBar().setTitle(getString(R.string.app_name) +" V"+serialVersionUID);
 				getSupportActionBar().setSubtitle(SpeechData.getNameId(mediaIndex));
 				Log.d(logTag,"Check media static before show controller: media player state: "+mpController.getMediaPlayerState()+", normal should equal or bigger then "+MediaPlayerController.MP_PREPARED);
-				if(playWhileMediaReady)mpController.start();
-				else
-					mpController.showMediaPlayerController(LamrimReaderActivity.this.findViewById(android.R.id.content));
+				if(regionPlayIndex!=-1){
+					Log.d(logTag,"This play event is region play, set play region.");					
+					mpController.setPlayRegion(RegionRecord.records.get(regionPlayIndex).startTimeMs, RegionRecord.records.get(regionPlayIndex).endTimeMs);
+					mpController.start();
+					regionPlayIndex=-1;
+				}
+				else{
+					Log.d(logTag,"The play event is fire by user select a new speech.");
+					mpController.showMediaPlayerController();
+					}
 			}
 			@Override
 			public void startRegionSeted(int position){
-				showNarmalToastMsg("區段開始位置設定完成: "+getMsToHMS(position,"\"","'",false));
+//				showNarmalToastMsg("區段開始位置設定完成: "+getMsToHMS(position,"\"","'",false));
 			}
 			@Override
 			public void startRegionDeset(int position){
-				showNarmalToastMsg("區段開始位置已清除: ");
+//				showNarmalToastMsg("區段開始位置已清除: ");
 			}
-			@Override
-			public void endRegionSeted(int position){showNarmalToastMsg("區段結束位置設定完成: "+getMsToHMS(position,"\"","'",false));}
-			@Override
-			public void endRegionDeset(int position){showNarmalToastMsg("區段結束位置已清除: ");}
+//			@Override
+//			public void endRegionSeted(int position){showNarmalToastMsg("區段結束位置設定完成: "+getMsToHMS(position,"\"","'",false));}
+//			@Override
+//			public void endRegionDeset(int position){showNarmalToastMsg("區段結束位置已清除: ");}
 			@Override
 			public void startRegionPlay(){
 				showNarmalToastMsg("開始區段播放");
@@ -274,10 +279,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 			}
 		});
 
-
-		
-		
-		
 		LayoutInflater inflater = getLayoutInflater();
 		toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) findViewById(R.id.toastLayout));
 		toastTextView = (TextView) toastLayout.findViewById(R.id.text);
@@ -301,9 +302,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public void onClick(View v) {
 				Log.d(logTag, v	+ " been clicked, Show media plyaer control panel.");
 				if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
-					mpController.showMediaPlayerController(findViewById(R.id.rootLayout));
+					mpController.showMediaPlayerController();
 			}
 		});
+		
 		fileDownloader = new FileDownloader(LamrimReaderActivity.this,downloadListener);
 		bookView = (ListView) findViewById(R.id.bookPageGrid);
 		bookView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -332,7 +334,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				// String s=(v.equals(subtitleView))?" is ":" is not ";
 				Log.d(logTag, v	+ " been clicked, Show media plyaer control panel.");
 				if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
-					mpController.showMediaPlayerController(findViewById(R.id.rootLayout));
+					mpController.showMediaPlayerController();
 			}
 		});
 
@@ -343,6 +345,42 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 		Log.d(funcLeave, "******* onCreate *******");
 		// LogRepoter.log("Leave OnCreate");
+	}
+	
+	private void setTheoryArea() {
+		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
+		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
+		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
+		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
+		final int bookPage=runtime.getInt("bookPage", 0);
+		final int bookPageShift=runtime.getInt("bookPageShift", 0);
+//		String[] bookArray=getResources().getStringArray(R.array.book);
+
+		bookList = new ArrayList<HashMap<String, String>>();
+        int pIndex = 0;
+
+        for (String value : TheoryData.content) {
+                HashMap<String, String> item = new HashMap<String, String>();
+                item.put("page", value);
+                item.put("desc", "第 " + (++pIndex) + " 頁");
+                bookList.add(item);
+        }
+		
+		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
+		bookView.setAdapter(adapter);
+		adapter.notifyDataSetChanged();
+		
+		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
+		
+		runOnUiThread(new Runnable() {
+			public void run() {
+				adapter.setTextSize(theoryTextSize);
+				bookView.setSelectionFromTop(bookPage, bookPageShift);
+				adapter.notifyDataSetChanged();
+				subtitleView.setTextSize(subtitleTextSize);
+				jumpPage.setText(Integer.toString(bookPage));
+			}
+		});
 	}
 
 	@Override
@@ -375,14 +413,13 @@ public class LamrimReaderActivity extends SherlockActivity {
 		try {
 			if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED){
 				Log.d(logTag,"onResume: The state of MediaPlayer is PAUSE, start play.");
-				mpController.showMediaPlayerController(LamrimReaderActivity.this.findViewById(android.R.id.content));
+				mpController.showMediaPlayerController();
 				return;
 			}
 		} catch (IllegalStateException e) {	e.printStackTrace();}
 		
 		mediaIndex=runtime.getInt("mediaIndex", -1);
 		if(mediaIndex!=-1)fileDownloader.start(mediaIndex);
-
 		Log.d(logTag,"Leave onResume");
 	}
 
@@ -472,9 +509,7 @@ public class LamrimReaderActivity extends SherlockActivity {
         
         //LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 	    //final View v = factory.inflate(R.layout.action_bar_control_panel, null);
-        
-        
-		
+
         getSupportActionBar().setCustomView(actionBarControlPanel);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         return super.onCreateOptionsMenu(menu);
@@ -582,8 +617,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 			editor.putInt("mediaIndex", selected);
 			editor.putInt("playPosition", 0);
 			editor.commit();
-			playWhileMediaReady=false;
-			mpController.desetPlayRegion();
+			regionPlayIndex=-1;
+//			isRegionPlay=false;
+//			mpController.desetPlayRegion();
 			mpController.reset();
 			
 			// After onActivityResult, the life-cycle will return to onStart, do start downloader in OnResume.
@@ -598,41 +634,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		Log.d(funcLeave, "Leave onActivityResult");
 	}
 
-	private void setTheoryArea() {
-		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
-		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
-		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
-		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
-		final int bookPage=runtime.getInt("bookPage", 0);
-		final int bookPageShift=runtime.getInt("bookPageShift", 0);
-		String[] bookArray=getResources().getStringArray(R.array.book);
-
-		bookList = new ArrayList<HashMap<String, String>>();
-        int pIndex = 0;
-
-        for (String value : bookArray) {
-                HashMap<String, String> item = new HashMap<String, String>();
-                item.put("page", value);
-                item.put("desc", "第 " + (++pIndex) + " 頁");
-                bookList.add(item);
-        }
-		
-		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
-		bookView.setAdapter(adapter);
-		adapter.notifyDataSetChanged();
-		
-		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
-		
-		runOnUiThread(new Runnable() {
-			public void run() {
-				adapter.setTextSize(theoryTextSize);
-				bookView.setSelectionFromTop(bookPage, bookPageShift);
-				adapter.notifyDataSetChanged();
-				subtitleView.setTextSize(subtitleTextSize);
-				jumpPage.setText(Integer.toString(bookPage));
-			}
-		});
-	}
+	
 
 	class TheoryListAdapter extends SimpleAdapter {
 		float textSize = 0;
@@ -794,14 +796,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 	private void showSetTextSizeDialog(){
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
-	    
-//	    Dialog dialog = new Dialog(this);
-//	    dialog.setContentView(R.layout.set_text_size_dialog_view);
-//	    dialog.setCancelable(true);
-	    
-	    
-//	    final TextView theorySample=(TextView) v.findViewById(R.id.theorySample);
-//	    final TextView subtitleSample=(TextView) v.findViewById(R.id.subtitleSample);
 	    final SeekBar theorySb=(SeekBar) v.findViewById(R.id.theorySizeBar);
 	    final SeekBar subtitleSb=(SeekBar) v.findViewById(R.id.subtitleSizeBar);
 	    final int orgTheorySize=runtime.getInt(getString(R.string.bookFontSizeKey), getResources().getInteger(R.integer.defFontSize));
@@ -923,182 +917,26 @@ public class LamrimReaderActivity extends SherlockActivity {
         popupWindow.setContentView(popupView);  
         
 		regionListView=(ListView) popupView.findViewById(R.id.recordListView);
-		
-
-/*		final int DELETE = 0;
-		final int CANCEL =1;
-		final QuickAction mQuickAction 	= new QuickAction(LamrimReaderActivity.this);
-		mQuickAction.addActionItem(new ActionItem(DELETE, getString(R.string.dlgManageSrcDel), null));
-		mQuickAction.addActionItem(new ActionItem(CANCEL, getString(R.string.dlgCancel), null));
-		
-		mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
-			@Override
-			public void onItemClick(QuickAction quickAction, int pos, int actionId) {
-				File f;
-				switch(actionId){
-				case DELETE:
-		        	regionRecord.remove(pos);
-		        	list.removeViewAt(pos);
-		        	break;
-				case CANCEL:
-					// Do nothing.
-					break;
-				};
-			}
-		});
-		
-		mQuickAction.setOnDismissListener(new QuickAction.OnDismissListener() {
-			@Override
-			public void onDismiss() {}
-		});
-*/
-		
-
-/*         if(regionRecordAdapter == null)
-        	 regionRecordAdapter = new SimpleAdapter(
-                 this,
-                 regionFakeList,
-                 android.R.layout.simple_list_item_2,
-                 new String[] { "title", "desc" },
-                 new int[] { android.R.id.text1, android.R.id.text2})
-                 {
-
-             		@Override
-             		public View getView(final int position, View convertView, ViewGroup parent) {
-             			View row = convertView;
-             			if (row == null) {
-             				Log.d(getClass().getName(), "row=null, construct it.");
-             				LayoutInflater inflater = getLayoutInflater();
-             				row = inflater.inflate(R.layout.popup_record_list_row, parent, false);
-             			}
-
-             			RegionRecord record=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
-             			Log.d(getClass().getName(), "Set: "+record.title);
-             			TextView title = (TextView) row.findViewById(R.id.regionRowTitle);
-             			TextView desc = (TextView) row.findViewById(R.id.regionRowDesc);
-             			ImageButton editButton = (ImageButton) row.findViewById(R.id.editButton);
-             			ImageButton delButton = (ImageButton) row.findViewById(R.id.deleteButton);
-             			
-             			title.setText(record.title);
-             			desc.setText(getMsToHMS(record.startTimeMs)+" ~ "+getMsToHMS(record.endTimeMs));
-             			
-             			editButton.setFocusable(false);
-             			delButton.setFocusable(false);
-             			
-             			editButton.setOnClickListener(new View.OnClickListener(){
-             				@Override
-             				public void onClick(View v) {
-             					RegionRecord rr=RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
-             					Runnable callBack=new Runnable(){
-             						@Override
-             						public void run() {
-             							runOnUiThread(new Runnable(){
-											@Override
-											public void run() {
-												regionRecordAdapter.notifyDataSetChanged();
-											}});
-             			        		
-             						}};
-             					BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this, mediaIndex , rr.startTimeMs, rr.endTimeMs, rr.title, position, callBack);
-             				}});
-             			
-             			delButton.setOnClickListener(new View.OnClickListener(){
-             				@Override
-             				public void onClick(View v) {
-             					BaseDialogs.showDelWarnDialog(
-             							LamrimReaderActivity.this,
-             							"記錄",
-             							null,
-             							new DialogInterface.OnClickListener(){
-             								@Override
-             								public void onClick(DialogInterface dialog,	int which) {
-             									RegionRecord.removeRecord(LamrimReaderActivity.this, position);
-             									regionFakeList.remove(position);
-             									regionRecordAdapter.notifyDataSetChanged();
-             								}},
-             							null,
-             							null);
-             				}});
-             			return row;
-             		}
-             	};
-             	
-*/
-         regionListView.setAdapter(regionRecordAdapter);
-         
-         regionListView.setOnItemClickListener(new OnItemClickListener(){
+        regionListView.setAdapter(regionRecordAdapter); 
+        regionListView.setOnItemClickListener(new OnItemClickListener(){
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
 				Log.d(logTag,"Region record menu: item "+RegionRecord.records.get(position).title+" clicked.");
 				
+				mpController.desetPlayRegion();
 				mpController.reset();
-				mpController.setPlayRegion(RegionRecord.records.get(position).startTimeMs, RegionRecord.records.get(position).endTimeMs);
 				SharedPreferences.Editor editor = runtime.edit();
 				editor.putInt("mediaIndex", RegionRecord.records.get(position).mediaIndex);
 				editor.putInt("playPosition", RegionRecord.records.get(position).startTimeMs);
 				editor.commit();
 				popupWindow.dismiss();
 				mediaIndex=RegionRecord.records.get(position).mediaIndex;
+				regionPlayIndex=position;
 				fileDownloader.start(mediaIndex);
-				playWhileMediaReady=true;
+				
 				// The procedure will not return to onStart or onResume, start play media from here.
 			}});
 
-/*		regionListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
-			@Override
-			public boolean onItemLongClick(AdapterView<?> parent, final View v2,int position, long id) {
-				final int DELETE = 0;
-				final int CANCEL =1;
-				final QuickAction mQuickAction 	= new QuickAction(popupWindow.getContentView().getContext());
-				mQuickAction.addActionItem(new ActionItem(DELETE, getString(R.string.dlgManageSrcDel), null));
-				mQuickAction.addActionItem(new ActionItem(CANCEL, getString(R.string.dlgCancel), null));
-				
-				mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
-					@Override
-					public void onItemClick(QuickAction quickAction, int pos, int actionId) {
-						switch(actionId){
-						case DELETE:
-				        	regionRecord.remove(pos);
-				        	regionListView.removeViewAt(pos);
-				        	break;
-						case CANCEL:
-							// Do nothing.
-							break;
-						};
-					}
-				});
-				
-				mQuickAction.setOnDismissListener(new QuickAction.OnDismissListener() {
-					@Override
-					public void onDismiss() {}
-				});
-				new Thread(new Runnable(){
-
-					@Override
-					public void run() {
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						
-						
-						regionListView.post(new Runnable() {
-							   public void run() {
-								   //popupWindow.dismiss();
-								   popupWindow.setFocusable(false);
-								   mQuickAction.show(v2);
-							   }
-							});
-
-					}}).start();
-				
-				return true;
-			}
-		});
-*/		
-		
-		
 		popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener (){
 			@Override
 			public void onDismiss() {

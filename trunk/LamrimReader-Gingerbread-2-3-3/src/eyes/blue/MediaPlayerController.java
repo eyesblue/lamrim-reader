@@ -1,8 +1,6 @@
 package eyes.blue;
 
 import java.io.BufferedReader;
-
-
 import android.net.Uri;
 import android.os.SystemClock;
 
@@ -84,7 +82,7 @@ public class MediaPlayerController {
 	/*
 	 * Give The constructor the Activity and changedListener for build object. You can change the LamrimReaderActivity to your activity and modify the code of UI control to meet your logic. 
 	 * */
-	public MediaPlayerController(LamrimReaderActivity activity,MediaPlayerControllerListener changedListener){
+	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, MediaPlayerControllerListener changedListener){
 		this.activity=activity;
 		logTag=activity.getResources().getString(R.string.app_name);
 		powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
@@ -94,6 +92,12 @@ public class MediaPlayerController {
 		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
 //		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
 		mediaPlayer.setOnPreparedListener(onPreparedListener);
+		mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
+			@Override
+			public void onCompletion(MediaPlayer mp) {
+				Log.d(logTag,"Media player play completion! release WakeLock.");
+				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+			}});
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 			@Override
 			public boolean onError(MediaPlayer arg0, int arg1, int arg2) {
@@ -105,6 +109,28 @@ public class MediaPlayerController {
 				return false;
 			}
 		});
+		
+		mediaController = new MediaController(activity);
+		mediaController.setMediaPlayer(this);
+		mediaController.setSubtitle(subtitle);
+		mediaController.setPrevNextListeners(
+				// Next button hit.
+				new View.OnClickListener(){
+					@Override
+					public void onClick(View v) {
+						onNextClick();
+					}}
+				,
+				// Prev button hit.
+				new View.OnClickListener(){
+
+					@Override
+					public void onClick(View v) {
+						onPreviousClick();
+					}}
+		);
+		mediaController.setAnchorView(anchorView);
+		mediaController.setEnabled(true);
 	}
 	
 // =============== Function implements of MediaPlayercontroller =================
@@ -126,29 +152,45 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer.
 	 * */
 	public void seekTo(int pos) {
-		Log.d(logTag,"SeekTo function been call.");
+//		Log.d(logTag,"SeekTo function: seek to position: "+pos);
 		if(mpState<MP_PREPARED)return;
 		
 		if(subtitle==null){
 			mediaPlayer.seekTo(pos);
 			return;
 		}
-	
+		
+		// Check is the seek position over the start or end region.
 		int index=subtitleBSearch(subtitle, pos);
+		
 		if(index<0){
+			if(regionStartMs!=-1 && pos<regionStartMs){
+				mediaPlayer.seekTo(regionStartMs);
+				return;
+			}
 			changedListener.startMoment();
-			mediaPlayer.seekTo(pos);
-			return;
-		}
-		else if(index>subtitle.length-1){
+			synchronized(playingIndexKey){
+				playingIndex=0;
+			}
 			mediaPlayer.seekTo(pos);
 			return;
 		}
 
-		playingIndex=index;
-		mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
-		changedListener.onSeek(subtitle[playingIndex]);
-		changedListener.onSubtitleChanged(subtitle[playingIndex]);
+		if(regionStartMs!=-1 && subtitle[index].startTimeMs<regionStartMs){
+			mediaPlayer.seekTo(regionStartMs);
+			return;
+		}
+		if(regionEndMs !=-1 && subtitle[index].endTimeMs>regionEndMs){
+			mediaPlayer.seekTo(regionEndMs);
+			return;
+		}
+		
+		synchronized(playingIndexKey){
+			playingIndex=index;
+			mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
+			changedListener.onSeek(subtitle[playingIndex]);
+			changedListener.onSubtitleChanged(subtitle[playingIndex]);
+		}
 	}
 	
 	
@@ -175,6 +217,11 @@ public class MediaPlayerController {
 			mediaPlayer.seekTo(regionStartMs);
 			changedListener.startRegionPlay();
 		}
+		
+		/*if(regionStartMs != -1){
+			mediaPlayer.seekTo(regionStartMs);
+			changedListener.startRegionPlay();
+		}*/
 		
 		synchronized(mediaPlayer){
 			mediaPlayer.start();
@@ -239,13 +286,33 @@ public class MediaPlayerController {
 	 * */
 	public void reset(){
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
+		isPlayRegion=false;
+		regionStartMs = -1;
+		regionEndMs = -1;
 		subtitleTimer=null;
+		playingIndex=0;
+		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
+		sb.setProgress(0);
+		updateSeekBar();
+		
 		synchronized(mediaPlayer){
 			Log.d("","============ Reset MediaPlayer ===============");
 			mediaPlayer.reset();
 			mpState=MP_IDLE;
 		}
-//		isPlayRegion=false;
+
+		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);
+		ImageButton ffwd=(ImageButton)mediaController.findViewById(R.id.ffwd);
+		ImageButton ibp= (ImageButton)mediaController.findViewById(R.id.prev);
+		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
+		
+		rew.setImageResource(R.drawable.ic_media_previous);
+		ffwd.setImageResource(R.drawable.ic_media_next);
+		ibp.setImageResource(R.drawable.ic_media_rew_d);
+		ibn.setImageResource(R.drawable.ic_media_ff_d);
+
+		// Can't update seekbar on this stage, because there is no information of duration, seekbar can't be create. put in onPrepared.
+		//updateSeekBar();
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	/*
@@ -279,20 +346,25 @@ public class MediaPlayerController {
 			return;
 		}
 		
-
 		synchronized(mediaPlayer){
 			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
 			//mediaPlayer.setDataSource(fis.getFD());
 			mpState=MP_INITED;
 		}
 		
-		
-		if( subtitleFile==null ||  !subtitleFile.exists()){
+		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);
+		ImageButton ffwd=(ImageButton)mediaController.findViewById(R.id.ffwd);
+		if( subtitleFile==null || !subtitleFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
 			subtitle=null;
+			rew.setImageResource(R.drawable.ic_media_previous_d);
+			ffwd.setImageResource(R.drawable.ic_media_next_d);
 			return;
 		}
-			
+		
+		rew.setImageResource(R.drawable.ic_media_previous);
+		ffwd.setImageResource(R.drawable.ic_media_next);
+		
 		Log.d(getClass().getName(),"The subtitle file exist, prepare the subtitle elements.");
 		new Thread(new Runnable(){
 			@Override
@@ -300,9 +372,6 @@ public class MediaPlayerController {
 				subtitle = loadSubtitle(subtitleFile);
 				if(subtitle.length==0)subtitle=null;
 		}}).run();
-
-		
-		
 	}
 	
 	/*
@@ -322,7 +391,7 @@ public class MediaPlayerController {
 	/*
 	 * Show the floating player bar on activity, given the rootView of Activity.
 	 * */
-	synchronized public void showMediaPlayerController(View rootView) {
+	synchronized public void showMediaPlayerController() {
 	//synchronized public void showMediaPlayerController(Activity rootView) {
 		if (activity.isFinishing()) {
 			Log.d(logTag,"The activity not prepare yet, skip show media controller.");
@@ -332,34 +401,20 @@ public class MediaPlayerController {
 			Log.d(logTag,"The controller has showing, skip show media controller.");
 			return;
 		}
-
-		if(mediaController == null){
-		mediaController = new MediaController(activity);
-		mediaController.setMediaPlayer(this);
-		mediaController.setSubtitle(subtitle);
 		
-		mediaController.setPrevNextListeners(
-				// Next button hit.
-				new View.OnClickListener(){
-					@Override
-					public void onClick(View v) {
-						onNextClick();
-					}}
-				,
-				// Prev button hit.
-				new View.OnClickListener(){
 
-					@Override
-					public void onClick(View v) {
-						onPreviousClick();
-					}}
-		);
-		mediaController.setAnchorView(rootView);
-		mediaController.setEnabled(true);
-		}
+/*		if(isPlayRegion=true &&	regionStartMs!=-1 && regionEndMs!=-1){
+			ImageButton ibp= (ImageButton)mediaController.findViewById(R.id.prev);
+			ibp.setImageResource(R.drawable.ic_media_rew);
+			ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
+			ibn.setImageResource(R.drawable.ic_media_ff);
+			updateSeekBar();
+		}*/
+		
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				mediaController.show();
+				//updateSeekBar();
 			}
 		});
 	}
@@ -367,6 +422,7 @@ public class MediaPlayerController {
 	// ================================ Functions for region play ================================
 	
 	public void rewToLastSubtitle(){
+		if(subtitle==null)return;
 		synchronized(playingIndexKey){
 			int currentIndex=playingIndex-1;
 			if(currentIndex<0){seekTo(subtitle[0].startTimeMs);}
@@ -375,6 +431,7 @@ public class MediaPlayerController {
 	}
 	
 	public void fwToNextSubtitle(){
+		if(subtitle==null)return;
 		synchronized(playingIndexKey){
 			int currentIndex=playingIndex+1;
 			if(currentIndex>=subtitle.length){seekTo(subtitle[subtitle.length-1].startTimeMs);}
@@ -391,9 +448,12 @@ public class MediaPlayerController {
 				mediaController.show();
 			}
 		});
-		
+		synchronized(playingIndexKey){
+			if(playingIndex < 0)
+				playingIndex = 0;
+		}
 		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.prev);
-		
+
 		// Set or deSet
 		if(regionStartMs!=-1){
 			regionStartMs=-1;
@@ -405,7 +465,7 @@ public class MediaPlayerController {
 			return;
 		}
 		if(regionEndMs!=-1 && subtitle[playingIndex].startTimeMs>regionEndMs){
-			BaseDialogs.showToast(activity, "標記錯誤，開始標記大於結束標記");
+//			BaseDialogs.showToast(activity, "標記錯誤，開始標記大於結束標記");
 			Log.d(logTag,"User operation error: the region start > region end!");
 			return;
 		}
@@ -414,12 +474,10 @@ public class MediaPlayerController {
 			regionStartMs=subtitle[playingIndex].startTimeMs;
 		}
 		
-
 		if(regionStartMs != -1 && regionEndMs != -1)isPlayRegion = true;
 		ib.setImageResource(R.drawable.ic_media_rew);
-		changedListener.startRegionSeted(regionStartMs);
-
 		updateSeekBar();
+		changedListener.startRegionSeted(regionStartMs);
 	}
 	
 	/*
@@ -436,6 +494,11 @@ public class MediaPlayerController {
 			}
 		});
 		
+		synchronized(playingIndexKey){
+			if(playingIndex < 0)
+				playingIndex = 0;
+		}
+				
 		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.next);
 		
 		// Set or deSet
@@ -449,7 +512,7 @@ public class MediaPlayerController {
 			return;
 		}
 		if(regionStartMs!=-1 && subtitle[playingIndex].endTimeMs<regionStartMs){
-			BaseDialogs.showToast(activity, "標記錯誤，結束標記小於開始標記");
+//			BaseDialogs.showToast(activity, "標記錯誤，結束標記小於開始標記");
 			Log.d(logTag,"User operation error: the region end  < region start !");
 			return;
 		}
@@ -469,6 +532,7 @@ public class MediaPlayerController {
 
 		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), id);
 		byte[] chunk = bitmap.getNinePatchChunk();
+		//NinePatchDrawable np_drawable = new NinePatchDrawable(bitmap, chunk, new Rect(), null);
 		NinePatchDrawable np_drawable = new NinePatchDrawable(context.getResources(),bitmap, chunk, new Rect(), null);
 		np_drawable.setBounds(0, 0,x, y);
 
@@ -479,107 +543,135 @@ public class MediaPlayerController {
 		return output_bitmap;
 	}
 
-	Bitmap seekBarFgBmap = null, seekBarBgBmap = null;
+//	Bitmap seekBarFgBmap = null, seekBarBgBmap = null;
+	boolean firstTimeCallUpdateSeekBar = true;
 	private void updateSeekBar(){
-		Bitmap fgBmap=null, bgBmap=null;
-		Canvas bgCanvas=null;
 		
-		final SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
-		final LayerDrawable layer = (LayerDrawable) sb.getProgressDrawable();
+		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
+		LayerDrawable layer = (LayerDrawable) sb.getProgressDrawable();
 		Drawable drawableFg = (Drawable)layer.findDrawableByLayerId(android.R.id.progress);
 		Drawable drawableBg = (Drawable)layer.findDrawableByLayerId(android.R.id.background);
 		
 		Log.d(logTag,"There are "+layer.getNumberOfLayers()+" layer in SeekBar object, forground: "+drawableFg+", background: "+drawableBg);
 		
-		final Rect fgBound=drawableFg.copyBounds();
-		final Rect bgBound=drawableBg.copyBounds();
+		Rect fgBound=drawableFg.copyBounds();
+		Rect bgBound=drawableBg.copyBounds();
 		
-		// initial the background and foreground
-		if(seekBarFgBmap == null){
-			Log.d(logTag,"Initial the forground width="+fgBound.right+", height="+fgBound.bottom);
-			seekBarFgBmap = getNinepatch(R.drawable.scrubber_primary_holo, fgBound.right, fgBound.bottom, activity);
-			Log.d(logTag,"Initial the background width="+bgBound.right+", height="+bgBound.bottom);
-			seekBarBgBmap = getNinepatch(R.drawable.scrubber_track_holo_light, bgBound.right, bgBound.bottom, activity);
-		}
+		// The view never draw, skip draw.
+		if(fgBound.height()==0)return ;
 		
+		Log.d(logTag,"forgound: bound.right="+fgBound.right+", bound.left="+fgBound.left+", bound.top="+fgBound.top+", bound.botton="+fgBound.bottom+", IntrinsicWidth="+drawableFg.getIntrinsicWidth()+",IntrinsicHeight= "+drawableFg.getIntrinsicHeight()+", rect.height="+fgBound.height()+", rect.width="+fgBound.width());
+		Log.d(logTag,"backgound: bound.right="+bgBound.right+", drawableFg.getIntrinsicWidth="+drawableBg.getIntrinsicWidth());
 		// Release the segment select.
 		if(regionStartMs==-1 && regionEndMs==-1 ){
 			Log.d(logTag,"Release the region select mode.");
-			BitmapDrawable drawable = new BitmapDrawable(activity.getResources(), seekBarFgBmap);
-			Drawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
-			progress.setBounds(0, 0, fgBound.right, fgBound.bottom);
+			Bitmap seekBarFgBmap = getNinepatch(R.drawable.scrubber_primary_holo, fgBound.width(), fgBound.height(), activity);
+			BitmapDrawable fgDrawable = new BitmapDrawable(activity.getResources(), seekBarFgBmap);
+			ClipDrawable progress = new ClipDrawable(fgDrawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
+			progress.setBounds(fgBound);
 			layer.setDrawableByLayerId(android.R.id.progress, progress);
 			
-			drawable = new BitmapDrawable(activity.getResources(), seekBarBgBmap);
-			InsetDrawable background=  new InsetDrawable(drawable,5,5,5,5);
-			background.setBounds(0, 0, bgBound.right, bgBound.bottom);
+			Bitmap seekBarBgBmap = getNinepatch(R.drawable.scrubber_track_holo_dark, bgBound.width(), bgBound.height(), activity);
+			BitmapDrawable bgDrawable = new BitmapDrawable(activity.getResources(), seekBarBgBmap);
+			InsetDrawable background=  new InsetDrawable(bgDrawable,0);
+			background.setBounds(bgBound);
 			layer.setDrawableByLayerId(android.R.id.background, background);
 			
 			sb.postInvalidate();
-
 			int value=sb.getProgress();
 			sb.setProgress(0);
 			sb.setProgress(value);
 			return;
 		}
-
-		// Add one pixel avoid while enableEnd = enableStart, there will throw exception while copy pixel.
+		
 		Log.d(logTag,"Debug: drawableFg: "+drawableFg+", copyBounds(): "+ drawableFg.copyBounds()+", getIntrinsicWidth: "+drawableFg.getIntrinsicWidth());
-		float enableStart=((regionStartMs==-1)?0:(float)regionStartMs/mediaPlayer.getDuration()*fgBound.right);
-		float enableEnd=((regionEndMs==-1)?fgBound.right:(float)regionEndMs/mediaPlayer.getDuration()*fgBound.right)+1;
+		int seekBarStartPosition=Math.round ((regionStartMs==-1)?fgBound.left:(float)regionStartMs/mediaPlayer.getDuration()*fgBound.width());
+		// Add one pixel avoid while enableEnd = enableStart, there will throw exception while copy pixel.
+		int seekBarEndPosition=Math.round (((regionEndMs==-1)?bgBound.right:(float)regionEndMs/mediaPlayer.getDuration()*bgBound.width())+1);
+		Log.d(logTag,"Set start pixel and end pixel: regionStartMs="+regionStartMs+", seekBarStartPosition="+seekBarStartPosition+", regionEndMs="+regionEndMs+", seekBarEndPosition="+seekBarEndPosition);
 		
-		Log.d(logTag,"Create forground rec: width="+Math.round(enableEnd-enableStart)+", height="+fgBound.bottom);
-		fgBmap=getNinepatch(R.drawable.scrubber_primary_holo, Math.round(enableEnd-enableStart),fgBound.bottom, activity);
-		bgBmap=getNinepatch(R.drawable.scrubber_track_holo_light, bgBound.right,bgBound.bottom, activity);
 		
+		Log.d(logTag,"Create forground rec: width="+(seekBarEndPosition-seekBarStartPosition)+", height="+fgBound.bottom);
+		//fgBmap=getNinepatch(R.drawable.scrubber_primary_holo, seekBarEndPosition-seekBarStartPosition,fgBound.bottom, activity);
+		Bitmap fgBmap=getNinepatch(R.drawable.scrubber_primary_segment_mode, bgBound.width(), bgBound.height(), activity);
+		Log.d(logTag,"Create background rec: width="+bgBound.right+", height="+bgBound.bottom);
+		Bitmap bgBmap=getNinepatch(R.drawable.scrubber_track_holo_dark, bgBound.width(), bgBound.height(), activity);
+		
+		//fgBmap.setDensity()
 //		Canvas fgCanvas=new Canvas(fgBmap);
-		bgCanvas=new Canvas(bgBmap);
-		
-		Rect src = new Rect(0, 0, fgBmap.getWidth(), fgBmap.getHeight());
-		Rect dst = new Rect(Math.round(enableStart), 0, Math.round(enableEnd), fgBound.bottom);
-		
-		bgCanvas.drawBitmap(fgBmap, src, dst, null);
+		Canvas bgCanvas=new Canvas(bgBmap);
 
-		BitmapDrawable drawable = new BitmapDrawable(activity.getResources(), bgBmap);
-		final Drawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
-		final InsetDrawable background=  new InsetDrawable(drawable,5,5,5,5);
 		
-		//LayerDrawable mylayer = new LayerDrawable(new Drawable[]{background,progress});
-		//sb.setProgressDrawable(mylayer);
-		Handler handler=new Handler();
-		handler.post(new Runnable(){
+		Log.d(logTag,"Copy forground rect to background: x1="+seekBarStartPosition+", y1="+ bgBound.top+", x2="+ seekBarEndPosition+", y2="+ bgBound.bottom);
+		//Rect src = new Rect(0, 0, fgBmap.getWidth(), fgBmap.getHeight());
+//		int len=seekBarEndPosition-seekBarStartPosition;
+//		int h=fgBound.height();
+//		int[] colors=new int[len*h];
+		
+//		fgBmap.getPixels(colors, 0, len, seekBarStartPosition, 0, len, h);
+//		      getPixels (int[] pixels, int offset, int stride, int x, int y, int width, int height)
+//		bgBmap.setPixels(colors, 0, len, seekBarStartPosition, 0, len, h);
+		Rect src = new Rect(seekBarStartPosition, 0, seekBarEndPosition, fgBound.bottom);
+		Rect dst = new Rect(seekBarStartPosition, 0, seekBarEndPosition, fgBound.bottom);
 
-			@Override
-			public void run() {
-				progress.setBounds(fgBound);
-				background.setBounds(bgBound);
-				layer.setDrawableByLayerId(android.R.id.background, background);
-				layer.setDrawableByLayerId(android.R.id.progress, progress);
-				
-				sb.postInvalidate();
-				int value=sb.getProgress();
-				sb.setProgress(0);
-				sb.setProgress(value);
-			}
-		});
+		//bgCanvas.drawBitmap(fgBmap, src, dst, new Paint());
+//		bgCanvas.setDensity(Bitmap.DENSITY_NONE);
+//		fgBmap.setDensity(Bitmap.DENSITY_NONE);
+		bgCanvas.drawBitmap(fgBmap, dst, dst, null);
 		
+		Drawable drawable = new BitmapDrawable(activity.getResources(), bgBmap);
+		ClipDrawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
+		InsetDrawable background=  new InsetDrawable(drawable,0);
+		
+		progress.setBounds(fgBound);
+		background.setBounds(bgBound);
+		
+		LayerDrawable mylayer = new LayerDrawable(new Drawable[]{background,progress});
+		mylayer.setId(0, android.R.id.background);
+		mylayer.setId(1, android.R.id.progress);
+		sb.setProgressDrawable(mylayer);
+
+		//progress.setBounds(fgBound);
+		//background.setBounds(bgBound);
+		//layer.setDrawableByLayerId(android.R.id.background, background);
+		//layer.setDrawableByLayerId(android.R.id.progress, progress);
+		sb.postInvalidate();
+		int value=sb.getProgress();
+		sb.setProgress(0);
+		sb.setProgress(value);
+		
+		// Avoid the seekbar bug.
+		if(firstTimeCallUpdateSeekBar){
+			firstTimeCallUpdateSeekBar=false;
+			updateSeekBar();
+		}
 	}
 	
-	public void desetPlayRegion(){
-		Log.d(logTag,"Deset play region");
-			regionStartMs=-1;
-			regionEndMs=-1;
-//			isPlayRegion = false;
-	}
-	
-	public boolean isPlayRegion(){return isPlayRegion;}
-	public boolean canPlayRegion(){return (regionStartMs>=0 && regionEndMs >0);}
 	public void setPlayRegion(int startTimeMs,int endTimeMs){
 		isPlayRegion=true;
 		regionStartMs=startTimeMs;
 		regionEndMs=endTimeMs;
+
+		ImageButton ibp= (ImageButton)mediaController.findViewById(R.id.prev);
+		ibp.setImageResource(R.drawable.ic_media_rew);
+		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
+		ibn.setImageResource(R.drawable.ic_media_ff);
+		
+		updateSeekBar();
 		Log.d(logTag," Set play region: isPlayRegion="+isPlayRegion+", start="+regionStartMs+", end="+regionEndMs);
 	}
+	
+	public void desetPlayRegion(){
+		Log.d(logTag,"Deset play region");
+		isPlayRegion=false;
+		regionStartMs=-1;
+		regionEndMs=-1;
+		updateSeekBar();
+	}
+	
+	public boolean isPlayRegion(){return isPlayRegion;}
+	public boolean canPlayRegion(){return (regionStartMs>=0 && regionEndMs >0);}
+	
 	public int getRegionStartPosition(){
 		return regionStartMs;
 	}
@@ -592,7 +684,7 @@ public class MediaPlayerController {
 
 	// ===========================================================================================
 	
-	public void showToastMsg(final String s){
+/*	private void showToastMsg(final String s){
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				toast.setText(s);
@@ -600,7 +692,7 @@ public class MediaPlayerController {
 			}
 		});
 	}
-	
+*/	
 	final protected OnPreparedListener onPreparedListener = new OnPreparedListener() {
 		public void onPrepared(MediaPlayer mp) {
 			Log.d(getClass().getName(), "**** Into onPreparedListener of MediaPlayer ****");
@@ -620,6 +712,7 @@ public class MediaPlayerController {
 			}
 
 			Log.e(logTag, "Prepare data");
+			
 			changedListener.onMediaPrepared();
 			Log.d(getClass().getName(),"**** Leave onPreparedListener of MediaPlayer ****");
 		}
@@ -693,7 +786,7 @@ public class MediaPlayerController {
 						int playPoint=mediaPlayer.getCurrentPosition();
 						int playArrayIndex=subtitleBSearch(se, playPoint);
 						
-						Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
+						//Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
 						// Play region function has set, and over the region, stop play.
 						if(isPlayRegion && regionStartMs != -1 && regionEndMs != -1 && playPoint > regionEndMs){
 							Log.d(logTag,"Stop Play");
@@ -799,11 +892,9 @@ public class MediaPlayerController {
 					se.text = stemp;
 					step = 0;
 					subtitleList.add(se);
-					System.out.println("get Subtitle: " + stemp);
+//					System.out.println("get Subtitle: " + stemp);
 					if (stemp.length() == 0)
-						System.err
-								.println("Load Subtitle: Warring: Get a Subtitle with no content at line "
-										+ lineCounter);
+						System.err.println("Load Subtitle: Warring: Get a Subtitle with no content at line " + lineCounter);
 				}
 			}
 

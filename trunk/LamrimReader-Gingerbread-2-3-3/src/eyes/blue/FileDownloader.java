@@ -50,8 +50,11 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -74,6 +77,8 @@ public class FileDownloader {
 	static ArrayList<RemoteSource> remoteResources=new ArrayList<RemoteSource>();
 	Downloader downloader=null;
 	ProgressDialog dlPrgsDialog = null, mkDlTaskDialog;
+	Object dlProgsKey=new Object(), mkDlTaskKey = new Object();
+	AsyncTask<Void, Void, Void> checkTask;
 	AlertDialog netAccessWarnDialog = null;
 	private PowerManager.WakeLock wakeLock = null;
 	JSONObject[] downloadTasks = null;
@@ -84,6 +89,8 @@ public class FileDownloader {
 		this.activity=activity;
 		PowerManager powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+		//wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
+		
 		//if(!wakeLock.isHeld()){wakeLock.acquire();}
 		runtime = activity.getSharedPreferences(activity.getString(R.string.runtimeStateFile), 0);
 		if(remoteResources.size() == 0){
@@ -92,28 +99,36 @@ public class FileDownloader {
 			Log.d(getClass().getName(),"Add remote resource site: " +grs.getName()+", there are "+remoteResources.size()+" site in list.");
 		}
 	}
+	
 	public FileDownloader(Activity activity,DownloadListener listener){
 		this(activity);
 		this.listener=listener;
 	}
+
 	public void setDownloadListener(DownloadListener listener){
 		this.listener=listener;
 	}
 	
+	
 	/*
 	 * Start download source of media, it download the subtitle and media file. call DownloadListener.prepareFinish after all download finish.
 	 * */
-	
-	
 	public void start(final int... index){
 		final ArrayList<JSONObject> al =new ArrayList<JSONObject>();
 		Log.d(getClass().getName(),"mkDlTaskDialog="+((mkDlTaskDialog==null)?"Null":"not null"));
-		if(mkDlTaskDialog==null ||(mkDlTaskDialog!=null&& !mkDlTaskDialog.isShowing()))mkDlTaskDialog= new ProgressDialog(activity);
+		synchronized(mkDlTaskKey){
+			if(mkDlTaskDialog!=null){
+				mkDlTaskDialog.dismiss();
+				mkDlTaskDialog=null;
+			}
+		}
+			
+		mkDlTaskDialog= new ProgressDialog(activity);
 		
 		//mkDlTaskProgDialog;
 		//AlertDialog netAccessDialog = null;
 		
-		final AsyncTask<Void, Void, Void> checkTask=new AsyncTask<Void, Void, Void>() {
+		checkTask=new AsyncTask<Void, Void, Void>() {
 	
 			@Override
 			protected void onCancelled(){
@@ -127,19 +142,34 @@ public class FileDownloader {
 						al.add(getSubtitleDesc(i));
 					if(!FileSysManager.isFileValid(i, activity.getResources().getInteger(R.integer.MEDIA_TYPE)))
 						al.add(getMediaDesc(i));
-					if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.setProgress(i+1);
-					if(this.isCancelled()){	mkDlTaskDialog.dismiss();return null;}
+					synchronized(mkDlTaskKey){
+						if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.setProgress(i+1);
+						if(this.isCancelled()){
+							mkDlTaskDialog.dismiss();
+							mkDlTaskDialog=null;
+							return null;
+						}
+					}
 				}
 				
 				if(al.size()==0){
-					if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.dismiss();
+					synchronized(mkDlTaskKey){
+						if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing()){
+							mkDlTaskDialog.dismiss();
+							mkDlTaskDialog=null;
+						}
+					}
 					if(wakeLock.isHeld())wakeLock.release();
 					listener.allPrepareFinish(index);
 					return null;
 				}
+				
 				downloadTasks=al.toArray(new JSONObject[0]);
 				//if(mkDlTaskDialog.isShowing())
+				synchronized(mkDlTaskKey){
 					mkDlTaskDialog.dismiss();
+					mkDlTaskDialog=null;
+				}
 				Log.d(getClass().getName(),"Call checkNetAccessPermission()");
 				checkNetAccessPermission();
 				
@@ -161,7 +191,12 @@ public class FileDownloader {
 					Log.d(getClass().getName(),"User cancel dialog mkDlTaskDialog.");
 					checkTask.cancel(false);
 					if(wakeLock.isHeld())wakeLock.release();
-					mkDlTaskDialog.dismiss();
+					synchronized(mkDlTaskKey){
+						if(mkDlTaskDialog==null)return;
+						mkDlTaskDialog.dismiss();
+						listener.userCancel(0, 0);
+						mkDlTaskDialog=null;
+					}
 				}
 			});
 			if(!wakeLock.isHeld()){wakeLock.acquire();}
@@ -186,13 +221,16 @@ public class FileDownloader {
 						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						netAccessWarnDialog=getNetAccessDialog();
 						netAccessWarnDialog.setCanceledOnTouchOutside(false);
-						netAccessWarnDialog.show();
+						new Handler().post(new Runnable(){
+							@Override
+							public void run() {
+								netAccessWarnDialog.show();
+							}});
 					}
 				}
 			});
 			return ;
 		}
-		
 		startDownloadThread();
 	}
 	
@@ -201,6 +239,12 @@ public class FileDownloader {
 		downloader=new Downloader();
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
+				synchronized(dlProgsKey){
+					if(dlPrgsDialog != null){
+						dlPrgsDialog.dismiss();
+						dlPrgsDialog=null;
+					}
+				}
 				dlPrgsDialog = getDlprgsDialog();
 				dlPrgsDialog.setCanceledOnTouchOutside(false);
 				dlPrgsDialog.setTitle("下載檔案");
@@ -411,13 +455,8 @@ public class FileDownloader {
 			
 			final long contentLength=httpEntity.getContentLength();
 	    	
-	    	if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-				activity.runOnUiThread(new Runnable() {
-					public void run() {
-						dlPrgsDialog.setMax((int)contentLength);
-					}
-				});
-	    	
+			setDlProgressMax((int)contentLength);
+			
 	    	
 	        try {
 				fos=new FileOutputStream(tmpFile);
@@ -553,8 +592,16 @@ public class FileDownloader {
 	 * Stop and release threads create by the class.
 	 * */
 	public void finish(){
+		synchronized(mkDlTaskKey){
+			if(mkDlTaskDialog!=null){
+				mkDlTaskDialog.dismiss();
+				mkDlTaskDialog=null;
+			}
+		}
 		if(downloader !=null && downloader.getStatus()!=AsyncTask.Status.FINISHED)
 			downloader.cancel(false);
+		if(checkTask  !=null && checkTask.getStatus()!=AsyncTask.Status.FINISHED)
+			checkTask.cancel(true);
 		dismissDlProgress();
 	}
 	
@@ -567,41 +614,51 @@ public class FileDownloader {
 	}
 	
 	private void setProgressMsg(final String title,final String msg){
-		if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-			activity.runOnUiThread(new Runnable() {
-				public void run() {
-					if(title!=null)dlPrgsDialog.setTitle(title);
-					if(msg!=null)dlPrgsDialog.setMessage(msg);
-				}
-			});
+		synchronized(dlProgsKey){
+			if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
+				activity.runOnUiThread(new Runnable() {
+					public void run() {
+						if(title!=null)dlPrgsDialog.setTitle(title);
+						if(msg!=null)dlPrgsDialog.setMessage(msg);
+					}
+				});
+		}
 	}
 	
 	private void setDlProgress(final int progress){
-		if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-			activity.runOnUiThread(new Runnable() {
-				public void run() {
-					dlPrgsDialog.setProgress(progress);
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				synchronized(dlProgsKey){
+					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
+						dlPrgsDialog.setProgress(progress);
 				}
-			});
+			}
+		});
 	}
 	
 	private void setDlProgressMax(final int max){
-		if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-			activity.runOnUiThread(new Runnable() {
-				public void run() {
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				synchronized(dlProgsKey){
+					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
 					dlPrgsDialog.setMax(max);
 				}
-			});
+			}
+		});
 	}
 	
 	private void dismissDlProgress(){
-		if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-			activity.runOnUiThread(new Runnable() {
-				public void run() {
-					dlPrgsDialog.dismiss();
-					if(wakeLock.isHeld())wakeLock.release();
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				synchronized(dlProgsKey){
+					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing()){
+						dlPrgsDialog.dismiss();
+						dlPrgsDialog=null;
 				}
-			});
+				if(wakeLock.isHeld())wakeLock.release();
+				}
+			}
+		});
 	}
 	
 	

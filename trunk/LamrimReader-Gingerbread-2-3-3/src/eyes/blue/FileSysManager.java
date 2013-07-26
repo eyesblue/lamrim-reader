@@ -149,11 +149,11 @@ public class FileSysManager {
         	
         	if(isExtMemWritable()){
         		extF=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
-        		Log.d(logTag,"Check exist: "+extF.getAbsolutePath());
+//        		Log.d(logTag,"Check exist: "+extF.getAbsolutePath());
         		if(extF.exists())return extF;
         	}
         	intF=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
-    		Log.d(logTag,"Check exist: "+intF.getAbsolutePath());
+//    		Log.d(logTag,"Check exist: "+intF.getAbsolutePath());
     		if(intF.exists())return intF;
 
     		
@@ -165,11 +165,11 @@ public class FileSysManager {
     		int reserv=context.getResources().getIntArray(R.array.mediaFileSize)[i];
 			reserv+=reserv*context.getResources().getInteger(R.integer.reservSpacePercent);
     		if(isExtMemWritable()){
-    			Log.d(logTag,"File not exist return user external place");
+//    			Log.d(logTag,"File not exist return user external place");
     			if(getFreeMemory(EXTERNAL)>reserv)
     				return extF;
     		}
-    		Log.d(logTag,"File not exist return user internal place");
+//    		Log.d(logTag,"File not exist return user internal place");
     		if(getFreeMemory(INTERNAL)>reserv)
     			return intF;
     		
@@ -199,7 +199,7 @@ public class FileSysManager {
         	return null;
         }
         
-        public static void deleteSpeechFiles(int locate){
+        public static void deleteAllSpeechFiles(int locate){
         	Log.d("FileSysManager","Delete all speech file in "+locateDesc[locate]);
         	String dir=context.getString(R.string.audioDirName);
 
@@ -209,7 +209,7 @@ public class FileSysManager {
 
         }
         
-        public static void deleteSubtitleFiles(int locate){
+        public static void deleteAllSubtitleFiles(int locate){
         	Log.d("FileSysManager","Delete all subtitle file in "+locateDesc[locate]);
         	String dir=context.getString(R.string.subtitleDirName);
        		File srcDir=new File(srcRoot[locate]+File.separator+dir);
@@ -417,7 +417,7 @@ public class FileSysManager {
         }
 
         public static boolean isFileValid(int i,int resType){
-        	Log.d(logTag,Thread.currentThread().getName()+":Check the existed file");
+//        	Log.d(logTag,Thread.currentThread().getName()+":Check the existed file");
         	File file=null;
         	
 
@@ -436,7 +436,7 @@ public class FileSysManager {
         				return true;
         			}
         			else {
-        				Log.d(logTag,"The user specified file is not exist.");
+//        				Log.d(logTag,"The user specified file is not exist.");
         				return false;
         			}
         		}
@@ -459,7 +459,7 @@ public class FileSysManager {
         	else if(resType==context.getResources().getInteger(R.integer.SUBTITLE_TYPE)){
         		file=getLocalSubtitleFile(i);
         		if(file==null||file.exists())return true;
-            	Log.d(logTag,"The subtitle file "+file.getAbsolutePath()+" is not exist");
+//            	Log.d(logTag,"The subtitle file "+file.getAbsolutePath()+" is not exist");
             	return false;
         	}
         	else if(resType==context.getResources().getInteger(R.integer.THEORY_TYPE)){
@@ -473,18 +473,24 @@ public class FileSysManager {
         	return false;
         }
         
+        public static boolean isFromUserSpecifyDir(File speechFile){
+        	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]) || speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))
+        		return false;
+        	return true;
+        }
+        
         public static boolean isExtMemWritable(){
         	return (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         }
         
         public static long getTotalMemory(int locate)
         {
-        	return (statFs[locate].getBlockCount() * statFs[locate].getBlockSize());
+        	return ((long)statFs[locate].getBlockCount() * (long)statFs[locate].getBlockSize());
         }
 
         public static long getFreeMemory(int locate)
         {
-        	return (statFs[locate].getAvailableBlocks() * statFs[locate].getBlockSize());
+        	return ((long)statFs[locate].getAvailableBlocks() * (long)statFs[locate].getBlockSize());
         }
         
         public static int getGlobalUsage(int locate){
