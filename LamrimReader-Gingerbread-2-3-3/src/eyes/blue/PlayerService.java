@@ -39,11 +39,11 @@ public class PlayerService extends IntentService  {
 	@Override
 	public void onCreate() {
 		isRunning=true;
-		String[] bookPage = getResources().getStringArray(R.array.book);
+//		String[] bookPage = getResources().getStringArray(R.array.book);
 		bookList = new ArrayList<HashMap<String, String>>();
 		int pIndex = 0;
 
-		for (String value : bookPage) {
+		for (String value : TheoryData.content) {
 			HashMap<String, String> item = new HashMap<String, String>();
 			item.put("page", value);
 			item.put("desc", "第 " + (++pIndex) + " 頁");
