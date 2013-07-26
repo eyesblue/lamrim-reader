@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StatFs;
 import android.app.Activity;
@@ -70,13 +71,17 @@ public class StorageManageActivity extends Activity {
 		btnOk = (Button) findViewById(R.id.btnOk);
 		radioMgnType = (RadioGroup) findViewById(R.id.radioMgnType);
 		fieldPathInput = (EditText) findViewById(R.id.fieldPathInput);
+		
 
+		// The ImageButton can't disable from xml.
+		btnChoicePath.setClickable(false);
+		btnChoicePath.setEnabled(false);
 		
-		
-		if(runtime.getBoolean(getString(R.string.isUseThirdDir), false)){
-			
+		isUseThirdDir=runtime.getBoolean(getString(R.string.isUseThirdDir),false);
+		if(isUseThirdDir){
 			radioMgnType.check(R.id.radioUserMgnStorage);
 			fieldPathInput.setEnabled(true);
+			btnChoicePath.setClickable(true);
 			btnChoicePath.setEnabled(true);
 			labelChoicePath.setEnabled(true);
 			String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
@@ -146,8 +151,8 @@ public class StorageManageActivity extends Activity {
 						Thread t=new Thread(new Runnable(){
 							@Override
 							public void run() {
-								FileSysManager.deleteSpeechFiles(FileSysManager.EXTERNAL);
-								FileSysManager.deleteSubtitleFiles(FileSysManager.EXTERNAL);
+								FileSysManager.deleteAllSpeechFiles(FileSysManager.EXTERNAL);
+								FileSysManager.deleteAllSubtitleFiles(FileSysManager.EXTERNAL);
 								pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
@@ -177,8 +182,8 @@ public class StorageManageActivity extends Activity {
 						Thread t=new Thread(new Runnable(){
 							@Override
 							public void run() {
-								FileSysManager.deleteSpeechFiles(FileSysManager.INTERNAL);
-								FileSysManager.deleteSubtitleFiles(FileSysManager.INTERNAL);
+								FileSysManager.deleteAllSpeechFiles(FileSysManager.INTERNAL);
+								FileSysManager.deleteAllSubtitleFiles(FileSysManager.INTERNAL);
 								pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
@@ -212,6 +217,7 @@ public class StorageManageActivity extends Activity {
 			public void onClick(View v) {
 				SharedPreferences.Editor editor = runtime.edit();
 				if(!isUseThirdDir){
+					Log.d(getClass().getName(),"is user specify the third dir? "+isUseThirdDir);
 					editor.putBoolean(getString(R.string.isUseThirdDir), false);
 					editor.commit();
 					finish();
@@ -281,12 +287,14 @@ public class StorageManageActivity extends Activity {
 					isUseThirdDir=false;
 					fieldPathInput.setEnabled(false);
 					btnChoicePath.setEnabled(false);
+					btnChoicePath.setClickable(false);
 					labelChoicePath.setEnabled(false);
 					break;
 				case R.id.radioUserMgnStorage:
 					isUseThirdDir=true;
 					fieldPathInput.setEnabled(true);
 					btnChoicePath.setEnabled(true);
+					btnChoicePath.setClickable(true);
 					labelChoicePath.setEnabled(true);
 					break;
 				}
@@ -336,6 +344,7 @@ public class StorageManageActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		refreshUsage();
+		
 	}
 	
 	private String numToKMG(long num){
@@ -347,7 +356,8 @@ public class StorageManageActivity extends Activity {
 		int sign=(int) (len/3);
 		if(sign*3==len)sign--;
 		
-		String result=s.substring(0, s.length()-(sign*3))+unit[sign];
+		int index=sign*3;
+		String result=s.substring(0, s.length()-index)+'.'+s.charAt(index)+unit[sign];
 		Log.d(getClass().getName(),"Num= "+s+", Length: "+s.length()+", result="+result);
 		return result;
 	}

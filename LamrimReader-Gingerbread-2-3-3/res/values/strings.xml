@@ -13,6 +13,10 @@
     <integer name="bookFontSizeMax">48</integer>
     <integer name="bookFontSizeMin">8</integer>
     <integer name="defFontSize">18</integer> 
+    <integer name="theorySmallTextSizePercent">90</integer>
+    <color name="theoryNumTextColor">#0000CC</color>
+    <color name="theoryDotTextColor">#835930</color>
+    <color name="theoryBoldColor">#006600</color>
     <integer name="subtitleMonInterval">100</integer>
     <integer name="downloadBufferSize">16384</integer>
     <string name="mediaCheckSumWhileDownload">true</string>
@@ -64,6 +68,7 @@
     <integer name="textMinSize">8</integer>
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
+    
     <!-- For Speech Menu -->
     <string name="musicSign">♬</string>
     <string name="subtitleSign">❏</string>

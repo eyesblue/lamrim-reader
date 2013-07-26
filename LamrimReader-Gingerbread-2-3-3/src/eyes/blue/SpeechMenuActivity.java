@@ -16,9 +16,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -52,15 +54,16 @@ public class SpeechMenuActivity extends Activity {
 	ListView speechList=null;
 	Intent playWindow=null;
 	private PowerManager.WakeLock wakeLock = null;
-	FileSysManager fileSysManager=null;
 	Toast toast = null;
 	SharedPreferences runtime = null;
 	// The handle for close the dialog.
 	AlertDialog itemManageDialog = null;
 	int manageItemIndex=-1;
-	
+	FileDownloader downloader = null;
+	boolean fireLockKey = false;
 	final int PLAY=0,UPDATE=1,	DELETE=2, CANCEL=3;
-
+//	boolean fireLock=false;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		
@@ -76,14 +79,15 @@ public class SpeechMenuActivity extends Activity {
 	 
 	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+	//wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
 	runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
+	fireLocker.start();
 	//if(!wakeLock.isHeld()){wakeLock.acquire();}
 	//if(wakeLock.isHeld())wakeLock.release();
-	fileSysManager=new FileSysManager(this);
-	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
-    
-
+	new FileSysManager(this);
+	downloader=new FileDownloader(SpeechMenuActivity.this);
 	
+	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 	
 	final QuickAction mQuickAction 	= new QuickAction(this);
 	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
@@ -105,7 +109,7 @@ public class SpeechMenuActivity extends Activity {
 					public void onClick(DialogInterface dialog, int which) {
 						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
 						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
-			        	if(f!=null)f.delete();
+			        	if(f!=null && !FileSysManager.isFromUserSpecifyDir(f))f.delete();
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	resultAndPlay(manageItemIndex);
@@ -119,10 +123,10 @@ public class SpeechMenuActivity extends Activity {
 					public void onClick(DialogInterface dialog, int which) {
 						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
 						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
-			        	if(f!=null)f.delete();
+						if(f!=null && !FileSysManager.isFromUserSpecifyDir(f))f.delete();
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
-			        	refreshListView();
+			        	updateUi(manageItemIndex);
 					}};
 
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, deleteListener, null, null);
@@ -145,7 +149,7 @@ public class SpeechMenuActivity extends Activity {
 	descs=new String[infos.length];
 	subjects=new String[infos.length];
 	for(int i=0;i<infos.length;i++){
-		Log.d(getClass().getName(),"Desc: "+infos[i]);
+//		Log.d(getClass().getName(),"Desc: "+infos[i]);
 		String[] sep=infos[i].split("-");
 		descs[i]=sep[0];
 		if(sep.length>1)subjects[i]=sep[1];
@@ -153,12 +157,15 @@ public class SpeechMenuActivity extends Activity {
 
 	speechFlags=new boolean[SpeechData.name.length];
 	subtitleFlags=new boolean[SpeechData.name.length];
-	for(int i=0;i<SpeechData.name.length;i++){
-	HashMap<String,Boolean> item = new HashMap<String,Boolean>();
-		item.put("title", speechFlags[i]);
-		item.put("desc", subtitleFlags[i]);
-		fakeList.add( item );
-	}
+	
+	
+	// Initial fakeList
+	HashMap<String,Boolean> fakeItem = new HashMap<String,Boolean>();
+	fakeItem.put("title", false);
+	fakeItem.put("desc", false);
+	for(int i=0;i<SpeechData.name.length;i++)
+		fakeList.add( fakeItem );
+
 
 	adapter = new SpeechListAdapter(this, fakeList,
 			 R.layout.speech_row, new String[] { "page", "desc" },
@@ -167,6 +174,7 @@ public class SpeechMenuActivity extends Activity {
 	speechList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 		@Override
 		public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
+			if(fireLock())return;
 			resultAndPlay(position);
 	}});
 
@@ -195,25 +203,26 @@ public class SpeechMenuActivity extends Activity {
 	btnDownloadAll.setOnClickListener(new View.OnClickListener (){
 		@Override
 		public void onClick(View arg0) {
-//			final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
-				downloadAllSrc();
+			if(fireLock())return;
+			downloadAllSrc();
 		}});
 	btnMaintain.setOnClickListener(new View.OnClickListener (){
 		@Override
 		public void onClick(View arg0) {
+			if(fireLock())return;
 			maintain();
 		}});
 	
 	btnManageStorage.setOnClickListener(new View.OnClickListener (){
 		@Override
 		public void onClick(View v) {
+			if(fireLock())return;
 			final Intent storageManage = new Intent(SpeechMenuActivity.this, StorageManageActivity.class);
 			startActivity(storageManage);
 		}});
-	
-	
-	
+
 	 }
+	
 // End of onCreate
 	
 	@Override
@@ -254,6 +263,20 @@ public class SpeechMenuActivity extends Activity {
 		finish();
 	}
 	
+	private void updateUi(final int i){
+		File speech=FileSysManager.getLocalMediaFile(i);
+		File subtitle =FileSysManager.getLocalSubtitleFile(i);
+		
+		speechFlags[i]=(speech!=null && speech.exists());
+		subtitleFlags[i]=(subtitle!=null && subtitle.exists());
+		refreshListView();
+		runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+				speechList.setSelection(i);
+		}});
+	}
+	
 	private void refreshFlags(final int start,final int end,final boolean isRefreshView){
 		Log.d(getClass().getName(), "Refresh flags: start="+start+", end="+end);
 		Thread t=new Thread(new Runnable(){
@@ -264,7 +287,7 @@ public class SpeechMenuActivity extends Activity {
 					File subtitle=FileSysManager.getLocalSubtitleFile(i);
 					boolean me=(speech!=null && speech.exists());
 					boolean se=(subtitle!=null && subtitle.exists());
-					Log.d(getClass().getName(), "Set flags of "+SpeechData.getNameId(i)+": is speech exist: "+me+", is subtitle exist: "+se);
+//					Log.d(getClass().getName(), "Set flags of "+SpeechData.getNameId(i)+": is speech exist: "+me+", is subtitle exist: "+se);
 					synchronized(speechFlags){
 						speechFlags[i]=me;
 					}
@@ -297,8 +320,6 @@ public class SpeechMenuActivity extends Activity {
 	
 	
 	private void downloadAllSrc(){
-
-		final FileDownloader downloader=new FileDownloader(SpeechMenuActivity.this);
 		downloader.setDownloadListener(new DownloadListener(){
 			@Override
 			public void allPrepareFinish(int... i){
@@ -320,22 +341,9 @@ public class SpeechMenuActivity extends Activity {
 			
 			@Override
 			public void userCancel(int i, int type){
+				Log.d(getClass().getName(),"User cancel the download!");
 				if(wakeLock.isHeld())wakeLock.release();
 				return;
-			}
-			
-			private void updateUi(final int i){
-				File speech=FileSysManager.getLocalMediaFile(i);
-				File subtitle =FileSysManager.getLocalSubtitleFile(i);
-				
-				speechFlags[i]=(speech!=null && speech.exists());
-				subtitleFlags[i]=(subtitle!=null && subtitle.exists());
-				refreshListView();
-				runOnUiThread(new Runnable(){
-					@Override
-					public void run() {
-						speechList.setSelection(i);
-				}});
 			}
 		});	
 		if(!wakeLock.isHeld()){wakeLock.acquire();}
@@ -367,6 +375,37 @@ public class SpeechMenuActivity extends Activity {
 		runner.execute();
 	}
 	
+	private boolean fireLock(){
+		if(fireLockKey){
+			Log.d(getClass().getName(),"Fire locked");
+			return true;
+		}
+		fireLockKey=true;
+		synchronized(fireLocker){
+			fireLocker.notify();
+		}
+		Log.d(getClass().getName(),"Fire released, lock it!");
+		return false;
+	}
+	
+	Thread fireLocker=new Thread(){
+		@Override
+		public void run(){
+			while(true){
+					try {
+						synchronized(this){
+							wait();
+						}
+					} catch (InterruptedException e1) {	e1.printStackTrace();}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {e.printStackTrace();}
+					Log.d(getClass().getName(),"Fire locker release the lock.");
+					fireLockKey=false;
+
+			}
+		}
+	};
 /*	private AlertDialog.Builder getConfirmDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
@@ -393,12 +432,12 @@ public class SpeechMenuActivity extends Activity {
 		public View getView(final int position, View convertView, ViewGroup parent) {
 			View row = convertView;
 			if (row == null) {
-				Log.d(getClass().getName(), "row=null, construct it.");
+//				Log.d(getClass().getName(), "row=null, construct it.");
 				LayoutInflater inflater = getLayoutInflater();
 				row = inflater.inflate(R.layout.speech_row, parent, false);
 			}
 
-			Log.d(getClass().getName(), "Set "+SpeechData.getNameId(position)+": is speech exist: "+speechFlags[position]+", is subtitle exist: "+subtitleFlags[position]);
+//			Log.d(getClass().getName(), "Set "+SpeechData.getNameId(position)+": is speech exist: "+speechFlags[position]+", is subtitle exist: "+subtitleFlags[position]);
 			TextView title = (TextView) row.findViewById(R.id.title);
 			TextView subject = (TextView) row.findViewById(R.id.subject);
 			ImageView mediaSign = (ImageView) row.findViewById(R.id.mediaSign);
@@ -418,13 +457,13 @@ public class SpeechMenuActivity extends Activity {
 			if(speechFlags[position]&&subtitleFlags[position]){
 				title.setTextColor(Color.BLACK);
 				subject.setTextColor(Color.BLACK);
-				speechDesc.setTextColor(Color.BLACK);
+//				speechDesc.setTextColor(Color.BLACK);
 				row.setBackgroundColor(0xFFFFFFDF);
 			}
 			else {
 				title.setTextColor(Color.WHITE);
 				subject.setTextColor(Color.WHITE);
-				speechDesc.setTextColor(Color.WHITE);
+//				speechDesc.setTextColor(Color.GRAY);
 				row.setBackgroundColor(Color.BLACK);
 			}
 			
