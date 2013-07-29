@@ -82,7 +82,7 @@ public class MediaPlayerController {
 	/*
 	 * Give The constructor the Activity and changedListener for build object. You can change the LamrimReaderActivity to your activity and modify the code of UI control to meet your logic. 
 	 * */
-	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, MediaPlayerControllerListener changedListener){
+	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, final MediaPlayerControllerListener changedListener){
 		this.activity=activity;
 		logTag=activity.getResources().getString(R.string.app_name);
 		powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
@@ -105,6 +105,7 @@ public class MediaPlayerController {
 					// 发生错误时也解除资源与MediaPlayer的赋值*
 					// mp.release();
 					// tv.setText("播放发生异常!");
+				changedListener.onPlayerError(arg0, arg1, arg2);
 				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 				return false;
 			}
@@ -133,6 +134,10 @@ public class MediaPlayerController {
 		mediaController.setEnabled(true);
 	}
 	
+/*	public void setAnchorView(View view){
+		mediaController.setAnchorView(view);
+	}
+	*/
 // =============== Function implements of MediaPlayercontroller =================
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
@@ -328,6 +333,7 @@ public class MediaPlayerController {
 		}
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
+	
 	/*
 	 * Return is the subtitle ready.
 	 * */
@@ -347,6 +353,7 @@ public class MediaPlayerController {
 		}
 		
 		synchronized(mediaPlayer){
+			Log.d(logTag,"Set data source: "+ Uri.fromFile(speechFile));
 			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
 			//mediaPlayer.setDataSource(fis.getFD());
 			mpState=MP_INITED;
@@ -738,7 +745,7 @@ public class MediaPlayerController {
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Log.d("onAudioFocusChange",	"Loss of audio focus of unknown duration.");
 				try {
-					pause();
+					//pause();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
 				}

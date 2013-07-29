@@ -10,8 +10,10 @@
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
     
     <!-- Default Value -->
-    <integer name="bookFontSizeMax">48</integer>
+    <integer name="bookFontSizeMax">32</integer>
     <integer name="bookFontSizeMin">8</integer>
+    <integer name="textMaxSize">40</integer>
+    <integer name="textMinSize">8</integer>
     <integer name="defFontSize">18</integer> 
     <integer name="theorySmallTextSizePercent">90</integer>
     <color name="theoryNumTextColor">#0000CC</color>
@@ -64,8 +66,6 @@
 	<string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhilePrepPlayer">準備語音檔時發生輸出入錯誤!</string>
 	<string name="inputTitleHint">請輸入標題！</string>
-    <integer name="textMaxSize">100</integer>
-    <integer name="textMinSize">8</integer>
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
     

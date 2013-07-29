@@ -160,6 +160,7 @@ public class FileDownloader {
 						}
 					}
 					if(wakeLock.isHeld())wakeLock.release();
+					Log.d(getClass().getName(),"Call All prepare finish at prepare download stage.");
 					listener.allPrepareFinish(index);
 					return null;
 				}
@@ -376,6 +377,7 @@ public class FileDownloader {
 			
 			dismissDlProgress();
 			if(wakeLock.isHeld())wakeLock.release();
+			Log.d(getClass().getName(),"Call All prepare finish at downloaded stage.");
 			listener.allPrepareFinish(mediaIndex);
 //			downloader=null;
 			return true;

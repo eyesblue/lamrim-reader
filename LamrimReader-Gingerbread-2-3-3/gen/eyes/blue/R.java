@@ -1065,6 +1065,7 @@ containing a value of this type.
         public static final int abs__up=0x7f05000b;
         public static final int arrow_down=0x7f050066;
         public static final int arrow_up=0x7f050062;
+        public static final int bookIcon=0x7f050034;
         public static final int bookPageGrid=0x7f05004e;
         public static final int btn1=0x7f050047;
         public static final int btn2=0x7f050048;
@@ -1106,7 +1107,6 @@ containing a value of this type.
         public static final int horizontalScrollView1=0x7f05004d;
         public static final int i_more=0x7f05004a;
         public static final int imageView=0x7f0500a1;
-        public static final int imageView1=0x7f050034;
         public static final int imageView2=0x7f050036;
         public static final int info=0x7f050060;
         public static final int intAppUsagePercent=0x7f050085;
@@ -1181,25 +1181,25 @@ containing a value of this type.
         public static final int wrap_content=0x7f050000;
     }
     public static final class integer {
-        public static final int MEDIA_TYPE=0x7f090008;
-        public static final int SUBTITLE_TYPE=0x7f090009;
-        public static final int THEORY_TYPE=0x7f09000a;
+        public static final int MEDIA_TYPE=0x7f09000a;
+        public static final int SUBTITLE_TYPE=0x7f09000b;
+        public static final int THEORY_TYPE=0x7f09000c;
         public static final int abs__max_action_buttons=0x7f090000;
         /**  Default Value 
          */
         public static final int bookFontSizeMax=0x7f090002;
         public static final int bookFontSizeMin=0x7f090003;
-        public static final int defFontSize=0x7f090004;
-        public static final int downloadBufferSize=0x7f090007;
+        public static final int defFontSize=0x7f090006;
+        public static final int downloadBufferSize=0x7f090009;
         public static final int isInit=0x7f090001;
         /**  FileSysManager 
          */
         public static final int reservSpacePercent=0x7f09000d;
-        public static final int subtitleMonInterval=0x7f090006;
+        public static final int subtitleMonInterval=0x7f090008;
         public static final int subtitleReservSizeK=0x7f09000e;
-        public static final int textMaxSize=0x7f09000b;
-        public static final int textMinSize=0x7f09000c;
-        public static final int theorySmallTextSizePercent=0x7f090005;
+        public static final int textMaxSize=0x7f090004;
+        public static final int textMinSize=0x7f090005;
+        public static final int theorySmallTextSizePercent=0x7f090007;
     }
     public static final class layout {
         public static final int about=0x7f030000;

@@ -95,12 +95,14 @@ import com.actionbarsherlock.app.SherlockActivity;
 
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 
-/*
- * $Id$
- * */
+/**
+ * $Revision: $
+ * $Date: $
+ * $Id: $
+ */
 public class LamrimReaderActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 	final static String logTag = "LamrimReader";
 	final static String funcInto = "Function Into";
 	final static String funcLeave = "Function Leave";
@@ -119,7 +121,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 	ListView bookView = null;
 	TextView subtitleView = null;
 	SharedPreferences runtime = null;
-
 	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter = null;
 	
@@ -147,6 +148,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	HashMap<String,String> fakeSample = new HashMap();
 	
 	View actionBarControlPanel = null;
+	ImageView bookIcon=null;
 	EditText jumpPage = null;
 	SeekBar volumeController = null;
 	
@@ -172,6 +174,18 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 		actionBarControlPanel = factory.inflate(R.layout.action_bar_control_panel, null);
+		bookIcon=(ImageView) actionBarControlPanel.findViewById(R.id.bookIcon);
+		bookIcon.setOnClickListener(new View.OnClickListener(){
+			@Override
+			public void onClick(View v) {
+				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return;
+				int pageNum=SpeechData.refPage[mediaIndex]-1;
+				if(pageNum==-1)return;
+				bookView.setSelection(pageNum);
+				Log.d(logTag,"Jump to theory page index "+pageNum);
+//				adapter.notifyDataSetChanged();
+			}});
+		
 		jumpPage=(EditText) actionBarControlPanel.findViewById(R.id.jumpPage);
 		jumpPage.setGravity(Gravity.CENTER);
 		jumpPage.setOnEditorActionListener(new OnEditorActionListener() {        
@@ -179,10 +193,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				Log.d(logTag,"User input jump page: "+jumpPage.getText().toString());
 				String input=jumpPage.getText().toString();
-				if(input == null || !input.matches("[0-9]+"))return false;
+				if(input == null || input.length() == 0 || !input.matches("[0-9]+"))return false;
 				int num = Integer.parseInt(jumpPage.getText().toString());
 				if(num>0 && num<=bookList.size())
 					bookView.setSelection(num-1);
+				Log.d(logTag,"Jump to theory page index "+(num-1));
+//				adapter.notifyDataSetChanged();
 				return false;
 			}
 		});
@@ -219,6 +235,8 @@ public class LamrimReaderActivity extends SherlockActivity {
                 new int[] { android.R.id.text1, android.R.id.text2}
 		);
 
+		if(mpController!=null)Log.d(logTag,"The media player controller is not null in onCreate!!!!!");
+		if(mpController==null)
 		mpController = new MediaPlayerController(LamrimReaderActivity.this, LamrimReaderActivity.this.findViewById(android.R.id.content), new MediaPlayerControllerListener() {
 			@Override
 			public void onSubtitleChanged(SubtitleElement subtitle) {
@@ -226,11 +244,15 @@ public class LamrimReaderActivity extends SherlockActivity {
 				setSubtitleViewText(subtitle.text);
 			}
 			@Override
+			public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){
+				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
+			}
+			@Override
 			public void onSeek(SubtitleElement subtitle){
 				showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+')');
 			}
-			@Override
-			public void startMoment(){setSubtitleViewText("");}
+//			@Override
+//			public void startMoment(){setSubtitleViewText("");}
 			@Override
 			public void onMediaPrepared() {
 				Log.d(getClass().getName(),"MediaPlayer prepared, show controller.");
@@ -391,6 +413,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		// Dump default settings to DB
 		int isInit=runtime.getInt("mediaIndex", -1);
 		if(isInit==-1){
+			Log.d(logTag,"This is first time launch LamrimReader, initial default settings.");
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("mediaIndex", isInit);
 //			editor.putInt("playerStatus", mpController.getMediaPlayerState());
@@ -410,10 +433,17 @@ public class LamrimReaderActivity extends SherlockActivity {
 		super.onResume();
 		Log.d(logTag,"Into onResume");
 		
+		/*
+		 * While in the sleep mode, the life cycle into onPause, when user active the application the life cycle become 
+		 * onResume -> onPause -> onDestroy -> onCreate -> onStart -> onResume, the media player still exist after the application recreate.
+		 * the prepare method call twice both in the two onResume, the second prepare will throw illegalStageExcteption, and will cause error
+		 * sometime, If the stage into PREPARING, it mean it preparing the media source at first onResume, then do nothing. 
+		 * */
 		try {
-			if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED){
+			if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARING){
 				Log.d(logTag,"onResume: The state of MediaPlayer is PAUSE, start play.");
-				mpController.showMediaPlayerController();
+//				mpController.setAnchorView(LamrimReaderActivity.this.findViewById(android.R.id.content));
+//				mpController.showMediaPlayerController();
 				return;
 			}
 		} catch (IllegalStateException e) {	e.printStackTrace();}
@@ -455,13 +485,22 @@ public class LamrimReaderActivity extends SherlockActivity {
 		Log.d(funcInto,"**** saveRuntime ****");
 		SharedPreferences.Editor editor = runtime.edit();
 		Log.d(logTag,"Save mediaIndex="+mediaIndex);
+		int bookPosition=bookView.getFirstVisiblePosition();
+		View v=bookView.getChildAt(0);  
+		int bookShift=(v==null)?0:v.getTop();
+		
+		
+
+		Log.d(logTag,"MediaPlayer status="+mpController.getMediaPlayerState());
 		editor.putInt("mediaIndex", mediaIndex);
 //		editor.putInt("playerStatus", mpController.getMediaPlayerState());
-		editor.putInt("playPosition", mpController.getCurrentPosition());
-		editor.putInt("bookPage",bookView.getFirstVisiblePosition());
-		View v=bookView.getChildAt(0);  
-        editor.putInt("bookPageShift",(v==null)?0:v.getTop());
-        Log.d(logTag,"Save content: mediaIndex="+mediaIndex+", playPosition="+runtime.getInt("playPosition", -1)+"");
+		if(mpController.getMediaPlayerState()>MediaPlayerController.MP_PREPARING){
+			int playPosition=mpController.getCurrentPosition();
+			editor.putInt("playPosition", playPosition);
+		}
+		editor.putInt("bookPage", bookPosition);
+        editor.putInt("bookPageShift", bookShift);
+        Log.d(logTag,"Save content: mediaIndex="+mediaIndex+", playPosition(write)="+", playPosition(read)="+runtime.getInt("playPosition", -1)+", book index="+bookPosition+", book shift="+bookShift);
 		editor.commit(); Log.d(funcLeave,"**** saveRuntime ****");
 	}
 
@@ -810,8 +849,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 //			    subtitleSample.setTextSize(orgSubtitleSize);
 				theorySb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
 			    subtitleSb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
-			    theorySb.setProgress(orgTheorySize-getResources().getInteger(R.integer.textMinSize));
-			    subtitleSb.setProgress(orgSubtitleSize-getResources().getInteger(R.integer.textMinSize));
+			    theorySb.setProgress(orgTheorySize);
+			    subtitleSb.setProgress(orgSubtitleSize);
 			}});
 
 
@@ -1036,6 +1075,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 			if(type==getResources().getInteger(R.integer.SUBTITLE_TYPE))isSubtitleReady=false;
 			setSubtitleViewText(getString(R.string.dlgDescDownloadFail));
 			Log.d(getClass().getName(),"**** Prepare files fail ****");
+		}
+		
+		public void userCancel(int i,int type){
+			setSubtitleViewText("請從選單選擇音檔");
 		}
 	};
 
