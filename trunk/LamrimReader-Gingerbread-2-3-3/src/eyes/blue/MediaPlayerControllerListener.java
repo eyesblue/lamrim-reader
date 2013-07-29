@@ -1,11 +1,13 @@
 package eyes.blue;
 
+import android.media.MediaPlayer;
+
 public class MediaPlayerControllerListener {
 	/*
 	 * Show subtitle in subtitle bar.
 	 * */
 	public void onSubtitleChanged(SubtitleElement subtitle){}
-	
+	public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){}
 	/*
 	 * Called while user seek.
 	 * */
@@ -20,7 +22,6 @@ public class MediaPlayerControllerListener {
 	 * Call on media prepared.
 	 * */
 	public void onMediaPrepared(){}
-	
 	public void startRegionSeted(int position){}
 	public void startRegionDeset(int position){}
 	public void endRegionSeted(int position){}
