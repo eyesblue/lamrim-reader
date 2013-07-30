@@ -727,6 +727,7 @@ public class MediaPlayerController {
 	
 	
 	final protected OnAudioFocusChangeListener audioFocusChangeListener = new OnAudioFocusChangeListener() {
+		int lastState=-1;
 		@Override
 		public void onAudioFocusChange(int focusChange) {
 			switch (focusChange) {
@@ -740,12 +741,15 @@ public class MediaPlayerController {
 					}
 				*/
 				// mpController.start();
+				if(lastState == MP_PLAYING)
+					start();
+				lastState=-1;
 				break;
 			// lost audio focus long time, release resource here.
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Log.d("onAudioFocusChange",	"Loss of audio focus of unknown duration.");
 				try {
-					//pause();
+					release();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
 				}
@@ -758,6 +762,7 @@ public class MediaPlayerController {
 			// you will probably get focus back shortly
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				try {
+					lastState=getMediaPlayerState();
 					pause();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
@@ -770,6 +775,7 @@ public class MediaPlayerController {
 			// audio completely.
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
 				try {
+					lastState=getMediaPlayerState();
 					pause();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();

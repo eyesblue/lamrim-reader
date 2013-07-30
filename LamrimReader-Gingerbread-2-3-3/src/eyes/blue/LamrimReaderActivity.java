@@ -70,6 +70,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -179,9 +180,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onClick(View v) {
 				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return;
-				int pageNum=SpeechData.refPage[mediaIndex]-1;
+				final int pageNum=SpeechData.refPage[mediaIndex]-1;
 				if(pageNum==-1)return;
-				bookView.setSelection(pageNum);
+				//bookView.setItemChecked(pageNum, true);
+				setTheoryArea(pageNum, 0);
 				Log.d(logTag,"Jump to theory page index "+pageNum);
 //				adapter.notifyDataSetChanged();
 			}});
@@ -192,11 +194,36 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				Log.d(logTag,"User input jump page: "+jumpPage.getText().toString());
-				String input=jumpPage.getText().toString();
-				if(input == null || input.length() == 0 || !input.matches("[0-9]+"))return false;
-				int num = Integer.parseInt(jumpPage.getText().toString());
-				if(num>0 && num<=bookList.size())
-					bookView.setSelection(num-1);
+				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(jumpPage.getWindowToken(), 0);
+				
+				int num;
+				if(jumpPage.getText().toString() == null)return false;
+				String input=jumpPage.getText().toString().trim();
+				if( input.length() == 0 || !input.matches("[0-9]+")){
+					new Handler().postDelayed(new Runnable(){
+						@Override
+						public void run() {
+							setTheoryArea(bookView.getFirstVisiblePosition(), 0);
+						}}, 200);
+						
+					
+					return false;
+				}
+				num = Integer.parseInt(jumpPage.getText().toString());
+				if(num>bookList.size())num=bookList.size();
+				else if(num<1)num=1;
+				
+				final int pageNum= num-1;
+				
+				new Handler().postDelayed(new Runnable(){
+
+					@Override
+					public void run() {
+						setTheoryArea(pageNum, 0);
+					}}, 200);
+					//bookView.setItemChecked(num-1, true);
+					//bookView.setSelection(pageNum);
 				Log.d(logTag,"Jump to theory page index "+(num-1));
 //				adapter.notifyDataSetChanged();
 				return false;
@@ -334,6 +361,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
 				if(view == null) return;
+				if(bookList == null)return;
+				String input=jumpPage.getText().toString().trim();
+				if( input.length() == 0 || !input.matches("[0-9]+"))return;
+				int num = Integer.parseInt(jumpPage.getText().toString());
+				if(num<0 || num>bookList.size())return;
+				
 				int showNum=Integer.parseInt(jumpPage.getText().toString());
 				if(showNum==firstVisibleItem+1)return;
 				
@@ -347,7 +380,11 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 			}});
-		setTheoryArea();
+		
+		int bookPage=runtime.getInt("bookPage", 0);
+		int bookPageShift=runtime.getInt("bookPageShift", 0);
+		setTheoryArea(bookPage, bookPageShift);
+		
 //		bookView.setScrollingCacheEnabled( false );
 		rootLayout = (LinearLayout) findViewById(R.id.rootLayout);
 		rootLayout.setOnClickListener(new OnClickListener() {
@@ -369,13 +406,13 @@ public class LamrimReaderActivity extends SherlockActivity {
 		// LogRepoter.log("Leave OnCreate");
 	}
 	
-	private void setTheoryArea() {
+	private void setTheoryArea(final int pageIndex, final int pageShift) {
 		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
 		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
-		final int bookPage=runtime.getInt("bookPage", 0);
-		final int bookPageShift=runtime.getInt("bookPageShift", 0);
+//		final int bookPage=runtime.getInt("bookPage", 0);
+//WG		final int bookPageShift=runtime.getInt("bookPageShift", 0);
 //		String[] bookArray=getResources().getStringArray(R.array.book);
 
 		bookList = new ArrayList<HashMap<String, String>>();
@@ -397,14 +434,14 @@ public class LamrimReaderActivity extends SherlockActivity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				adapter.setTextSize(theoryTextSize);
-				bookView.setSelectionFromTop(bookPage, bookPageShift);
+				bookView.setSelectionFromTop(pageIndex, pageShift);
 				adapter.notifyDataSetChanged();
 				subtitleView.setTextSize(subtitleTextSize);
-				jumpPage.setText(Integer.toString(bookPage));
+				jumpPage.setText(Integer.toString(pageIndex));
 			}
 		});
 	}
-
+	
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -735,8 +772,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 	
 	private void updateTheoryTextSize(final int size) {
-
-		
 		Log.d(logTag,"Update theory font size: "+size);
 		runOnUiThread(new Runnable() {
 			public void run() {
@@ -837,18 +872,16 @@ public class LamrimReaderActivity extends SherlockActivity {
 	    final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
 	    final SeekBar theorySb=(SeekBar) v.findViewById(R.id.theorySizeBar);
 	    final SeekBar subtitleSb=(SeekBar) v.findViewById(R.id.subtitleSizeBar);
-	    final int orgTheorySize=runtime.getInt(getString(R.string.bookFontSizeKey), getResources().getInteger(R.integer.defFontSize));
-	    final int orgSubtitleSize=runtime.getInt(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize));
-	    
-	    
+	    final int orgTheorySize=runtime.getInt(getString(R.string.bookFontSizeKey), getResources().getInteger(R.integer.defFontSize))-getResources().getInteger(R.integer.textMinSize);
+	    final int orgSubtitleSize=runtime.getInt(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize))-getResources().getInteger(R.integer.textMinSize);
+	    final int textMaxSize=getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize);
 
+	    Log.d(logTag,"Set theory size Max="+(textMaxSize)+", orgSize="+orgTheorySize+", subtitle size Max="+textMaxSize+", orgSize="+orgSubtitleSize);
 	    runOnUiThread(new Runnable(){
 			@Override
 			public void run() {
-//				theorySample.setTextSize(orgTheorySize);
-//			    subtitleSample.setTextSize(orgSubtitleSize);
-				theorySb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
-			    subtitleSb.setMax(getResources().getInteger(R.integer.textMaxSize)-getResources().getInteger(R.integer.textMinSize));
+				theorySb.setMax(textMaxSize);
+			    subtitleSb.setMax(textMaxSize);
 			    theorySb.setProgress(orgTheorySize);
 			    subtitleSb.setProgress(orgSubtitleSize);
 			}});
@@ -858,16 +891,16 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onProgressChanged(final SeekBar seekBar, final int progress, boolean fromUser) {
 				if(!fromUser)return;
-				final int prog = progress+getResources().getInteger(R.integer.textMinSize);
+				final int minSize = getResources().getInteger(R.integer.textMinSize);
 				
 				runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
 						Log.d(logTag,"Seek bar get progress: "+progress+", min size: "+getResources().getInteger(R.integer.textMinSize)+", add:"+(progress+getResources().getInteger(R.integer.textMinSize)));
 						if(seekBar.equals(theorySb))
-							updateTheoryTextSize(prog);
+							updateTheoryTextSize(progress+minSize);
 							//theorySample.setTextSize;
-						else subtitleView.setTextSize(prog);
+						else subtitleView.setTextSize(progress+minSize);
 							//subtitleSample.setTextSize(prog);
 	//					Log.d(logTag,"theorySample size: "+theorySample.getTextSize()+", subtitleSample size: "+subtitleSample.getTextSize());		
 						seekBar.setProgress(progress);
@@ -1031,6 +1064,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				try {
 					setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
 					mpController.setDataSource(getApplicationContext(),index[0]);
+					mpController.prepareMedia();
 				} catch (IllegalArgumentException e) {
 					setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
 					e.printStackTrace();
@@ -1050,7 +1084,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				}
 			}
 
-			synchronized (mpController) {
+/*			synchronized (mpController) {
 //				mpState = MP_PREPARING;
 				Log.d("setMediaPlayer", "**** setMediaPlayer ****");
 //				mediaPlayer.setOnPreparedListener(onPreparedListener);
@@ -1064,7 +1098,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 					e.printStackTrace();
 				}
 			}
-
+*/
 			Log.d(getClass().getName(),"**** Prepare files success ****");
 		}
 
