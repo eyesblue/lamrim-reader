@@ -157,7 +157,7 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer.
 	 * */
 	public void seekTo(int pos) {
-//		Log.d(logTag,"SeekTo function: seek to position: "+pos);
+		Log.d(logTag,"SeekTo function: seek to position: "+pos);
 		if(mpState<MP_PREPARED)return;
 		
 		if(subtitle==null){
@@ -167,6 +167,7 @@ public class MediaPlayerController {
 		
 		// Check is the seek position over the start or end region.
 		int index=subtitleBSearch(subtitle, pos);
+		Log.d(logTag,"The position"+pos+" locate at index "+index+", start time="+subtitle[index].startTimeMs);
 		
 		if(index<0){
 			if(regionStartMs!=-1 && pos<regionStartMs){
@@ -939,14 +940,14 @@ public class MediaPlayerController {
 				return 0;
 			}
 			if (mid == a.length - 1) {
-//				System.out.println("Shift to the last element, return "	+ (a.length - 1));
+//				System.out.println("Shift to the last element, check is the key < last element.");
+				if(key<a[a.length-1].startTimeMs)return a.length - 2;
 				return a.length - 1;
 			}
 			if (a[mid].startTimeMs > key && key <= a[mid + 1].startTimeMs) {
 				d = 1;
 //				System.out.println("MID=" + mid + ", Compare " + a[mid].startTimeMs + " > " + key + " > " + a[mid + 1].startTimeMs + ", set -1, shift to smaller");
-			} else if (a[mid].startTimeMs <= key
-					&& key < a[mid + 1].startTimeMs) {
+			} else if (a[mid].startTimeMs <= key && key < a[mid + 1].startTimeMs) {
 				d = 0;
 //				System.out.println("This should find it! MID=" + mid + ", "						+ a[mid].startTimeMs + " < " + key + " > "						+ a[mid + 1].startTimeMs + ", set 0, this should be.");
 			} else {
