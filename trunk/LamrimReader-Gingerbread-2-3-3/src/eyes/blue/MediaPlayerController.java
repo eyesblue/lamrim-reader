@@ -167,7 +167,7 @@ public class MediaPlayerController {
 		
 		// Check is the seek position over the start or end region.
 		int index=subtitleBSearch(subtitle, pos);
-		Log.d(logTag,"The position"+pos+" locate at index "+index+", start time="+subtitle[index].startTimeMs);
+//		Log.d(logTag,"The position"+pos+" locate at index "+index+", start time="+subtitle[index].startTimeMs);
 		
 		if(index<0){
 			if(regionStartMs!=-1 && pos<regionStartMs){
