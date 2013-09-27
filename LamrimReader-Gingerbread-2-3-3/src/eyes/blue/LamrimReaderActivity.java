@@ -1212,8 +1212,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 //—————————————————————————–
 //REVISION HISTORY
-//$LastChangedDate: $
-//$Revision: $
-//$LastChangedBy: $
-//$Id: $
+//$LastChangedDate$
+//$Revision$
+//$LastChangedBy$
+//$Id$
 //—————————————————————————–
