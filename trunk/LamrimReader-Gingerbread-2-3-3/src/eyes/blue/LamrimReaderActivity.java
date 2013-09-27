@@ -1209,11 +1209,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 	}
 }
 
-
-//—————————————————————————–
-//REVISION HISTORY
-//$LastChangedDate$
-//$Revision$
-//$LastChangedBy$
-//$Id$
-//—————————————————————————–
+/**
+* 更新: $$Date$$
+* 作者: $$Author$$
+* 版本: $$Revision$$
+* ID  ：$$Id$$
+*/
