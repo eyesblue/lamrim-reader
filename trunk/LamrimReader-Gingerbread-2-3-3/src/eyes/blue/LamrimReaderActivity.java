@@ -1,7 +1,3 @@
-/**
- * $LastChangedDate$
- * $LastChangedRevision$
- */
 package eyes.blue;
 
 import java.io.File;
@@ -1212,3 +1208,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 		return mst+minuteSign+ss+((hasDecimal)?"."+sub:"")+secSign;
 	}
 }
+
+
+//—————————————————————————–
+//REVISION HISTORY
+//$LastChangedDate: $
+//$Revision: $
+//$LastChangedBy: $
+//$Id: $
+//—————————————————————————–
