@@ -1,3 +1,7 @@
+/**
+ * $LastChangedDate$
+ * $LastChangedRevision$
+ */
 package eyes.blue;
 
 import java.io.File;
@@ -96,10 +100,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 
-/**
- * $LastChangedDate$
- * $LastChangedRevision$
- */
+
 
 public class LamrimReaderActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
