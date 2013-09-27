@@ -97,10 +97,10 @@ import com.actionbarsherlock.app.SherlockActivity;
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 
 /**
- * $Revision: $
- * $Date: $
- * $Id: $
+ * $LastChangedDate$
+ * $LastChangedRevision$
  */
+
 public class LamrimReaderActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
 	private static final long serialVersionUID = 4L;
@@ -159,7 +159,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		// try{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
+		
 		getSupportActionBar();
 //		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
