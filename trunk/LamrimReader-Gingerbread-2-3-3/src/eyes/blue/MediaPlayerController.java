@@ -194,8 +194,8 @@ public class MediaPlayerController {
 		synchronized(playingIndexKey){
 			playingIndex=index;
 			mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
-			changedListener.onSeek(subtitle[playingIndex]);
-			changedListener.onSubtitleChanged(subtitle[playingIndex]);
+			changedListener.onSeek(playingIndex, subtitle[playingIndex]);
+			changedListener.onSubtitleChanged(playingIndex, subtitle[playingIndex]);
 		}
 	}
 	
@@ -244,8 +244,10 @@ public class MediaPlayerController {
 	 * */
 	public int getCurrentPosition() {
 		try{
-		return mediaPlayer.getCurrentPosition();
+			return mediaPlayer.getCurrentPosition();
 		}catch(java.lang.IllegalStateException ise){
+			return 0;
+		}catch(java.lang.Exception e){
 			return 0;
 		}
 	}
@@ -327,12 +329,18 @@ public class MediaPlayerController {
 	public void release(){
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
-		synchronized(mediaPlayer){
-			Log.d("","============ Release MediaPlayer ===============");
-			mediaPlayer.release();
-			mpState=MP_IDLE;
-		}
+		if(mediaPlayer!=null)
+			synchronized(mediaPlayer){
+				Log.d("","============ Release MediaPlayer ===============");
+				mediaPlayer.release();
+				mpState=MP_IDLE;
+			}
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+	}
+	
+	public void finish(){
+		release();
+		mediaPlayer=null;
 	}
 	
 	/*
@@ -353,6 +361,7 @@ public class MediaPlayerController {
 			return;
 		}
 		
+		Log.d(getClass().getName(),"MediaPlayer: Set data source to index: "+index);
 		synchronized(mediaPlayer){
 			Log.d(logTag,"Set data source: "+ Uri.fromFile(speechFile));
 			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
@@ -686,8 +695,11 @@ public class MediaPlayerController {
 	public int getRegionEndPosition(){
 		return regionEndMs;
 	}
-	public SubtitleElement getSubtitle(int position){
-		return subtitle[subtitleBSearch(subtitle, position)];
+	public SubtitleElement getSubtitle(int time){
+		return subtitle[subtitleBSearch(subtitle, time)];
+	}
+	public int getSubtitleIndex(int time){
+		return subtitleBSearch(subtitle, time);
 	}
 
 	// ===========================================================================================
@@ -812,7 +824,7 @@ public class MediaPlayerController {
 						if(playingIndex!=playArrayIndex){
 							playingIndex=playArrayIndex;
 							if(playArrayIndex==-1){changedListener.startMoment();}
-							else changedListener.onSubtitleChanged(subtitle[playArrayIndex]);
+							else changedListener.onSubtitleChanged(playArrayIndex, subtitle[playArrayIndex]);
 						}
 					}
 					// The last of subtitle has reached.
@@ -832,7 +844,9 @@ public class MediaPlayerController {
 		}
 	}
 	
-	
+	public SubtitleElement[] getSubtitle(){
+		return subtitle;
+	}
 		private static SubtitleElement[] loadSubtitle(File file) {
 		ArrayList<SubtitleElement> subtitleList = new ArrayList<SubtitleElement>();
 		try {

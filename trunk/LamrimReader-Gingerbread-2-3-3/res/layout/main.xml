@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<eyes.blue.modified.MyLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rootLayout"
-    android:layout_width="fill_parent"
+    android:layout_width="wrap_content"
     android:layout_height="fill_parent"
     android:gravity="fill"
     android:orientation="vertical" >
 <!--android:screenOrientation="landscape" -->    	
 
-    <HorizontalScrollView
+<eyes.blue.modified.MyHorizontalScrollView
         android:id="@+id/horizontalScrollView1"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
@@ -16,23 +16,24 @@
         android:fillViewport="true"
         android:scrollbars="none" >
 
-    <ListView
+    <eyes.blue.modified.MyListView
         android:id="@+id/bookPageGrid"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
         android:stretchMode="columnWidth" >
 
-    </ListView>
-    </HorizontalScrollView>
+    </eyes.blue.modified.MyListView>
+</eyes.blue.modified.MyHorizontalScrollView>
 
     <TextView
         android:id="@+id/subtitleView"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0"
+        android:background="#0F395E"
         android:gravity="center"
         android:text="@string/app_name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-</LinearLayout>
+</eyes.blue.modified.MyLinearLayout>

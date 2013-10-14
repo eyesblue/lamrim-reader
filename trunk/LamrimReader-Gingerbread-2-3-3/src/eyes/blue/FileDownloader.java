@@ -138,6 +138,7 @@ public class FileDownloader {
 			@Override
 			protected Void doInBackground(Void... params) {
 				for(int i:index){
+					Log.d(getClass().getName(),"Check sources of index "+i);
 					if(!FileSysManager.isFileValid(i, activity.getResources().getInteger(R.integer.SUBTITLE_TYPE)))
 						al.add(getSubtitleDesc(i));
 					if(!FileSysManager.isFileValid(i, activity.getResources().getInteger(R.integer.MEDIA_TYPE)))
@@ -208,6 +209,7 @@ public class FileDownloader {
 					if(!activity.isFinishing() && !mkDlTaskDialog.isShowing())mkDlTaskDialog.show();
 			}});
 		}
+		Log.d(getClass().getName(),"Creat a source check task and start.");
 		checkTask.execute();
 	}
 	

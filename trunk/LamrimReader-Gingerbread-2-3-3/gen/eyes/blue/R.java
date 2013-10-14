@@ -711,11 +711,14 @@ containing a value of this type.
         public static final int abs__bright_foreground_disabled_holo_light=0x7f090005;
         public static final int abs__bright_foreground_holo_dark=0x7f090002;
         public static final int abs__bright_foreground_holo_light=0x7f090003;
-        public static final int abs__primary_text_disable_only_holo_dark=0x7f09000a;
-        public static final int abs__primary_text_disable_only_holo_light=0x7f09000b;
-        public static final int abs__primary_text_holo_dark=0x7f09000c;
-        public static final int abs__primary_text_holo_light=0x7f09000d;
-        public static final int gray=0x7f090009;
+        public static final int abs__primary_text_disable_only_holo_dark=0x7f09000d;
+        public static final int abs__primary_text_disable_only_holo_light=0x7f09000e;
+        public static final int abs__primary_text_holo_dark=0x7f09000f;
+        public static final int abs__primary_text_holo_light=0x7f090010;
+        public static final int gray=0x7f09000c;
+        public static final int subtitleBGcolor=0x7f090009;
+        public static final int subtitleRedingModeHilightColor=0x7f09000a;
+        public static final int subtitleScrollPressColor=0x7f09000b;
         public static final int theoryBoldColor=0x7f090008;
         public static final int theoryDotTextColor=0x7f090007;
         public static final int theoryNumTextColor=0x7f090006;
@@ -1194,9 +1197,11 @@ containing a value of this type.
         public static final int isInit=0x7f0b0001;
         /**  FileSysManager 
          */
-        public static final int reservSpacePercent=0x7f0b000d;
+        public static final int reservSpacePercent=0x7f0b000f;
         public static final int subtitleMonInterval=0x7f0b0008;
-        public static final int subtitleReservSizeK=0x7f0b000e;
+        public static final int subtitleReservSizeK=0x7f0b0010;
+        public static final int subtitleScrollTouchBottomBoundDp=0x7f0b000e;
+        public static final int subtitleScrollTouchUpperBoundDp=0x7f0b000d;
         public static final int textMaxSize=0x7f0b0004;
         public static final int textMinSize=0x7f0b0005;
         public static final int theorySmallTextSizePercent=0x7f0b0007;

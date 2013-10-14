@@ -6,12 +6,12 @@ public class MediaPlayerControllerListener {
 	/*
 	 * Show subtitle in subtitle bar.
 	 * */
-	public void onSubtitleChanged(SubtitleElement subtitle){}
+	public void onSubtitleChanged(int index, SubtitleElement subtitle){}
 	public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){}
 	/*
 	 * Called while user seek.
 	 * */
-	public void onSeek(SubtitleElement subtitle){}
+	public void onSeek(int index, SubtitleElement subtitle){}
 	
 	/*
 	 * Call while start play but first subtitle not coming.
