@@ -2,7 +2,6 @@ package eyes.blue;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -21,6 +20,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,6 +30,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -47,20 +49,32 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.SubMenu;
 
 import android.view.MenuInflater;
+
 import com.actionbarsherlock.view.MenuItem;
 
 import android.view.Display;
 import android.view.DragEvent;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -77,6 +91,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -85,17 +100,24 @@ import android.widget.MediaController;
 import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.Scroller;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
+
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
 
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
-
+import eyes.blue.modified.MyListView;
+import eyes.blue.modified.MyHorizontalScrollView;
+import eyes.blue.modified.MyLinearLayout;
+import eyes.blue.modified.MyLinearLayoutController;
+import eyes.blue.modified.OnDoubleTapEventListener;
+import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 
 
 public class LamrimReaderActivity extends SherlockActivity {
@@ -111,22 +133,25 @@ public class LamrimReaderActivity extends SherlockActivity {
 	final static int SPEECH_MENU_RESULT = 0;
 	final static int THEORY_MENU_RESULT = 1;
 	final static int OPT_MENU_RESULT = 2;
+	final static int SUBTITLE_MODE=1;
+	final static int READING_MODE=2;
 	
+	int renderMode=SUBTITLE_MODE;
 	static int mediaIndex = -1;
 	MediaPlayerController mpController;
 	private PowerManager powerManager = null;
 	private PowerManager.WakeLock wakeLock = null;
-	ListView bookView = null;
+	MyListView bookView = null;
 	TextView subtitleView = null;
 	SharedPreferences runtime = null;
 	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter = null;
 	
-	MenuItem speechMenu, setTextSize, saveRegion, playRegionRec,exitApp;
+	MenuItem speechMenu, saveRegion, playRegionRec,exitApp;
 
 	FileSysManager fileSysManager = null;
 	FileDownloader fileDownloader = null;
-	LinearLayout rootLayout = null;
+	MyLinearLayout rootLayout = null;
 	
 	Typeface educFont = null;
 	View toastLayout = null;
@@ -144,11 +169,15 @@ public class LamrimReaderActivity extends SherlockActivity {
 	ListView regionListView = null;
 	
 	HashMap<String,String> fakeSample = new HashMap();
+	PackageInfo pkgInfo = null;
 	
 	View actionBarControlPanel = null;
 	ImageView bookIcon=null;
 	EditText jumpPage = null;
 	SeekBar volumeController = null;
+	
+	int[][] readingModeSEindex=null;
+	String readingModeAllSubtitle=null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -169,11 +198,16 @@ public class LamrimReaderActivity extends SherlockActivity {
 		powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,logTag);
 		educFont=Typeface.createFromAsset(this.getAssets(), "EUDC.TTF");
-
+		try {
+			pkgInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+		} catch (NameNotFoundException e3) {
+			e3.printStackTrace();
+		}
+		
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 		actionBarControlPanel = factory.inflate(R.layout.action_bar_control_panel, null);
 		bookIcon=(ImageView) actionBarControlPanel.findViewById(R.id.bookIcon);
-		bookIcon.setOnClickListener(new View.OnClickListener(){
+/*		bookIcon.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
 				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return;
@@ -184,7 +218,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				Log.d(logTag,"Jump to theory page index "+pageNum);
 //				adapter.notifyDataSetChanged();
 			}});
-		
+*/		
 		jumpPage=(EditText) actionBarControlPanel.findViewById(R.id.jumpPage);
 		jumpPage.setGravity(Gravity.CENTER);
 		jumpPage.setOnEditorActionListener(new OnEditorActionListener() {        
@@ -203,8 +237,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 						public void run() {
 							setTheoryArea(bookView.getFirstVisiblePosition(), 0);
 						}}, 200);
-						
-					
 					return false;
 				}
 				num = Integer.parseInt(jumpPage.getText().toString());
@@ -263,34 +295,88 @@ public class LamrimReaderActivity extends SherlockActivity {
 		if(mpController==null)
 		mpController = new MediaPlayerController(LamrimReaderActivity.this, LamrimReaderActivity.this.findViewById(android.R.id.content), new MediaPlayerControllerListener() {
 			@Override
-			public void onSubtitleChanged(SubtitleElement subtitle) {
+			public void onSubtitleChanged(final int index, final SubtitleElement subtitle) {
 //				Log.d(getClass().getName(), "Set subtitle: "+ subtitle.text);
-				setSubtitleViewText(subtitle.text);
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						synchronized (mpController){
+						switch(renderMode){
+						case SUBTITLE_MODE:
+							subtitleView.setText(subtitle.text);
+							break;
+						case READING_MODE:
+							//SpannableString str=new SpannableString (subtitleView.getText());
+							SpannableString str=new SpannableString (subtitleView.getText().toString());
+							//Spannable WordtoSpan = (Spannable) subtitleView.getText();
+							
+							str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+							subtitleView.setText(str);
+							break;
+						};
+					}
+				}
+				});
 			}
 			@Override
 			public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){
 				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
 			}
 			@Override
-			public void onSeek(SubtitleElement subtitle){
-				showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+')');
+			public void onSeek(final int index, final SubtitleElement subtitle){
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						synchronized (mpController){
+							switch(renderMode){
+							case SUBTITLE_MODE:
+								showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+')');
+								break;
+							case READING_MODE:
+								SpannableString str=new SpannableString (subtitleView.getText().toString());
+								
+								//Spannable WordtoSpan = (Spannable) subtitleView.getText();
+								str.setSpan(new ForegroundColorSpan(Color.parseColor("#CD78CE")), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+								subtitleView.setText(str);
+								break;
+						};
+					
+				}}});
 			}
 //			@Override
 //			public void startMoment(){setSubtitleViewText("");}
 			@Override
 			public void onMediaPrepared() {
 				Log.d(getClass().getName(),"MediaPlayer prepared, show controller.");
-				if(mpController.isSubtitleReady())setSubtitleViewText(getString(R.string.dlgHintMpController));
+				if(mpController.isSubtitleReady()){
+					setSubtitleViewText(getString(R.string.dlgHintMpController));
+					SubtitleElement[] se=mpController.getSubtitle();
+					readingModeSEindex=new int[se.length][2];
+					readingModeAllSubtitle=new String();
+					int wordCounter=0;
+					for(int i=0;i<se.length;i++){
+						readingModeSEindex[i][0]=wordCounter;
+						wordCounter+=se[i].text.length();
+						readingModeSEindex[i][1]=wordCounter;
+						String str=se[i].text.replaceAll(",", "，");
+						str=str.replaceAll("\\.", "。");
+						str=str.replaceAll("!", "！");
+						str=str.replaceAll(";", "；");
+						str=str.replaceAll("\\?", "？");
+						str=str.replaceAll(":", "：");
+						readingModeAllSubtitle+=str;
+					}
+				}
 				else setSubtitleViewText(getString(R.string.dlgHintMpControllerNoSubtitle));
-				
+			
 				// If this time fire by user select a new speech, no need to seekTo(sometime), just play from 0, and set the newPlay flag to false.
 				int seekPosition=runtime.getInt("playPosition",0);
-					Log.d(logTag,"Seek to last play positon "+seekPosition);
-					mpController.seekTo(seekPosition);
+				Log.d(logTag,"Seek to last play positon "+seekPosition);
+				mpController.seekTo(seekPosition);
 
-
-				getSupportActionBar().setTitle(getString(R.string.app_name) +" V"+serialVersionUID);
-				getSupportActionBar().setSubtitle(SpeechData.getNameId(mediaIndex));
+				String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName;
+				getSupportActionBar().setTitle(SpeechData.getNameId(mediaIndex));
+				getSupportActionBar().setSubtitle(appSubtitle);
 				Log.d(logTag,"Check media static before show controller: media player state: "+mpController.getMediaPlayerState()+", normal should equal or bigger then "+MediaPlayerController.MP_PREPARED);
 				if(regionPlayIndex!=-1){
 					Log.d(logTag,"This play event is region play, set play region.");					
@@ -301,7 +387,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				else{
 					Log.d(logTag,"The play event is fire by user select a new speech.");
 					mpController.showMediaPlayerController();
-					}
+				}
 			}
 			@Override
 			public void startRegionSeted(int position){
@@ -341,9 +427,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
 		subtitleView.setTypeface(educFont);
+		subtitleView.setBackgroundColor(getResources().getColor(R.color.subtitleBGcolor));
 		
 //		subtitleView = new TextView(LamrimReaderActivity.this);
-		subtitleView.setOnClickListener(new OnClickListener() {
+/*		subtitleView.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				Log.d(logTag, v	+ " been clicked, Show media plyaer control panel.");
@@ -351,9 +438,93 @@ public class LamrimReaderActivity extends SherlockActivity {
 					mpController.showMediaPlayerController();
 			}
 		});
+*/
+		final GestureDetector subtitleViewGestureListener=new GestureDetector(getApplicationContext(),new SimpleOnGestureListener(){
+			@Override
+			public boolean onDown(MotionEvent e) {return true;}
+			@Override
+			public boolean onSingleTapConfirmed(MotionEvent e) {
+				Log.d(logTag, "SubtitleView been clicked, Show media plyaer control panel.");
+				if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
+					mpController.showMediaPlayerController();
+
+				return true;
+			}
+			@Override
+			public boolean onDoubleTapEvent(MotionEvent e) {
+				// If it stay in subtitle mode, do nothing.
+				if(renderMode==SUBTITLE_MODE)return false;
+				if(mpController.getMediaPlayerState()==MediaPlayerController.MP_PLAYING && mpController.getSubtitle()!=null){
+					int index=mpController.getSubtitleIndex(mpController.getCurrentPosition());
+					if(index==-1)return true;
+					//subtitleView.bringPointIntoView(readingModeSEindex[index][0]);
+					int line = subtitleView.getLayout ().getLineForOffset (readingModeSEindex[index][0]);
+
+				    //int y = (int) ((line + 0.5) * subtitleView.getLineHeight ());
+				    //subtitleView.scrollTo (0, y - subtitleView.getHeight () / 2);
+					subtitleView.scrollTo(subtitleView.getScrollX(),subtitleView.getLineBounds(line, null)-subtitleView.getLineHeight());
+
+				}
+				return true;
+			}
+			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+				if(renderMode==READING_MODE){
+				int y=(int) (subtitleView.getScrollY()+distanceY);
+				int bottom=subtitleView.getLineBounds(subtitleView.getLayout().getLineForOffset(subtitleView.getText().length()),null)-subtitleView.getMeasuredHeight()+subtitleView.getLineHeight();
+				Log.d(logTag,"Org Y="+y+"layout.height="+subtitleView.getLayoutParams().height+", subtitle.height="+subtitleView.getHeight()+", measureHeight="+subtitleView.getMeasuredHeight());
+				if(y<0)y=0;
+				if(y>bottom)y=bottom;
+//				if(subtitleView.getLayoutParams().height-subtitleView.getMeasuredHeight()-y<0)y=subtitleView.getLayoutParams().height-subtitleView.getMeasuredHeight();
+				subtitleView.scrollTo(subtitleView.getScrollX(), y);
+				Log.d(logTag,"Scroll subtitle view to "+subtitleView.getScrollX()+", "+y);
+				}
+				return true;
+			}
+		});
+		
+		final ScaleGestureDetector stScaleGestureDetector =new ScaleGestureDetector(this.getApplicationContext(),new SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScaleBegin(ScaleGestureDetector detector) {
+				Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
+				return true;
+			}
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				float size=subtitleView.getTextSize()*detector.getScaleFactor();
+   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+   				subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+   				Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
+   				if(renderMode==SUBTITLE_MODE)
+   					subtitleView.setHeight(subtitleView.getLineHeight());
+   				
+   				return true;
+   			}
+			@Override
+			public void onScaleEnd(ScaleGestureDetector detector){
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putInt(getString(R.string.subtitleFontSizeKey), (int) adapter.getTextSize());
+				editor.commit();
+			}
+			});
+		
+		subtitleView.setOnTouchListener(new View.OnTouchListener(){
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getPointerCount()==2){
+					return stScaleGestureDetector.onTouchEvent(event);
+				}
+				boolean res= subtitleViewGestureListener.onTouchEvent(event);
+				Log.d(logTag, "Subtitle OnTouchListener return "+res);
+				return res;
+			}
+			
+		});
+		
 		
 		fileDownloader = new FileDownloader(LamrimReaderActivity.this,downloadListener);
-		bookView = (ListView) findViewById(R.id.bookPageGrid);
+		bookView = (MyListView) findViewById(R.id.bookPageGrid);
+		bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
 		bookView.setOnScrollListener(new AbsListView.OnScrollListener() {
 			@Override
 			public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
@@ -378,27 +549,204 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 			}});
 		
+		
 		int bookPage=runtime.getInt("bookPage", 0);
 		int bookPageShift=runtime.getInt("bookPageShift", 0);
 		setTheoryArea(bookPage, bookPageShift);
 		
 //		bookView.setScrollingCacheEnabled( false );
-		rootLayout = (LinearLayout) findViewById(R.id.rootLayout);
-		rootLayout.setOnClickListener(new OnClickListener() {
+		rootLayout = (MyLinearLayout) findViewById(R.id.rootLayout);
+		rootLayout.setLongClickable(false);
+
+/*		rootLayout.setGestureListener(new GestureDetector(this,new SimpleOnGestureListener(){
 			@Override
-			public void onClick(View v) {
-				// String s=(v.equals(subtitleView))?" is ":" is not ";
-				Log.d(logTag, v	+ " been clicked, Show media plyaer control panel.");
-				if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
-					mpController.showMediaPlayerController();
+			public boolean onSingleTapUp(MotionEvent e) {
+				Log.d(logTag, "Into onSingleTapUp");
+				bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
+				return false;
+			}
+			@Override
+			public void onLongPress(MotionEvent e) {
+				Log.d(logTag, "Into onLongPress");
+			}
+			/**
+			@param e1 The first down motion event that started the scrolling.
+			@param e2 The move motion event that triggered the current onScroll.
+			@param distanceX The distance along the X axis(轴) that has been scrolled since the last call to onScroll. This is NOT the distance between e1 and e2.
+			@param distanceY The distance along the Y axis that has been scrolled since the last call to onScroll. This is NOT the distance between e1 and e2.
+			无论是用手拖动view，或者是以抛的动作滚动，都会多次触发 ,这个方法在ACTION_MOVE动作发生时就会触发 参看GestureDetector的onTouchEvent方法源码
+			* */
+/*			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2,	float distanceX, float distanceY) {
+				Log.d(logTag, "Into onScroll");
+				int height=(int) (rootLayout.getHeight()-e2.getY());
+				int minHeight=(int) subtitleView.getLineHeight();
+				
+				synchronized (mpController){
+				// set Subtitle mode
+				if(height<=minHeight){
+					height=minHeight;
+					renderMode=SUBTITLE_MODE;
+					subtitleView.setGravity(Gravity.CENTER);
+					subtitleView.setMovementMethod(null);
+					if(mpController.getMediaPlayerState()==MediaPlayerController.MP_PLAYING && mpController.getSubtitle()!=null){
+						if(mpController.getCurrentPosition()==-1)return true;
+						setSubtitleViewText(mpController.getSubtitle(mpController.getCurrentPosition()).text);
+					}
+					else
+						setSubtitleViewText(getString(R.string.dlgHintMpController));
+				}
+				// set reading mode
+				else{
+					// It is first time into reading mode, set the all text to subtitleView, but not set text every time.
+					if(renderMode==SUBTITLE_MODE){
+						if(mpController==null || !mpController.isSubtitleReady() || readingModeAllSubtitle==null){
+							showNarmalToastMsg("尚無字幕，無法切換到閱讀模式！");
+							return true;
+						}
+						subtitleView.setGravity(Gravity.LEFT);
+							setSubtitleViewText(readingModeAllSubtitle);
+//							subtitleView.setScroller(new Scroller(LamrimReaderActivity.this)); 
+							subtitleView.setScrollBarStyle(TextView.SCROLLBARS_INSIDE_OVERLAY);
+							//subtitleView.setMovementMethod(new ScrollingMovementMethod());
+							subtitleView.setMovementMethod(ScrollingMovementMethod.getInstance());
+							renderMode=READING_MODE;
+
+					}
+				}
+				}
+				
+				Log.d(logTag, "Set height to: "+height);
+				subtitleView.setHeight(height);
+
+				return true;
+			}
+			/**
+			* @param e1 第1个ACTION_DOWN MotionEvent 并且只有一个
+			* @param e2 最后一个ACTION_MOVE MotionEvent 
+			* @param velocityX X轴上的移动速度，像素/秒 
+			* @param velocityY Y轴上的移动速度，像素/秒
+			* 这个方法发生在ACTION_UP时才会触发 参看GestureDetector的onTouchEvent方法源码
+			* 
+			* */
+/*			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+				Log.d(getClass().getName(),"Into onFling");
+				bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
+				return false;
+			}
+			
+			
+			@Override
+			public void onShowPress(MotionEvent e) {
+				Log.d(getClass().getName(),"Into onShowPress");
+				bookView.setFadeColor(getResources().getColor(R.color.subtitleScrollPressColor));
+			}
+			@Override
+			public boolean onDown(MotionEvent e) {
+				Log.d(getClass().getName(),"Into onDown");
+				return true;
+			}
+			@Override
+			public boolean onDoubleTap(MotionEvent e) {
+				Log.d(getClass().getName(),"Into onDoubleTap");
+				return false;
+			}
+			@Override
+			public boolean onDoubleTapEvent(MotionEvent e) {
+				Log.d(getClass().getName(),"Into onDoubleTapEvent");
+				return false;
+			}
+			/**
+			这个方法不同于onSingleTapUp，他是在GestureDetector确信用户在第一次触摸屏幕后，没有紧跟着第二次触摸屏幕，也就是不是“双击”的时候触发
+			* */
+/*			@Override
+			public boolean onSingleTapConfirmed(MotionEvent e) {
+				Log.d(getClass().getName(),"Into onSingleTapConfirmed");
+				return false;
+			}
+			}));
+*/		
+		rootLayout.setOnInterceptTouchEvent(new MyLinearLayoutController(){
+			@Override
+			public boolean onInterceptTouchEvent(MotionEvent ev){
+				
+				//int subtitleViewBound=getResources().getDisplayMetrics().heightPixels-subtitleView.getHeight();
+				int subtitleViewBound=rootLayout.getHeight()-subtitleView.getHeight();
+				int upBound=(int) (subtitleViewBound-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
+				int downBound=(int) (subtitleViewBound+getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchBottomBoundDp));
+				
+				
+				if(ev.getAction()==MotionEvent.ACTION_DOWN){
+					if(ev.getY()>upBound && ev.getY()<downBound){
+						bookView.setFadeColor(getResources().getColor(R.color.subtitleScrollPressColor));
+						Log.d(logTag,"User hit bound of subtitleView: ("+ev.getX()+","+ev.getY()+"), up bound: "+upBound+", down bound: "+downBound);
+						return true;
+					}
+				}
+				Log.d(logTag,"User hit bound of subtitleView");
+				
+				return false;
+			}
+			
+			@Override
+			public boolean onTouchEvent(MotionEvent ev){
+				Log.d(logTag, "Action Code= "+ev.getAction());
+				if(ev.getAction()==MotionEvent.ACTION_UP || ev.getAction()==MotionEvent.ACTION_CANCEL){
+					Log.d(logTag, "Leave event received");
+					bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
+					return true;
+				}
+				
+				Log.d(logTag, "Into onScroll");
+				int height=(int) (rootLayout.getHeight()-ev.getY());
+				int minHeight=(int) subtitleView.getLineHeight();
+				int maxHeight=(int) (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
+				
+				synchronized (mpController){
+				// set Subtitle mode
+				if(height<=minHeight){
+					height=minHeight;
+					renderMode=SUBTITLE_MODE;
+					subtitleView.setGravity(Gravity.CENTER);
+					subtitleView.setMovementMethod(null);
+					if(mpController.getMediaPlayerState()==MediaPlayerController.MP_PLAYING && mpController.getSubtitle()!=null){
+						if(mpController.getCurrentPosition()==-1)return true;
+						setSubtitleViewText(mpController.getSubtitle(mpController.getCurrentPosition()).text);
+					}
+					else
+						setSubtitleViewText(getString(R.string.dlgHintMpController));
+				}
+				// set reading mode
+				else{
+					// It is first time into reading mode, set the all text to subtitleView, but not set text every time.
+					if(renderMode==SUBTITLE_MODE){
+						if(mpController==null || !mpController.isSubtitleReady() || readingModeAllSubtitle==null){
+							showNarmalToastMsg("尚無字幕，無法切換到閱讀模式！");
+							return true;
+						}
+						subtitleView.setGravity(Gravity.LEFT);
+							setSubtitleViewText(readingModeAllSubtitle);
+//							subtitleView.setScroller(new Scroller(LamrimReaderActivity.this)); 
+							subtitleView.setScrollBarStyle(TextView.SCROLLBARS_INSIDE_OVERLAY);
+							//subtitleView.setMovementMethod(new ScrollingMovementMethod());
+							subtitleView.setMovementMethod(ScrollingMovementMethod.getInstance());
+							renderMode=READING_MODE;
+					}
+				}
+				}
+				
+				Log.d(logTag, "Set height to: "+height);
+				if(height>maxHeight)height=maxHeight;
+				subtitleView.setHeight(height);
+
+				return true;
 			}
 		});
 
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
 		
-		
-
 		Log.d(funcLeave, "******* onCreate *******");
 		// LogRepoter.log("Leave OnCreate");
 	}
@@ -422,10 +770,47 @@ public class LamrimReaderActivity extends SherlockActivity {
                 bookList.add(item);
         }
 		
+        
+        
 		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
 		bookView.setAdapter(adapter);
-		adapter.notifyDataSetChanged();
+		bookView.setScaleGestureDetector(new ScaleGestureDetector(this.getApplicationContext(),new SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScaleBegin(ScaleGestureDetector detector) {
+				Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
+				return true;
+			}
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				float size=adapter.getTextSize()*detector.getScaleFactor();
+   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+   				adapter.setTextSize(size);
+   				adapter.notifyDataSetChanged();
+   				Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
+   				return true;
+   			}
+			@Override
+			public void onScaleEnd(ScaleGestureDetector detector){
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putInt(getString(R.string.bookFontSizeKey), (int) adapter.getTextSize());
+				editor.commit();
+			}
+			}));
+		bookView.setOnDoubleTapEventListener(new OnDoubleTapEventListener(){
+			@Override
+			public boolean onDoubleTap(MotionEvent e){
+				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return true;
+				final int pageNum=SpeechData.refPage[mediaIndex]-1;
+				if(pageNum==-1)return true;
+				//bookView.setItemChecked(pageNum, true);
+				setTheoryArea(pageNum, 0);
+				Log.d(logTag,"Jump to theory page index "+pageNum);
+				return true;
+			}
+		});
 		
+		adapter.notifyDataSetChanged();
+		//bookView.setOnTouchListener(l);
 		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
 		
 		runOnUiThread(new Runnable() {
@@ -448,6 +833,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		int isInit=runtime.getInt("mediaIndex", -1);
 		if(isInit==-1){
 			Log.d(logTag,"This is first time launch LamrimReader, initial default settings.");
+			int currentIndex=mpController.getCurrentPosition();
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("mediaIndex", isInit);
 //			editor.putInt("playerStatus", mpController.getMediaPlayerState());
@@ -483,7 +869,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 		} catch (IllegalStateException e) {	e.printStackTrace();}
 		
 		mediaIndex=runtime.getInt("mediaIndex", -1);
-		if(mediaIndex!=-1)fileDownloader.start(mediaIndex);
+		if(mediaIndex!=-1){
+			Log.d(logTag,"Call fileDownloader start download index " + mediaIndex);
+			fileDownloader.start(mediaIndex);
+		}
 		Log.d(logTag,"Leave onResume");
 	}
 
@@ -510,7 +899,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		super.onDestroy();
 		Log.d(funcInto, "**** onDestroy ****");
 		fileDownloader.finish();
-		mpController.release();
+		mpController.finish();
 		toast.cancel();
 		Log.d(funcLeave, "**** onDestroy ****");
 	}
@@ -566,8 +955,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 		SubMenu rootMenu = menu.addSubMenu("");
 		speechMenu=rootMenu.add(getString(R.string.menuStrSelectSpeech));
 		speechMenu.setIcon(R.drawable.speech);
-		setTextSize=rootMenu.add(getString(R.string.menuStrTextSize));
-		setTextSize.setIcon(R.drawable.font_size);
+//		setTextSize=rootMenu.add(getString(R.string.menuStrTextSize));
+//		setTextSize.setIcon(R.drawable.font_size);
 		saveRegion=rootMenu.add(getString(R.string.menuStrSavePlayRegion));
 		saveRegion.setIcon(R.drawable.save);
 		playRegionRec=rootMenu.add(getString(R.string.menuStrPlayRegionRec));
@@ -601,7 +990,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 			else{
 				saveRegion.setEnabled(false);
 				saveRegion.setIcon(R.drawable.save_d);
-				
 			}
 			if(RegionRecord.records.size()>0){
 				playRegionRec.setEnabled(true);
@@ -617,8 +1005,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
-		}else if(item.getTitle().equals(getString(R.string.menuStrTextSize))){
-			showSetTextSizeDialog();
+			/*}
+		else if(item.getTitle().equals(getString(R.string.menuStrTextSize))){
+			showSetTextSizeDialog();*/
 		}else if(item.getTitle().equals(getString(R.string.menuStrSavePlayRegion))){
 			showSaveRegionDialog();
 		}else if(item.getTitle().equals(getString(R.string.menuStrPlayRegionRec))){
@@ -652,6 +1041,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 	private void onOptResultData(int resultCode, Intent intent) {
 		Log.d(funcInto, "onOptResultData");
+		/*
 		final int bookFontSize = intent.getIntExtra(getString(R.string.bookFontSizeKey),getResources().getInteger(R.integer.defFontSize));
 		final int subtitleFontSize = intent.getIntExtra(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize));
 
@@ -663,6 +1053,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		updateTextSize();
 		Log.d(logTag, "Get the book font size: " + bookFontSize	+ ", subtitleFontSize: " + subtitleFontSize);
 		Log.d(funcLeave, "Leave onOptResultData");
+		*/
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode,Intent intent) {
@@ -691,8 +1082,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 			editor.putInt("playPosition", 0);
 			editor.commit();
 			regionPlayIndex=-1;
+			renderMode=SUBTITLE_MODE;
+			subtitleView.setGravity(Gravity.CENTER);
+			subtitleView.setHeight(subtitleView.getLineHeight());
 //			isRegionPlay=false;
 //			mpController.desetPlayRegion();
+			Log.d(logTag, "Call reset player in onActivityResult.");
 			mpController.reset();
 			
 			// After onActivityResult, the life-cycle will return to onStart, do start downloader in OnResume.
@@ -725,8 +1120,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 				row = inflater.inflate(R.layout.theory_page_view, parent, false);
 			}
 
+
 			// / Log.d(logTag, "row=" + row+", ConvertView="+convertView);
 			TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
+			bContent.setHorizontallyScrolling(true);
 			// bContent.drawPoints(new int[0][0]);
 			bContent.setTypeface(educFont);
 			if (bContent.getTextSize() != textSize)
@@ -743,8 +1140,11 @@ public class LamrimReaderActivity extends SherlockActivity {
 		public void setTextSize(float size) {
 			textSize = size;
 		}
+		public float getTextSize(){
+			return textSize;
+		}
 	}
-
+/*
 	private void updateTextSize() {
 		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
@@ -782,12 +1182,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 		});
 
 	}
-
+*/
 	/*
 	 * Set the message on the subtitle view, there should check the subtitleView
 	 * is not playing, or hide the message.
 	 */
-	public void setSubtitleViewText(final String s) {
+	public void setSubtitleViewText(final CharSequence  s) {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				subtitleView.setTextKeepState(s);
@@ -864,7 +1264,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	}
 
 
-	private void showSetTextSizeDialog(){
+/*	private void showSetTextSizeDialog(){
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
 	    final SeekBar theorySb=(SeekBar) v.findViewById(R.id.theorySizeBar);
@@ -934,7 +1334,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	    setTextSizeDialog.setCanceledOnTouchOutside(true);
 	    setTextSizeDialog.show();
 	}
-	
+*/	
 	private void showSaveRegionDialog(){
 		int regionStartMs=mpController.getRegionStartPosition();
 		int regionEndMs=mpController.getRegionEndPosition();
@@ -1002,7 +1402,13 @@ public class LamrimReaderActivity extends SherlockActivity {
 				mediaIndex=RegionRecord.records.get(position).mediaIndex;
 				regionPlayIndex=position;
 				fileDownloader.start(mediaIndex);
-				
+				renderMode=SUBTITLE_MODE;
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						subtitleView.setGravity(Gravity.CENTER);
+						subtitleView.setHeight(subtitleView.getLineHeight());
+					}});
 				// The procedure will not return to onStart or onResume, start play media from here.
 			}});
 
@@ -1048,6 +1454,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			if(!isSpeechReady)return;
 				
 			try {
+				Log.d(logTag, "Call reset at downloader finish, stage of mediaplayer is "+mpController.getMediaPlayerState()+" before reset.");
 				mpController.reset();
 			} catch (IllegalStateException iae) {
 				setSubtitleViewText(getString(R.string.errWhileReleasePlayer));
@@ -1055,7 +1462,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				return;
 			}
 
-			Log.d(getClass().getName(), "Get the local file of index " + index);
+			Log.d(getClass().getName(), "Get the local file of index " + index[0]);
 			
 			synchronized (mpController) {
 				try {

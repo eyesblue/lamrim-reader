@@ -41,13 +41,13 @@ public class TheoryPageView extends TextView {
 	
 	public TheoryPageView(Context context) {
 		super(context);
-		this.setOnTouchListener(touchListener);
+//		this.setOnTouchListener(touchListener);
 	}
 
 	public TheoryPageView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
-        this.setOnTouchListener(touchListener);
+ //       this.setOnTouchListener(touchListener);
     }
 
 	public void setText(String text){
