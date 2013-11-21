@@ -50,6 +50,8 @@
     <string name="menuStrTextSize">設定字體</string>
     <string name="menuStrSavePlayRegion">儲存區段</string>
     <string name="menuStrPlayRegionRec">播放區段</string>
+    <string name="menuStrOpenProjectWeb">計劃網頁</string>
+    <string name="projectWebUrl">http://lamrimreader.eyes-blue.com/</string>
     <string name="exitApp">關閉</string>
     <string name="noSubtitleDesc">無字幕</string>
     <string name="selectIndexFromMenuDesc">請從選單選擇章節或錄音</string>

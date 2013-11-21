@@ -147,7 +147,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter = null;
 	
-	MenuItem speechMenu, saveRegion, playRegionRec,exitApp;
+	MenuItem speechMenu, saveRegion, playRegionRec, prjWeb, exitApp;
 
 	FileSysManager fileSysManager = null;
 	FileDownloader fileDownloader = null;
@@ -374,9 +374,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				Log.d(logTag,"Seek to last play positon "+seekPosition);
 				mpController.seekTo(seekPosition);
 
-				String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName;
 				getSupportActionBar().setTitle(SpeechData.getNameId(mediaIndex));
-				getSupportActionBar().setSubtitle(appSubtitle);
 				Log.d(logTag,"Check media static before show controller: media player state: "+mpController.getMediaPlayerState()+", normal should equal or bigger then "+MediaPlayerController.MP_PREPARED);
 				if(regionPlayIndex!=-1){
 					Log.d(logTag,"This play event is region play, set play region.");					
@@ -747,6 +745,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
 		
+		String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
+		getSupportActionBar().setSubtitle(appSubtitle);
 		Log.d(funcLeave, "******* onCreate *******");
 		// LogRepoter.log("Leave OnCreate");
 	}
@@ -961,6 +961,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 		saveRegion.setIcon(R.drawable.save);
 		playRegionRec=rootMenu.add(getString(R.string.menuStrPlayRegionRec));
 		playRegionRec.setIcon(R.drawable.region);
+		
+		prjWeb=rootMenu.add(getString(R.string.menuStrOpenProjectWeb));
+		prjWeb.setIcon(R.drawable.project_web);
+		
 		exitApp=rootMenu.add(getString(R.string.exitApp));
 		exitApp.setIcon(R.drawable.exit_app);
 		
@@ -1012,6 +1016,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 			showSaveRegionDialog();
 		}else if(item.getTitle().equals(getString(R.string.menuStrPlayRegionRec))){
 			showRecordListPopupMenu();
+		}else if(item.getTitle().equals(getString(R.string.menuStrOpenProjectWeb))){
+			Uri uri = Uri.parse(getString(R.string.projectWebUrl));
+			Intent it = new Intent(Intent.ACTION_VIEW, uri);
+			startActivity(it);
 		}else if(item.getTitle().equals(getString(R.string.exitApp))){
 			onBackPressed();
 			Log.d(funcLeave, "**** onBackPressed ****");
