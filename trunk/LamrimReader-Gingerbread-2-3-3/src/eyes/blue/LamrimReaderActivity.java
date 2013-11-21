@@ -110,6 +110,7 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
+import com.google.analytics.tracking.android.EasyTracker;
 
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 import eyes.blue.modified.MyListView;
@@ -829,6 +830,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 		super.onStart();
 		Log.d(funcInto, "**** onStart() ****");
 		
+		EasyTracker.getInstance(this).activityStart(this);
+		
 		// Dump default settings to DB
 		int isInit=runtime.getInt("mediaIndex", -1);
 		if(isInit==-1){
@@ -892,6 +895,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
+		EasyTracker.getInstance(this).activityStop(this);
 	}
 
 	@Override
