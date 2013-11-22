@@ -145,6 +145,7 @@ public class MediaPlayerController {
 	public void pause() {
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
+		
 		synchronized(mediaPlayer){
 			mpState=MP_PAUSE;
 			mediaPlayer.pause();
@@ -335,6 +336,9 @@ public class MediaPlayerController {
 				mediaPlayer.release();
 				mpState=MP_IDLE;
 			}
+		AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+		audioManager.abandonAudioFocus(audioFocusChangeListener);
+		
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	
@@ -721,9 +725,7 @@ public class MediaPlayerController {
 			}
 			
 			AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
-			int result = audioManager.requestAudioFocus(
-					audioFocusChangeListener, AudioManager.STREAM_MUSIC,
-					AudioManager.AUDIOFOCUS_GAIN);
+			int result = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 			
 			// could not get audio focus.
 			if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -769,10 +771,8 @@ public class MediaPlayerController {
 				// mpController.stopSubtitleTimer();
 				break;
 			// temporarily lost audio focus, but should receive it back shortly.
-			// You
-			// must stop all audio playback, but you can keep your resources
-			// because
-			// you will probably get focus back shortly
+			// You must stop all audio playback, but you can keep your resources
+			// because you will probably get focus back shortly
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				try {
 					lastState=getMediaPlayerState();
