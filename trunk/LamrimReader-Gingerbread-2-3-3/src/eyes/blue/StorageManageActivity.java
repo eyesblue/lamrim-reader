@@ -2,6 +2,7 @@ package eyes.blue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import android.os.Bundle;
 import android.os.Environment;
@@ -40,6 +41,9 @@ public class StorageManageActivity extends Activity {
 	private PowerManager.WakeLock wakeLock = null;
 	SharedPreferences runtime = null;
 	Toast toast = null;
+	
+	long intFreeB, extFreeB, intTotal, extTotal, intUsed, extUsed;
+	String userSpecDir;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -275,6 +279,7 @@ public class StorageManageActivity extends Activity {
 				editor.putBoolean(getString(R.string.isUseThirdDir), true);
 				editor.putString(getString(R.string.userSpecifySpeechDir), fieldPathInput.getText().toString());
 				editor.commit();
+
 				finish();
 			}});
 		
@@ -305,13 +310,13 @@ public class StorageManageActivity extends Activity {
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
-				final long intFreeB=FileSysManager.getFreeMemory(FileSysManager.INTERNAL);
-				final long extFreeB=FileSysManager.getFreeMemory(FileSysManager.EXTERNAL);
-				final long intTotal=FileSysManager.getTotalMemory(FileSysManager.INTERNAL);
-				final long extTotal=FileSysManager.getTotalMemory(FileSysManager.EXTERNAL);
-				final long intUsed=FileSysManager.getAppUsed(FileSysManager.INTERNAL);
-				final long extUsed=FileSysManager.getAppUsed(FileSysManager.EXTERNAL);
-				final String userSpecDir=runtime.getString(getString(R.string.userSpecifySpeechDir), null);
+				intFreeB=FileSysManager.getFreeMemory(FileSysManager.INTERNAL);
+				extFreeB=FileSysManager.getFreeMemory(FileSysManager.EXTERNAL);
+				intTotal=FileSysManager.getTotalMemory(FileSysManager.INTERNAL);
+				extTotal=FileSysManager.getTotalMemory(FileSysManager.EXTERNAL);
+				intUsed=FileSysManager.getAppUsed(FileSysManager.INTERNAL);
+				extUsed=FileSysManager.getAppUsed(FileSysManager.EXTERNAL);
+				userSpecDir=runtime.getString(getString(R.string.userSpecifySpeechDir), null);
 				
 				runOnUiThread(new Runnable(){
 					@Override
@@ -345,6 +350,33 @@ public class StorageManageActivity extends Activity {
 		super.onResume();
 		refreshUsage();
 		
+	}
+	
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		finish();
+	}
+	
+	@Override
+	public void finish() {
+		super.finish();
+		GaLogger.sendEvent("storage_status", "ext_storage", "free_percent", Math.round(((double)extFreeB/extTotal)*100));
+		GaLogger.sendEvent("storage_status", "ext_storage", "usage_percent", Math.round(Math.round(((double)extUsed/extTotal)*100)));
+		GaLogger.sendEvent("storage_status", "ext_storage", "free_byte", extFreeB);
+		GaLogger.sendEvent("storage_status", "ext_storage", "used_byte", extUsed);
+		
+		GaLogger.sendEvent("storage_status", "int_storage", "free_percent", Math.round(((double)intFreeB/intTotal)*100));
+		GaLogger.sendEvent("storage_status", "int_storage", "usage_percent", Math.round(Math.round(((double)intUsed/intTotal)*100)));
+		GaLogger.sendEvent("storage_status", "int_storage", "free_byte", intFreeB);
+		GaLogger.sendEvent("storage_status", "int_storage", "used_byte", intUsed);
+		
+		boolean isUserSpecifyDir=runtime.getBoolean(getString(R.string.isUseThirdDir),false);
+		GaLogger.sendEvent("storage_status", "user_specify_dir", "boolean", ((isUserSpecifyDir)?1:0));
+		if(isUserSpecifyDir)
+			GaLogger.sendEvent("storage_status", "user_specify_dir", runtime.getString(getString(R.string.userSpecifySpeechDir), null), null);
+			
+		else GaLogger.sendEvent("storage_status", "user_specify_dir", FileSysManager.getSysDefMediaDir(), null);
 	}
 	
 	private String numToKMG(long num){

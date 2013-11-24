@@ -6,7 +6,12 @@
 
   <!--Enable automatic activity tracking-->
   <bool name="ga_autoActivityTracking">true</bool>
+  <string name="eyes.blue.LamrimReaderActivity">Main</string>
+  <string name="eyes.blue.SpeechMenuActivity">SpeechMenu</string>
+  <string name="eyes.blue.StorageManageActivity">StorageManage</string>
 
+  <integer name="ga_sessionTimeout">300</integer>
+  
   <!--Enable automatic exception tracking-->
   <bool name="ga_reportUncaughtExceptions">true</bool>
 </resources>

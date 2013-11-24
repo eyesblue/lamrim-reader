@@ -69,8 +69,6 @@ public class SpeechMenuActivity extends Activity {
 		
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.speech_menu);
-
-	
 	speechList=(ListView) findViewById(R.id.list);
 	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
 	btnMaintain=(ImageButton) findViewById(R.id.btnMaintain);
@@ -102,6 +100,7 @@ public class SpeechMenuActivity extends Activity {
 			switch(actionId){
 			case PLAY:
 				resultAndPlay(manageItemIndex);
+				GaLogger.sendEvent("dialog_action", "auick_action_menu", "play", manageItemIndex);
 				break;
 			case UPDATE:
 				DialogInterface.OnClickListener updateListener=new DialogInterface.OnClickListener(){
@@ -112,7 +111,8 @@ public class SpeechMenuActivity extends Activity {
 			        	if(f!=null && !FileSysManager.isFromUserSpecifyDir(f))f.delete();
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
-			        	resultAndPlay(manageItemIndex);
+			        	downloadSrc(manageItemIndex);
+			        	GaLogger.sendEvent("dialog_action", "auick_action_menu", "result_and_play", manageItemIndex);
 					}};
 	        	
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, updateListener, null, null);
@@ -127,12 +127,13 @@ public class SpeechMenuActivity extends Activity {
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	updateUi(manageItemIndex);
+			        	GaLogger.sendEvent("dialog_action", "auick_action_menu", "delete", manageItemIndex);
 					}};
 
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, deleteListener, null, null);
 	        	break;
 			case CANCEL:
-				// Do nothing.
+				GaLogger.sendEvent("dialog_action", "auick_action_menu", "cancel", manageItemIndex);
 				break;
 			};
 		}
@@ -175,7 +176,8 @@ public class SpeechMenuActivity extends Activity {
 		@Override
 		public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
 			if(fireLock())return;
-			resultAndPlay(position);
+			downloadSrc(position);
+			GaLogger.sendEvent("ui_action", "speech_list", "select_item", position);
 	}});
 
 	speechList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
@@ -186,6 +188,7 @@ public class SpeechMenuActivity extends Activity {
 				return false;
 			manageItemIndex=position;
 			mQuickAction.show(v);
+			GaLogger.sendEvent("ui_action", "show_dialog", "quick_action_menu", null);
 			//itemManageDialog=getItemManageDialog(position);
 			//itemManageDialog.show();
 //			if(!wakeLock.isHeld()){wakeLock.acquire();}
@@ -205,12 +208,14 @@ public class SpeechMenuActivity extends Activity {
 		public void onClick(View arg0) {
 			if(fireLock())return;
 			downloadAllSrc();
+			GaLogger.sendEvent("ui_action", "botton_pressed", "download_all", null);
 		}});
 	btnMaintain.setOnClickListener(new View.OnClickListener (){
 		@Override
 		public void onClick(View arg0) {
 			if(fireLock())return;
 			maintain();
+			GaLogger.sendEvent("ui_action", "botton_pressed", "maintain_files", null);
 		}});
 	
 	btnManageStorage.setOnClickListener(new View.OnClickListener (){
@@ -219,24 +224,12 @@ public class SpeechMenuActivity extends Activity {
 			if(fireLock())return;
 			final Intent storageManage = new Intent(SpeechMenuActivity.this, StorageManageActivity.class);
 			startActivity(storageManage);
+			GaLogger.sendEvent("ui_action", "botton_pressed", "manage_storage", null);
 		}});
 
 	 }
 	
 // End of onCreate
-	
-	@Override
-	protected void onPause() {
-		super.onPause();
-		SharedPreferences.Editor editor = runtime.edit();
-
-		editor.putInt("speechMenuPage",speechList.getFirstVisiblePosition());
-		View v=speechList.getChildAt(0);  
-        editor.putInt("speechMenuPageShift",(v==null)?0:v.getTop());
-        editor.putInt("lastViewItem",speechList.getLastVisiblePosition());
-        editor.commit();
-	}
-	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -251,12 +244,36 @@ public class SpeechMenuActivity extends Activity {
 		}
 		refreshFlags(speechMenuPage,++lastPage,true);
 		refreshFlags(0,speechFlags.length,false);
-	}
 		
+		Bundle b=this.getIntent().getExtras();
+		if(b==null)return;
+		int downloadIndex=b.getInt("index");
+		downloadSrc(downloadIndex);
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		SharedPreferences.Editor editor = runtime.edit();
+
+		editor.putInt("speechMenuPage",speechList.getFirstVisiblePosition());
+		View v=speechList.getChildAt(0);  
+        editor.putInt("speechMenuPageShift",(v==null)?0:v.getTop());
+        editor.putInt("lastViewItem",speechList.getLastVisiblePosition());
+        editor.commit();
+	}
+	
+/*	@Override
+	public void onBackPressed() {
+		playWindow.putExtra("index", -1);
+		setResult(RESULT_OK,new Intent().putExtras(playWindow));
+		if(wakeLock.isHeld())wakeLock.release();
+		finish();
+	}
+	*/
 	private void resultAndPlay(int position){
 		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
 		
-		//fakeList=null;
 		playWindow.putExtra("index", position);
 		setResult(RESULT_OK,new Intent().putExtras(playWindow));
 		if(wakeLock.isHeld())wakeLock.release();
@@ -318,6 +335,64 @@ public class SpeechMenuActivity extends Activity {
 			}});
 	}
 	
+	private void downloadSrc(final int index){
+		File mediaFile=FileSysManager.getLocalMediaFile(index);
+		File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
+		
+		if(mediaFile.exists() && subtitleFile.exists()){
+			resultAndPlay(index);
+			return;
+		}
+		
+		downloader.setDownloadListener(new DownloadListener(){
+			boolean everFail=false;
+			@Override
+			public void allPrepareFinish(int... i){
+				if(!everFail){
+					resultAndPlay(index);
+					return;
+				}
+				
+				String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index));
+				AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
+				dialog.setTitle(msg); 
+				dialog.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {  
+				    public void onClick(DialogInterface dialog, int which) {
+				    	downloadSrc(index);
+				    }  
+				}); 
+				dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
+				    public void onClick(DialogInterface dialog, int which) {
+				    	dialog.dismiss();
+				    	if (wakeLock.isHeld())wakeLock.release();
+				    }  
+				});
+			}
+			@Override
+			public void prepareFinish(int i, int type){
+				updateUi(i);
+			}
+			@Override
+			public void prepareFail(final int i, int type){
+				if(type==FileSysManager.MEDIA_FILE)everFail=true;
+				runOnUiThread(new Runnable() {
+					public void run() {
+						toast.setText("下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+						toast.show();
+				}});
+				updateUi(i);
+			}
+			
+			@Override
+			public void userCancel(int i, int type){
+				Log.d(getClass().getName(),"User cancel the download!");
+				if(wakeLock.isHeld())wakeLock.release();
+				return;
+			}
+		});	
+		if(!wakeLock.isHeld()){wakeLock.acquire();}
+		downloader.start(index);
+	}
 	
 	private void downloadAllSrc(){
 		downloader.setDownloadListener(new DownloadListener(){
