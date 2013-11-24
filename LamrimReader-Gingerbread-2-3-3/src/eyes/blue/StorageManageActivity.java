@@ -75,7 +75,6 @@ public class StorageManageActivity extends Activity {
 		btnOk = (Button) findViewById(R.id.btnOk);
 		radioMgnType = (RadioGroup) findViewById(R.id.radioMgnType);
 		fieldPathInput = (EditText) findViewById(R.id.fieldPathInput);
-		
 
 		// The ImageButton can't disable from xml.
 		btnChoicePath.setClickable(false);
@@ -88,10 +87,12 @@ public class StorageManageActivity extends Activity {
 			btnChoicePath.setClickable(true);
 			btnChoicePath.setEnabled(true);
 			labelChoicePath.setEnabled(true);
-			String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
-			if(thirdDir!=null)fieldPathInput.setText(thirdDir,null);
 		}
-			
+		
+		String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
+		if(thirdDir==null || thirdDir.length()==0)thirdDir=FileSysManager.getSysDefMediaDir();
+		fieldPathInput.setText(thirdDir,null);
+		
 		btnMoveAllToExt.setOnClickListener(new View.OnClickListener (){
 			@Override
 			public void onClick(View v) {
@@ -227,6 +228,20 @@ public class StorageManageActivity extends Activity {
 					finish();
 					return;
 				}
+				
+				if(fieldPathInput.getText().toString().length()==0){
+					fieldPathInput.setText(FileSysManager.getSysDefMediaDir());
+					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
+					builder.setTitle("目錄錯誤");
+					builder.setMessage("路徑不可為空！請重新選擇。");
+					builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
+						@Override
+						public void onClick(DialogInterface dialog,	int which) {
+							dialog.dismiss();
+						}});
+					builder.create().show();
+					return;
+				}
 					// Check is the path is FILE
 				File f=new File(fieldPathInput.getText().toString());
 				if(f.isFile()){
@@ -349,7 +364,6 @@ public class StorageManageActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		refreshUsage();
-		
 	}
 	
 	@Override
