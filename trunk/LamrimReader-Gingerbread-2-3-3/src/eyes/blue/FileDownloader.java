@@ -198,7 +198,7 @@ public class FileDownloader {
 					synchronized(mkDlTaskKey){
 						if(mkDlTaskDialog==null)return;
 						mkDlTaskDialog.dismiss();
-						listener.userCancel(0, 0);
+						listener.userCancel();
 						mkDlTaskDialog=null;
 					}
 				}
@@ -321,6 +321,7 @@ public class FileDownloader {
 	        	editor.putBoolean(activity.getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
 	            editor.putBoolean(activity.getString(R.string.isAllowNetAccess), false);
 	        	editor.commit();
+	        	listener.userCancel();
 	        	if(wakeLock.isHeld())wakeLock.release();
 	            dialog.cancel();
 	        }
@@ -337,10 +338,8 @@ public class FileDownloader {
 
 		@Override
 		protected void onCancelled(){
-			try {
-				if(wakeLock.isHeld())wakeLock.release();
-				listener.userCancel(executing.getInt("mediaIndex"),executing.getInt("type"));
-			} catch (JSONException e) {e.printStackTrace();}
+			if(wakeLock.isHeld())wakeLock.release();
+			listener.userCancel();
 		}
 		
 		@Override
