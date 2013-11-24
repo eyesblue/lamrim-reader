@@ -66,7 +66,7 @@ public class FileSysManager {
 	static String srcRoot[] = new String[2];
 
 //        static int bufLen=16384;
-        
+	
 	public FileSysManager(Activity context){
 		runtime = context.getSharedPreferences(context.getString(R.string.runtimeStateFile), 0);
 		
@@ -79,11 +79,17 @@ public class FileSysManager {
 		FileSysManager.logTag=getClass().getName();
 		FileSysManager.context=context;
                 grs=new GoogleRemoteSource(context);
-        }
-        
-        public void setDownloadListener(DownloadListener listener){
-        	this.downloadListener=listener;
-        }
+	}
+	
+	public static String getSysDefMediaDir(){
+		boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+		if(extWritable)return srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName);
+		return srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName);
+	}
+	
+	public void setDownloadListener(DownloadListener listener){
+		this.downloadListener=listener;
+	}
         
         
         /*

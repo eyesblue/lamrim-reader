@@ -47,6 +47,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.analytics.tracking.android.MapBuilder;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -391,10 +393,9 @@ public class FileDownloader {
 			setDlProgress(0);
 			Log.d(getClass().getName(),"Download file from "+url);
 			File tmpFile=new File(outputPath+activity.getString(R.string.downloadTmpPostfix));
-	        long startTime=System.currentTimeMillis();
-	        int readLen=-1;
-	        int counter=0;
-	        int bufLen=activity.getResources().getInteger(R.integer.downloadBufferSize);
+	        long startTime=System.currentTimeMillis(), respWaitStartTime;
+	        
+	        int readLen=-1, counter=0, bufLen=activity.getResources().getInteger(R.integer.downloadBufferSize);
 	        Checksum checksum = new CRC32();
 	        FileOutputStream fos=null;
 	        
@@ -407,6 +408,7 @@ public class FileDownloader {
 			setProgressMsg(activity.getString(R.string.dlgTitleConnecting),String.format(activity.getString(R.string.dlgDescConnecting), SpeechData.getNameId(mediaIndex),(type == activity.getResources().getInteger(R.integer.MEDIA_TYPE))?"音檔":"字幕"));
 			
 	    	try {
+	    		respWaitStartTime=System.currentTimeMillis();
 				response = httpclient.execute(httpget);
 				respCode=response.getStatusLine().getStatusCode();
 
@@ -430,7 +432,12 @@ public class FileDownloader {
 	    		Log.d(getClass().getName(),"User canceled, download procedure skip!");
 	    		return false;
 	    	}
-	    	
+	    	GaLogger.send(MapBuilder
+	    		      .createTiming("download",    // Timing category (required)
+	    		    		  System.currentTimeMillis()-respWaitStartTime,       // Timing interval in milliseconds (required)
+	    	                    "wait resp time",  // Timing name
+	    	                    null)           // Timing label
+	    	      .build());
 	    	
 	    	HttpEntity httpEntity=response.getEntity();
 	    	InputStream is=null;
@@ -529,12 +536,19 @@ public class FileDownloader {
 	        	long sum = checksum.getValue();
 	        	boolean isCorrect=(SpeechData.crc[mediaIndex]==sum);
 	        	int spend=(int) (System.currentTimeMillis()-startTime);
+	        	
 	        	Log.d(getClass().getName(),Thread.currentThread().getName()+": File index: "+mediaIndex+" Read length: "+counter+", CRC32 check: "+((isCorrect)?" Correct!":" Error!"+" ("+sum+"/"+SpeechData.crc[mediaIndex])+"), spend time: "+spend+"ms");
 	        	if(!isCorrect){
 	        		httpclient.getConnectionManager().shutdown();
 	        		tmpFile.delete();
 	        		return false;
 	        	}
+	        	GaLogger.send(MapBuilder
+		    		      .createTiming("download",    // Timing category (required)
+		    		    		  (long)spend,       // Timing interval in milliseconds (required)
+		    		    		  "download time",  // Timing name
+		    		    		  null)           // Timing label
+		    		    		  .build());
 	        }
 	        // rename the protected file name to correct file name
 	        tmpFile.renameTo(new File(outputPath));

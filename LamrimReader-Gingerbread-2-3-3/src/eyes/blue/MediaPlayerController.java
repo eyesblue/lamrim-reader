@@ -700,7 +700,9 @@ public class MediaPlayerController {
 		return regionEndMs;
 	}
 	public SubtitleElement getSubtitle(int time){
-		return subtitle[subtitleBSearch(subtitle, time)];
+		int index=subtitleBSearch(subtitle, time);
+		if(index<0)index=0;
+		return subtitle[index];
 	}
 	public int getSubtitleIndex(int time){
 		return subtitleBSearch(subtitle, time);
