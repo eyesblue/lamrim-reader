@@ -229,7 +229,7 @@ public class MediaPlayerController {
 			mediaPlayer.seekTo(regionStartMs);
 			changedListener.startRegionPlay();
 		}*/
-		
+		if(mpState==MP_PREPARED)
 		synchronized(mediaPlayer){
 			mediaPlayer.start();
 			mpState=MP_PLAYING;
