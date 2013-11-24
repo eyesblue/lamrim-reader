@@ -85,7 +85,7 @@ public class SpeechMenuActivity extends Activity {
 	new FileSysManager(this);
 	downloader=new FileDownloader(SpeechMenuActivity.this);
 	
-	toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+	toast = Toast.makeText(this, "", Toast.LENGTH_LONG);
 	
 	final QuickAction mQuickAction 	= new QuickAction(this);
 	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
@@ -349,12 +349,14 @@ public class SpeechMenuActivity extends Activity {
 			@Override
 			public void allPrepareFinish(int... i){
 				if(!everFail){
+					if (wakeLock.isHeld())wakeLock.release();
 					resultAndPlay(index);
 					return;
 				}
 				
+				Log.d(getClass().getName(), "There is download fail, show download again dialog.");
 				String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index));
-				AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
+				final AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
 				dialog.setTitle(msg); 
 				dialog.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {  
 				    public void onClick(DialogInterface dialog, int which) {
@@ -367,6 +369,13 @@ public class SpeechMenuActivity extends Activity {
 				    	if (wakeLock.isHeld())wakeLock.release();
 				    }  
 				});
+				if(!wakeLock.isHeld()){wakeLock.acquire();}
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						dialog.show();
+					}});
+				
 			}
 			@Override
 			public void prepareFinish(int i, int type){
@@ -384,7 +393,7 @@ public class SpeechMenuActivity extends Activity {
 			}
 			
 			@Override
-			public void userCancel(int i, int type){
+			public void userCancel(){
 				Log.d(getClass().getName(),"User cancel the download!");
 				if(wakeLock.isHeld())wakeLock.release();
 				return;
@@ -415,7 +424,7 @@ public class SpeechMenuActivity extends Activity {
 			}
 			
 			@Override
-			public void userCancel(int i, int type){
+			public void userCancel(){
 				Log.d(getClass().getName(),"User cancel the download!");
 				if(wakeLock.isHeld())wakeLock.release();
 				return;
