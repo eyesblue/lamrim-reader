@@ -96,7 +96,6 @@ public class SpeechMenuActivity extends Activity {
 	mQuickAction.setOnActionItemClickListener(new QuickAction.OnActionItemClickListener() {
 		@Override
 		public void onItemClick(QuickAction quickAction, int pos, int actionId) {
-			AlertDialog.Builder builder;
 			switch(actionId){
 			case PLAY:
 				resultAndPlay(manageItemIndex);
