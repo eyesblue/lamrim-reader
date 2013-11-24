@@ -49,6 +49,7 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.text.InputType;
+import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
@@ -470,7 +471,18 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
 				if(renderMode==READING_MODE){
 				int y=(int) (subtitleView.getScrollY()+distanceY);
-				int bottom=subtitleView.getLineBounds(subtitleView.getLayout().getLineForOffset(subtitleView.getText().length()),null)-subtitleView.getMeasuredHeight()+subtitleView.getLineHeight();
+
+				// Unknown problem, there will return null on some machine.
+				Layout layout=subtitleView.getLayout();
+				Log.d(logTag,"Layout is "+((layout==null)?"null":"not null"));
+				if(layout==null)return true;
+				// ======================================================
+				int bottom=subtitleView.getLineBounds(
+						subtitleView.getLayout().getLineForOffset(
+								subtitleView.getText().length()
+								),null)-
+								subtitleView.getMeasuredHeight()
+								+subtitleView.getLineHeight();
 				Log.d(logTag,"Org Y="+y+"layout.height="+subtitleView.getLayoutParams().height+", subtitle.height="+subtitleView.getHeight()+", measureHeight="+subtitleView.getMeasuredHeight());
 				if(y<0)y=0;
 				if(y>bottom)y=bottom;
@@ -746,7 +758,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
 		
-		String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
+		//String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
+		String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName;
 		getSupportActionBar().setSubtitle(appSubtitle);
 		Log.d(funcLeave, "******* onCreate *******");
 		// LogRepoter.log("Leave OnCreate");
