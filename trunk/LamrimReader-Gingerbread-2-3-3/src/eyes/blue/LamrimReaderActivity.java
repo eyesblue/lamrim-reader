@@ -314,6 +314,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 						switch(renderMode){
 						case SUBTITLE_MODE:
 							subtitleView.setText(subtitle.text);
+							subtitleView.setHeight(subtitleView.getLineHeight()*subtitleView.getLineCount());
 							break;
 						case READING_MODE:
 							//SpannableString str=new SpannableString (subtitleView.getText());
@@ -515,9 +516,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public boolean onScale(ScaleGestureDetector detector) {
 				float size=subtitleView.getTextSize()*detector.getScaleFactor();
-   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+//				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
    				subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-   				Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
+//				Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
    				if(renderMode==SUBTITLE_MODE)
    					subtitleView.setHeight(subtitleView.getLineHeight());
    				
@@ -865,7 +866,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		int isInit=runtime.getInt("mediaIndex", -1);
 		if(isInit==-1){
 			Log.d(logTag,"This is first time launch LamrimReader, initial default settings.");
-			int currentIndex=mpController.getCurrentPosition();
+//			int currentIndex=mpController.getCurrentPosition();
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("mediaIndex", isInit);
 //			editor.putInt("playerStatus", mpController.getMediaPlayerState());
@@ -901,7 +902,6 @@ public class LamrimReaderActivity extends SherlockActivity {
 		} catch (IllegalStateException e) {	e.printStackTrace();}
 		
 		mediaIndex=runtime.getInt("mediaIndex", -1);
-		
 		
 		if(mediaIndex==-1)return;
 		

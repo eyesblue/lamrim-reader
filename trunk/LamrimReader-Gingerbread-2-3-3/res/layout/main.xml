@@ -8,19 +8,19 @@
 <!--android:screenOrientation="landscape" -->    	
 
 <eyes.blue.modified.MyHorizontalScrollView
-        android:id="@+id/horizontalScrollView1"
-        android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:scrollbars="none" >
+    android:id="@+id/horizontalScrollView1"
+    android:layout_width="match_parent"
+    android:layout_height="fill_parent"
+    android:layout_gravity="center"
+    android:layout_weight="1"
+    android:fillViewport="true"
+    android:scrollbars="none" >
 
     <eyes.blue.modified.MyListView
         android:id="@+id/bookPageGrid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0"
+        android:layout_weight="1"
         android:stretchMode="columnWidth" >
 
     </eyes.blue.modified.MyListView>
@@ -30,6 +30,7 @@
         android:id="@+id/subtitleView"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
         android:layout_weight="0"
         android:background="#0F395E"
         android:gravity="center"
