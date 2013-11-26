@@ -894,7 +894,13 @@ public class LamrimReaderActivity extends SherlockActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		getWindowManager().getDefaultDisplay().getSize(screenDim);
+		try {
+			getWindowManager().getDefaultDisplay().getSize(screenDim);
+	    } catch (java.lang.NoSuchMethodError ignore) { // Older device
+	    	screenDim.x = getWindowManager().getDefaultDisplay().getWidth();
+	    	screenDim.y = getWindowManager().getDefaultDisplay().getHeight();
+	    }
+		
 		Log.d(logTag,"Into onResume");
 		
 		/*
