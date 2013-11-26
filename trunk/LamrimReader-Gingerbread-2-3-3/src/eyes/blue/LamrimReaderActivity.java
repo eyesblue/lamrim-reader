@@ -186,6 +186,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	
 	int[][] readingModeSEindex=null;
 	String readingModeAllSubtitle=null;
+	Point screenDim=new Point();
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -314,7 +315,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 						switch(renderMode){
 						case SUBTITLE_MODE:
 							subtitleView.setText(subtitle.text);
-							subtitleView.setHeight(subtitleView.getLineHeight()*subtitleView.getLineCount());
+							int lineCount=subtitleView.getLineCount();// There will return 0 sometimes.
+							if(lineCount<1)lineCount=1;
+							subtitleView.setHeight(subtitleView.getLineHeight()*lineCount);
 							break;
 						case READING_MODE:
 							//SpannableString str=new SpannableString (subtitleView.getText());
@@ -423,16 +426,16 @@ public class LamrimReaderActivity extends SherlockActivity {
 			}
 		});
 
-		LayoutInflater inflater = getLayoutInflater();
+/*		LayoutInflater inflater = getLayoutInflater();
 		toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) findViewById(R.id.toastLayout));
 		toastTextView = (TextView) toastLayout.findViewById(R.id.text);
 		toastTextView.setTypeface(educFont);
-		toast = new Toast(getApplicationContext());
-//		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-//		toast.setDuration(Toast.LENGTH_LONG);
-//		toast.setView(layout);
-//		toast.show();
-		
+*/		toast = new Toast(getApplicationContext());
+/*		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+		toast.setDuration(Toast.LENGTH_LONG);
+		toast.setView(layout);
+		toast.show();
+*/		
 /*		toastTextView = new TextView(LamrimReaderActivity.this);
 		toastTextView.setTypeface(educFont);
 		toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);*/
@@ -698,9 +701,14 @@ public class LamrimReaderActivity extends SherlockActivity {
 				
 				//int subtitleViewBound=getResources().getDisplayMetrics().heightPixels-subtitleView.getHeight();
 				int subtitleViewBound=rootLayout.getHeight()-subtitleView.getHeight();
-				int upBound=(int) (subtitleViewBound-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
-				int downBound=(int) (subtitleViewBound+getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchBottomBoundDp));
+				float upBoundDp=(float)getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundPercentDp)/100*screenDim.y;
+				float downBoundDp=(float)getResources().getInteger(R.integer.subtitleScrollTouchBottomBoundPercentDp)/100*screenDim.y;
+				int upBound=(int) (subtitleViewBound-upBoundDp);
+				int downBound=(int) (subtitleViewBound+downBoundDp);
+				//int upBound=(int) (subtitleViewBound-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundPercentDp));
+				//int downBound=(int) (subtitleViewBound+getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchBottomBoundPercentDp));
 				
+				Log.d(logTag,"Height="+screenDim.y+", Upper bound="+upBound+", down bound="+downBound);
 				
 				if(ev.getAction()==MotionEvent.ACTION_DOWN){
 					if(ev.getY()>upBound && ev.getY()<downBound){
@@ -726,8 +734,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 				
 				Log.d(logTag, "Into onScroll");
 				int height=(int) (rootLayout.getHeight()-ev.getY());
+				float upBoundDp=(float)getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundPercentDp)/100*screenDim.y;
 				int minHeight=(int) subtitleView.getLineHeight();
-				int maxHeight=(int) (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
+				int maxHeight=(int) (rootLayout.getHeight()-upBoundDp);
+				//int maxHeight=(int) (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
 				
 				synchronized (mpController){
 				// set Subtitle mode
@@ -884,6 +894,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		getWindowManager().getDefaultDisplay().getSize(screenDim);
 		Log.d(logTag,"Into onResume");
 		
 		/*
@@ -1259,12 +1270,21 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public void run() {
 				toast.cancel();
 				toast = new Toast(getApplicationContext());
-				ImageView img=(ImageView) toastLayout.findViewById(R.id.imageView);
-				img.setImageResource(R.drawable.ic_launcher);
+				//LayoutInflater factory = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+			    //final View v = factory.inflate(R.layout.toastLayout, null);
+				
+				LayoutInflater inflater = getLayoutInflater();
+				toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) findViewById(R.id.toastLayout));
+				toastTextView = (TextView) toastLayout.findViewById(R.id.text);
+				toastTextView.setTypeface(educFont);
+				toastTextView.setText(s);
+				
+				
+//				ImageView img=(ImageView) toastLayout.findViewById(R.id.imageView);
+//				img.setImageResource(R.drawable.ic_launcher);
 				toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 				toast.setDuration(Toast.LENGTH_LONG);
 				toast.setView(toastLayout);
-				toastTextView.setText(s);
 //				toast=toast.makeText(LamrimReaderActivity.this, s, Toast.LENGTH_SHORT);
 				toast.show();
 				//toast.setText(s);

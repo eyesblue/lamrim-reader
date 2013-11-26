@@ -1202,8 +1202,8 @@ containing a value of this type.
         public static final int reservSpacePercent=0x7f0b0010;
         public static final int subtitleMonInterval=0x7f0b0009;
         public static final int subtitleReservSizeK=0x7f0b0011;
-        public static final int subtitleScrollTouchBottomBoundDp=0x7f0b000f;
-        public static final int subtitleScrollTouchUpperBoundDp=0x7f0b000e;
+        public static final int subtitleScrollTouchBottomBoundPercentDp=0x7f0b000f;
+        public static final int subtitleScrollTouchUpperBoundPercentDp=0x7f0b000e;
         public static final int textMaxSize=0x7f0b0005;
         public static final int textMinSize=0x7f0b0006;
         public static final int theorySmallTextSizePercent=0x7f0b0008;
