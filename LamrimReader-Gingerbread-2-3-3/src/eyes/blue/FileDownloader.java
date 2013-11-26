@@ -608,7 +608,7 @@ public class FileDownloader {
 	/*
 	 * Stop and release threads create by the class.
 	 * */
-	public void finish(){
+/*	private void finish(){
 		synchronized(mkDlTaskKey){
 			if(mkDlTaskDialog!=null){
 				mkDlTaskDialog.dismiss();
@@ -621,7 +621,7 @@ public class FileDownloader {
 			checkTask.cancel(true);
 		dismissDlProgress();
 	}
-	
+*/	
 	/*
 	 * Return is the AsyncTask running.
 	 * */
@@ -669,13 +669,18 @@ public class FileDownloader {
 			public void run() {
 				synchronized(dlProgsKey){
 					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing()){
-						dlPrgsDialog.dismiss();
-						dlPrgsDialog=null;
+						// Here ever happen dismiss after dismissed.
+						try{
+							dlPrgsDialog.dismiss();
+							dlPrgsDialog=null;
+						}catch(IllegalArgumentException iae){
+							iae.printStackTrace();
+							GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);
+						}
 				}
 				if(wakeLock.isHeld())wakeLock.release();
 				}
-			}
-		});
+			}});
 	}
 	
 	

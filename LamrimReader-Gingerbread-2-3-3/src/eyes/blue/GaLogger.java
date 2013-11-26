@@ -14,6 +14,7 @@ public class GaLogger {
 	public static void activityStop(Activity actvity){EasyTracker.getInstance(actvity).activityStop(actvity);}
 	
 	public static void sendEvent(String category, String action, String label, Long value){
+		if(easyTracker==null)return;
 		easyTracker.send(MapBuilder
 			      .createEvent(category,     // Event category (required)
 			    		  action,  // Event action (required)
@@ -24,6 +25,7 @@ public class GaLogger {
 	}
 	
 	public static void sendEvent(String category, String action, String label, int value){
+		if(easyTracker==null)return;
 		easyTracker.send(MapBuilder
 			      .createEvent(category,     // Event category (required)
 			    		  action,  // Event action (required)
@@ -33,5 +35,8 @@ public class GaLogger {
 			  );
 	}
 	
-	public static void send(Map<String, String> builder){easyTracker.send(builder);}
+	public static void send(Map<String, String> builder){
+		if(easyTracker==null)return;
+		easyTracker.send(builder);
+	}
 }

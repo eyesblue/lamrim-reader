@@ -1303,16 +1303,22 @@ public class LamrimReaderActivity extends SherlockActivity {
 		runOnUiThread(new Runnable() {
 			public void run() {
 				toast.cancel();
-				toast = new Toast(getApplicationContext());
-				ImageView img=(ImageView) toastLayout.findViewById(R.id.imageView);
-				img.setImageResource(R.drawable.info_icon);
-				toast.setView(toastLayout);
-				toast.setDuration(Toast.LENGTH_LONG);
-				toastTextView.setText(s);
-//				toast=toast.makeText(LamrimReaderActivity.this, s, Toast.LENGTH_SHORT);
-				toast.show();
-				//toast.setText(s);
-				//toast.show();
+                toast = new Toast(getApplicationContext());
+
+                LayoutInflater inflater = getLayoutInflater();
+                toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) findViewById(R.id.toastLayout));
+                toastTextView = (TextView) toastLayout.findViewById(R.id.text);
+                toastTextView.setTypeface(educFont);
+                toastTextView.setText(s);
+               
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.setDuration(Toast.LENGTH_LONG);
+                toast.setView(toastLayout);
+//              toast=toast.makeText(LamrimReaderActivity.this, s, Toast.LENGTH_SHORT);
+                toast.show();
+                //toast.setText(s);
+                //toast.show();
+
 			}
 		});
 	}
