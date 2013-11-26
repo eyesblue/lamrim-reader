@@ -229,6 +229,13 @@ public class SpeechMenuActivity extends Activity {
 	 }
 	
 // End of onCreate
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		GaLogger.activityStart(this);
+	}
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -270,6 +277,13 @@ public class SpeechMenuActivity extends Activity {
 		finish();
 	}
 	*/
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		GaLogger.activityStop(this);
+	}
+	
 	private void resultAndPlay(int position){
 		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
 		

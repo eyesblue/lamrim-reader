@@ -321,6 +321,18 @@ public class StorageManageActivity extends Activity {
 			}});
 	}
 	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		GaLogger.activityStart(this);
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		GaLogger.activityStop(this);
+	}
+	
 	private void refreshUsage(){
 		new Thread(new Runnable(){
 			@Override

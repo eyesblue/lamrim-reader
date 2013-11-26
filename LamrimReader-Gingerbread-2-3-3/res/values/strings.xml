@@ -74,8 +74,8 @@
     <color name="subtitleBGcolor">#0F395E</color>
     <color name="subtitleRedingModeHilightColor">#FFF82A</color>
     <color name="subtitleScrollPressColor">#E17D37</color>
-    <integer name="subtitleScrollTouchUpperBoundDp">14</integer>
-    <integer name="subtitleScrollTouchBottomBoundDp">0</integer>
+    <integer name="subtitleScrollTouchUpperBoundPercentDp">3</integer>
+    <integer name="subtitleScrollTouchBottomBoundPercentDp">0</integer>
     
     <!-- For Speech Menu -->
     <string name="musicSign">♬</string>
