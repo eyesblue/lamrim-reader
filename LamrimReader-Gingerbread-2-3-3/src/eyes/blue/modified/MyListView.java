@@ -31,7 +31,7 @@ public class MyListView extends ListView {
 			return res;
 		}
 		res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;
-		Log.d(getClass().getName(),"TheoryPageView onTouchEvent return "+res);
+//		Log.d(getClass().getName(),"TheoryPageView onTouchEvent return "+res);
 		return res;
 	}
 	
@@ -47,7 +47,7 @@ public class MyListView extends ListView {
 		public boolean 	onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY){return true;}
 		@Override
 		public boolean 	onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY){
-			Log.d(getClass().getName(),"Into onScroll, distance("+distanceX+", "+distanceY+"), scroll point=("+getScrollX()+", "+getScrollY()+")");
+//			Log.d(getClass().getName(),"Into onScroll, distance("+distanceX+", "+distanceY+"), scroll point=("+getScrollX()+", "+getScrollY()+")");
 			float scrollX=getScrollX()+distanceX;
 //			float scrollY=getScrollY()+distanceY;
 			float rightBoundY=getHeight()-getMeasuredHeight();
@@ -64,8 +64,8 @@ public class MyListView extends ListView {
 				Log.d(getClass().getName(),"Right bound reached Return false");
 				return false;
 			}			
-*/			Log.d(getClass().getName(),"Scroll to ("+scrollX+", "+getScrollY()+")");
-			scrollTo((int)scrollX,(int)getScrollY());
+			Log.d(getClass().getName(),"Scroll to ("+scrollX+", "+getScrollY()+")");
+*/			scrollTo((int)scrollX,(int)getScrollY());
 			
 			// Left bound has reached, and still scroll to left
 			//this.onDoubleTapEvent(e)
