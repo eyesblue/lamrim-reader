@@ -311,7 +311,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
-						synchronized (mpController){
+		//				synchronized (mpController){
 						switch(renderMode){
 						case SUBTITLE_MODE:
 							subtitleView.setText(subtitle.text);
@@ -328,24 +328,24 @@ public class LamrimReaderActivity extends SherlockActivity {
 							subtitleView.setText(str);
 							break;
 						};
-					}
+		//			}
 				}
 				});
 			}
 			@Override
 			public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){
 				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
-				GaLogger.sendEvent("ui_action", "EditText_edited", "jump_page", null);
+				GaLogger.sendEvent("player_action", "onPlayerError", "error_happen", null);
 			}
 			@Override
 			public void onSeek(final int index, final SubtitleElement subtitle){
 				runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
-						synchronized (mpController){
+				//		synchronized (mpController){
 							switch(renderMode){
 							case SUBTITLE_MODE:
-								showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+')');
+								showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+" - "+getMsToHMS(subtitle.endTimeMs,"\"","'",false)+')');
 								break;
 							case READING_MODE:
 								SpannableString str=new SpannableString (subtitleView.getText().toString());
@@ -356,7 +356,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 								break;
 						};
 					
-				}}});
+				//}
+						}});
 			}
 //			@Override
 //			public void startMoment(){setSubtitleViewText("");}
@@ -708,7 +709,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				//int upBound=(int) (subtitleViewBound-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundPercentDp));
 				//int downBound=(int) (subtitleViewBound+getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchBottomBoundPercentDp));
 				
-				Log.d(logTag,"Height="+screenDim.y+", Upper bound="+upBound+", down bound="+downBound);
+//				Log.d(logTag,"Height="+screenDim.y+", Upper bound="+upBound+", down bound="+downBound);
 				
 				if(ev.getAction()==MotionEvent.ACTION_DOWN){
 					if(ev.getY()>upBound && ev.getY()<downBound){
@@ -739,7 +740,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				int maxHeight=(int) (rootLayout.getHeight()-upBoundDp);
 				//int maxHeight=(int) (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
 				
-				synchronized (mpController){
+		//		synchronized (mpController){
 				// set Subtitle mode
 				if(height<=minHeight){
 					height=minHeight;
@@ -770,7 +771,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 							renderMode=READING_MODE;
 					}
 				}
-				}
+		//		}
 				
 				Log.d(logTag, "Set height to: "+height);
 				if(height>maxHeight)height=maxHeight;
@@ -880,7 +881,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("mediaIndex", isInit);
 //			editor.putInt("playerStatus", mpController.getMediaPlayerState());
-			editor.putInt("playPosition", mpController.getCurrentPosition());
+			editor.putInt("playPosition", 0);
 			editor.commit();
 			
 			Log.d(funcLeave,"**** saveRuntime ****");
@@ -1152,7 +1153,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		AsyncTask<Void, Void, Void> runner=new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				synchronized (mpController) {
+		//		synchronized (mpController) {
 					try {
 						setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
 						mpController.setDataSource(getApplicationContext(), mediaIndex);
@@ -1170,7 +1171,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 						setSubtitleViewText(getString(R.string.errIOEwhileSetPlayerSrc));
 						e.printStackTrace();
 					}
-				}
+		//		}
 				return null;
 			}
 		};
@@ -1559,6 +1560,7 @@ public class LamrimReaderActivity extends SherlockActivity {
         //popupWindow.showAsDropDown(findViewById(R.id.subtitleView));
 	}
 	
+	/*
 	final protected DownloadListener downloadListener = new DownloadListener() {
 		boolean isSpeechReady=true;
 		boolean isSubtitleReady=true;
@@ -1598,7 +1600,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 					e.printStackTrace();
 				}
 			}
-*/
+
 			Log.d(getClass().getName(),"**** Prepare files success ****");
 		}
 
@@ -1616,7 +1618,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 			GaLogger.sendEvent("download_action", "fail_action", msg, fileIndex);
 		}
 		
-		public void userCancel(int i,int type){
+		@Override
+		public void userCancel(){
 			setSubtitleViewText("請從選單選擇音檔");
 			String msg="";
 			if(type==getResources().getInteger(R.integer.MEDIA_TYPE))msg="media_type";
@@ -1624,7 +1627,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			GaLogger.sendEvent("download_action", "fail_action", msg, i);
 		}
 	};
-
+*/
 	
 	class RegionRecordAdapter extends SimpleAdapter{
 
