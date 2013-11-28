@@ -60,6 +60,7 @@
     <string name="newMediaPlayPosition">NewMediaPlayPosition</string>
     <string name="dlgHintMpController">請點選此處顯示撥放選單</string>
     <string name="dlgHintMpControllerNoSubtitle">尚無字幕，請點選此處顯示撥放選單</string>
+    <string name="playCompleteReloading">播放結束，重新載入中，請稍候！</string>
     <string name="errWhileReleasePlayer">釋放發生撥放器時發生狀態錯誤!</string>
     <string name="errIAEwhileSetPlayerSrc">開啟語音檔時發生參數錯誤!</string>
     <string name="errSEwhileSetPlayerSrc">開啟語音檔時發生安全性錯誤!</string>

@@ -99,7 +99,7 @@ public class SpeechMenuActivity extends Activity {
 			switch(actionId){
 			case PLAY:
 				resultAndPlay(manageItemIndex);
-				GaLogger.sendEvent("dialog_action", "auick_action_menu", "play", manageItemIndex);
+				GaLogger.sendEvent("dialog_action", "quick_action_menu", "play", manageItemIndex);
 				break;
 			case UPDATE:
 				DialogInterface.OnClickListener updateListener=new DialogInterface.OnClickListener(){
@@ -111,7 +111,7 @@ public class SpeechMenuActivity extends Activity {
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	downloadSrc(manageItemIndex);
-			        	GaLogger.sendEvent("dialog_action", "auick_action_menu", "result_and_play", manageItemIndex);
+			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "result_and_play", manageItemIndex);
 					}};
 	        	
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, updateListener, null, null);
@@ -126,13 +126,13 @@ public class SpeechMenuActivity extends Activity {
 			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	updateUi(manageItemIndex);
-			        	GaLogger.sendEvent("dialog_action", "auick_action_menu", "delete", manageItemIndex);
+			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "delete", manageItemIndex);
 					}};
 
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, deleteListener, null, null);
 	        	break;
 			case CANCEL:
-				GaLogger.sendEvent("dialog_action", "auick_action_menu", "cancel", manageItemIndex);
+				GaLogger.sendEvent("dialog_action", "quick_action_menu", "cancel", manageItemIndex);
 				break;
 			};
 		}
@@ -176,7 +176,7 @@ public class SpeechMenuActivity extends Activity {
 		public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
 			if(fireLock())return;
 			downloadSrc(position);
-			GaLogger.sendEvent("ui_action", "speech_list", "select_item", position);
+			GaLogger.sendEvent("ui_action", "speech_list", "select_item_"+SpeechData.name[position], null);
 	}});
 
 	speechList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){

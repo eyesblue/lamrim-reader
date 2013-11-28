@@ -259,7 +259,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 					@Override
 					public void run() {
 						setTheoryArea(pageNum, 0);
-						GaLogger.sendEvent("ui_action", "EditText_edited", "jump_page", (long) pageNum);
+						GaLogger.sendEvent("ui_action", "EditText_edited", "jump_page_"+pageNum, null);
 					}}, 200);
 					//bookView.setItemChecked(num-1, true);
 					//bookView.setSelection(pageNum);
@@ -284,7 +284,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
 				audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, arg1, 0);
-				GaLogger.sendEvent("ui_action", "SeekBar_scored", "volume_control", (long)arg1);
+				GaLogger.sendEvent("ui_action", "SeekBar_scored", "volume_control_arg1", null);
 			}
 		});
 		
@@ -335,7 +335,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){
 				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
-				GaLogger.sendEvent("player_action", "onPlayerError", "error_happen", null);
+				GaLogger.sendEvent("error", "player_error", "error_happen", null);
 			}
 			@Override
 			public void onSeek(final int index, final SubtitleElement subtitle){
@@ -364,7 +364,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onMediaPrepared() {
 				Log.d(getClass().getName(),"MediaPlayer prepared, show controller.");
-				GaLogger.sendEvent("play_action", "player_event", "media_prepared", (long) mediaIndex);
+				GaLogger.sendEvent("play_action", "player_event", SpeechData.name[mediaIndex]+"_prepared", null);
 				
 				if(mpController.isSubtitleReady()){
 					setSubtitleViewText(getString(R.string.dlgHintMpController));
@@ -405,6 +405,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 					mpController.showMediaPlayerController();
 				}
 			}
+			
+			@Override
+			public void onCompleteReload(){
+				setSubtitleViewText(getString(R.string.playCompleteReloading));
+			}
+			
 			@Override
 			public void startRegionSeted(int position){
 //				showNarmalToastMsg("區段開始位置設定完成: "+getMsToHMS(position,"\"","'",false));
@@ -463,7 +469,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				Log.d(logTag, "SubtitleView been clicked, Show media plyaer control panel.");
 				if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
 					mpController.showMediaPlayerController();
-				GaLogger.sendEvent("ui_action", "player_ctl_panel_event", "single_tap", null);
+				GaLogger.sendEvent("ui_action", "subtitle_event", "single_tap", null);
 				return true;
 			}
 			@Override
@@ -479,7 +485,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				    //int y = (int) ((line + 0.5) * subtitleView.getLineHeight ());
 				    //subtitleView.scrollTo (0, y - subtitleView.getHeight () / 2);
 					subtitleView.scrollTo(subtitleView.getScrollX(),subtitleView.getLineBounds(line, null)-subtitleView.getLineHeight());
-					GaLogger.sendEvent("ui_action", "player_ctl_panel_event", "double_tap", line);
+					GaLogger.sendEvent("ui_action", "subtitle_event", "double_tap", line);
 				}
 				return true;
 			}
@@ -514,7 +520,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public boolean onScaleBegin(ScaleGestureDetector detector) {
 				Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
-				GaLogger.sendEvent("ui_action", "player_ctl_panel_event", "scale_start", null);
+				GaLogger.sendEvent("ui_action", "subtitle_event", "scale_start", null);
 				return true;
 			}
 			@Override
@@ -533,9 +539,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 				SharedPreferences.Editor editor = runtime.edit();
 				editor.putInt(getString(R.string.subtitleFontSizeKey), (int) adapter.getTextSize());
 				editor.commit();
-				GaLogger.sendEvent("ui_action", "player_ctl_panel_event", "scale_end", null);
+				GaLogger.sendEvent("ui_action", "subtitle_event", "scale_end", null);
 			}
-			});
+		});
 		
 		subtitleView.setOnTouchListener(new View.OnTouchListener(){
 			@Override
@@ -847,7 +853,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				//bookView.setItemChecked(pageNum, true);
 				setTheoryArea(pageNum, 0);
 				Log.d(logTag,"Jump to theory page index "+pageNum);
-				GaLogger.sendEvent("ui_action", "bookview_event", "jump_page_to", pageNum);
+				GaLogger.sendEvent("ui_action", "bookview_event", "jump_to_audio_start", null);
 				return true;
 			}
 		});
@@ -872,6 +878,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		super.onStart();
 		Log.d(funcInto, "**** onStart() ****");
 		GaLogger.activityStart(this);
+		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart", null);
 		
 		// Dump default settings to DB
 		int isInit=runtime.getInt("mediaIndex", -1);
@@ -1038,7 +1045,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Log.d(funcInto,	"****OptionsItemselected, select item=" + item.getItemId()	+ ", String="+item.getTitle()+", Order="+item.getOrder()+" ****");
-		GaLogger.sendEvent("ui_action", "menu_event", item.getTitle()+"_pressed", null);
+		String gid=(String) item.getTitle();
+		GaLogger.sendEvent("ui_action", "menu_event", ((gid.length()==0)?"root_menu":gid)+"_pressed", null);
 		
 		if(item.equals(rootMenuItem)){
 		Log.d(logTag,"Create menu: can save region? "+mpController.canPlayRegion());
@@ -1110,7 +1118,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		case SPEECH_MENU_RESULT:
 			if (resultCode == RESULT_CANCELED){
 				Log.d(logTag, "User skip, do nothing.");
-				GaLogger.sendEvent("activity_result", "speech_menu_result", "user_cancel", null);
+				GaLogger.sendEvent("activity", "SpeechMenu_result_LamrimReader", "user_cancel", null);
 				return;
 			}
 			final int selected = intent.getIntExtra("index", -1);
@@ -1136,7 +1144,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 //			mpController.desetPlayRegion();
 			Log.d(logTag, "Call reset player in onActivityResult.");
 			mpController.reset();
-			GaLogger.sendEvent("activity_result", "speech_menu_result", "select_index", selected);
+			GaLogger.sendEvent("activity", "SpeechMenu_result", "select_index_"+selected, null);
 			// After onActivityResult, the life-cycle will return to onStart, do start downloader in OnResume.
 			break;
 		}
@@ -1160,15 +1168,19 @@ public class LamrimReaderActivity extends SherlockActivity {
 						mpController.prepareMedia();
 					} catch (IllegalArgumentException e) {
 						setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
+						GaLogger.sendEvent("error", "player_error", "IllegalArgumentException", null);
 						e.printStackTrace();
 					} catch (SecurityException e) {
 						setSubtitleViewText(getString(R.string.errSEwhileSetPlayerSrc));
+						GaLogger.sendEvent("error", "player_error", "SecurityException", null);
 						e.printStackTrace();
 					} catch (IllegalStateException e) {
 						setSubtitleViewText(getString(R.string.errISEwhileSetPlayerSrc));
+						GaLogger.sendEvent("error", "player_error", "IllegalStateException", null);
 						e.printStackTrace();
 					} catch (IOException e) {
 						setSubtitleViewText(getString(R.string.errIOEwhileSetPlayerSrc));
+						GaLogger.sendEvent("error", "player_error", "IOException", null);
 						e.printStackTrace();
 					}
 		//		}
@@ -1526,7 +1538,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 						subtitleView.setGravity(Gravity.CENTER);
 						subtitleView.setHeight(subtitleView.getLineHeight());
 					}});
-				GaLogger.sendEvent("dialog_action", "select_region", "play_saved_region", position);
+				GaLogger.sendEvent("dialog_action", "select_record", "play_saved_region", position);
 				// The procedure will not return to onStart or onResume, start play media from here.
 			}});
 
@@ -1543,7 +1555,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				editor.putInt(pageKey, pageCount);
 				editor.putInt(pageShiftKey, shift);
 				editor.commit();
-				GaLogger.sendEvent("dialog_action", "select_region", "cancel_select", null);
+				GaLogger.sendEvent("dialog_action", "select_record", "cancel_select", null);
 		}});
         popupWindow.setFocusable(true);
         popupWindow.setBackgroundDrawable(new BitmapDrawable());

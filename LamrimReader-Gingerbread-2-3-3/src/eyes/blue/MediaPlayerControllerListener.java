@@ -22,6 +22,7 @@ public class MediaPlayerControllerListener {
 	 * Call on media prepared.
 	 * */
 	public void onMediaPrepared(){}
+	public void onCompleteReload(){}
 	public void startRegionSeted(int position){}
 	public void startRegionDeset(int position){}
 	public void endRegionSeted(int position){}
