@@ -1,6 +1,7 @@
 package eyes.blue;
 
 import java.io.BufferedReader;
+
 import android.net.Uri;
 import android.os.SystemClock;
 
@@ -58,6 +59,7 @@ public class MediaPlayerController {
 	final public static int MP_PREPARED = 3;
 	final public static int MP_PLAYING = 4;
 	final public static int MP_PAUSE = 5;
+	final public static int MP_STOPED = 6;
 	int mpState = 0;
 	
 	LamrimReaderActivity activity=null;
@@ -97,6 +99,17 @@ public class MediaPlayerController {
 			public void onCompletion(MediaPlayer mp) {
 				Log.d(logTag,"Media player play completion! release WakeLock.");
 				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+				mediaPlayer.stop();
+				mpState=MP_STOPED;
+				try {
+					prepareMedia();
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, false);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, false);
+				}
 			}});
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 			@Override
@@ -280,6 +293,7 @@ public class MediaPlayerController {
 				return mediaPlayer.isPlaying();
 			}
 		} catch (IllegalStateException e) {
+			GaLogger.sendException(e, false);
 			return false;
 		}
 	}
@@ -779,6 +793,7 @@ public class MediaPlayerController {
 				try {
 					release();
 				} catch (IllegalStateException e) {
+					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS", e, false);
 					e.printStackTrace();
 				}
 				// mpController.stopSubtitleTimer();
@@ -791,6 +806,7 @@ public class MediaPlayerController {
 					lastState=getMediaPlayerState();
 					pause();
 				} catch (IllegalStateException e) {
+					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS_TRANSIENT", e, false);
 					e.printStackTrace();
 				}
 				// mpController.stopSubtitleTimer();
@@ -804,6 +820,7 @@ public class MediaPlayerController {
 					lastState=getMediaPlayerState();
 					pause();
 				} catch (IllegalStateException e) {
+					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK", e, false);
 					e.printStackTrace();
 				}
 				// mpController.stopSubtitleTimer();
