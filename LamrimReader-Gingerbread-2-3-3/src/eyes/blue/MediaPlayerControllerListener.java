@@ -7,7 +7,7 @@ public class MediaPlayerControllerListener {
 	 * Show subtitle in subtitle bar.
 	 * */
 	public void onSubtitleChanged(int index, SubtitleElement subtitle){}
-	public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){}
+	public void onPlayerError(){}
 	/*
 	 * Called while user seek.
 	 * */

@@ -491,21 +491,25 @@ public class FileSysManager {
         
         public static long getTotalMemory(int locate)
         {
+        	if(statFs[locate]==null)return 0;
         	return ((long)statFs[locate].getBlockCount() * (long)statFs[locate].getBlockSize());
         }
 
         public static long getFreeMemory(int locate)
         {
+        	if(statFs[locate]==null)return 0;
         	return ((long)statFs[locate].getAvailableBlocks() * (long)statFs[locate].getBlockSize());
         }
         
         public static int getGlobalUsage(int locate){
+        	if(statFs[locate]==null)return 0;
         	double result=statFs[locate].getAvailableBlocks();
         	result/=statFs[locate].getBlockCount();
         	return (int) (result*100);
         }
         
         public static long getAppUsed(int locate){
+        	if(srcRoot[locate]==null)return 0;
         	long total=0;
         	String[] dirs={context.getString(R.string.audioDirName),context.getString(R.string.subtitleDirName)};
         	

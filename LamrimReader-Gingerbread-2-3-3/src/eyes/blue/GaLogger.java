@@ -30,7 +30,7 @@ public class GaLogger{
 
 			@Override
 			public String getDescription(String threadId, Throwable throwable) {
-				return "Thread: " + threadId + ", Exception: " + ExceptionUtils.getStackTrace(throwable);
+				return "UNCHATCHED: V"+android.os.Build.VERSION.RELEASE+", "+getDeviceName()+", "+"Thread: {" + threadId + "}, Exception: " + ExceptionUtils.getStackTrace(throwable);
 			}});
 	    }
 	}
@@ -66,7 +66,7 @@ public class GaLogger{
 	
 	public static void sendException(Throwable ta,boolean isFatal){
 		easyTracker.send(MapBuilder
-			      .createException(android.os.Build.VERSION.RELEASE+getDeviceName()+":"+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
+			      .createException("CATCHED: V"+android.os.Build.VERSION.RELEASE+", "+getDeviceName()+", "+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
 			                       .getDescription(Thread.currentThread().getName(),    // The name of the thread on which the exception occurred.
 			                    		   ta),                                  // The exception.
 			                    		   isFatal)                                               // False indicates a fatal exception
@@ -74,7 +74,7 @@ public class GaLogger{
 	}
 	public static void sendException(String msg, Throwable ta,boolean isFatal){
 		easyTracker.send(MapBuilder
-			      .createException(android.os.Build.VERSION.RELEASE+getDeviceName()+":"+msg+": "+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
+			      .createException("CATCHED: V"+android.os.Build.VERSION.RELEASE+","+getDeviceName()+", "+msg+": "+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
 			                       .getDescription(Thread.currentThread().getName(),    // The name of the thread on which the exception occurred.
 			                    		   ta),                                  // The exception.
 			                    		   isFatal)                                               // False indicates a fatal exception

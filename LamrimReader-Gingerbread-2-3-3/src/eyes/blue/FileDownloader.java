@@ -631,15 +631,15 @@ public class FileDownloader {
 	}
 	
 	private void setProgressMsg(final String title,final String msg){
-		synchronized(dlProgsKey){
-			if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
-				activity.runOnUiThread(new Runnable() {
-					public void run() {
-						if(title!=null)dlPrgsDialog.setTitle(title);
-						if(msg!=null)dlPrgsDialog.setMessage(msg);
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				synchronized(dlProgsKey){
+					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
+					if(title!=null)dlPrgsDialog.setTitle(title);
+					if(msg!=null)dlPrgsDialog.setMessage(msg);
 					}
-				});
-		}
+				}
+			});
 	}
 	
 	private void setDlProgress(final int progress){
