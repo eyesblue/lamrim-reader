@@ -326,8 +326,13 @@ public class MediaController extends FrameLayout {
             p.flags |= WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
             p.token = null;
             p.windowAnimations = 0; // android.R.style.DropDownAnimationDown;
-            mWindowManager.addView(mDecor, p);
-            mShowing = true;
+            try{
+            	mWindowManager.addView(mDecor, p);
+            	mShowing = true;
+            }catch(Exception e){
+            	GaLogger.sendException(e, true);
+            }
+            
         }
         updatePausePlay();
         

@@ -333,8 +333,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 				});
 			}
 			@Override
-			public void onPlayerError(MediaPlayer arg0, int arg1, int arg2){
-				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
+			public void onPlayerError(){
+				setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
 				GaLogger.sendEvent("error", "player_error", "error_happen", null);
 			}
 			@Override

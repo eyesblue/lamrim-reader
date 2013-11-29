@@ -59,7 +59,7 @@ public class MediaPlayerController {
 	final public static int MP_PREPARED = 3;
 	final public static int MP_PLAYING = 4;
 	final public static int MP_PAUSE = 5;
-	final public static int MP_STOPED = 6;
+	final public static int MP_COMPLETE = 6;
 	int mpState = 0;
 	
 	LamrimReaderActivity activity=null;
@@ -100,15 +100,15 @@ public class MediaPlayerController {
 				Log.d(logTag,"Media player play completion! release WakeLock.");
 				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 				mediaPlayer.stop();
-				mpState=MP_STOPED;
+				mpState=MP_COMPLETE;
 				try {
 					prepareMedia();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
-					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, false);
+					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, true);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, false);
+					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, true);
 				}
 			}});
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -118,7 +118,7 @@ public class MediaPlayerController {
 					// 发生错误时也解除资源与MediaPlayer的赋值*
 					// mp.release();
 					// tv.setText("播放发生异常!");
-				changedListener.onPlayerError(arg0, arg1, arg2);
+				changedListener.onPlayerError();
 				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 				return false;
 			}
@@ -280,7 +280,13 @@ public class MediaPlayerController {
 	 * */
 	public int getDuration() {
 		synchronized(mediaPlayer){
-			return mediaPlayer.getDuration();
+			try{
+				return mediaPlayer.getDuration();
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				GaLogger.sendException("mpState="+mpState, e, true);
+				return 0;
+			}
 		}
 	}
 
@@ -328,8 +334,13 @@ public class MediaPlayerController {
 		
 		synchronized(mediaPlayer){
 			Log.d("","============ Reset MediaPlayer ===============");
-			if(mpState!=MP_IDLE)mediaPlayer.reset();
-			mpState=MP_IDLE;
+			try{
+				if(mpState!=MP_IDLE)mediaPlayer.reset();
+				mpState=MP_IDLE;
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				GaLogger.sendException("mpState="+mpState, e, true);
+			}
 		}
 
 		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);
@@ -423,7 +434,12 @@ public class MediaPlayerController {
 	 * */
 	public void prepareMedia() throws IllegalStateException, IOException{
 		synchronized(mediaPlayer){
-			mediaPlayer.prepare();
+			try{
+				mediaPlayer.prepare();
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				GaLogger.sendException("mpState="+mpState, e, true);
+			}
 		}
 	}
 	
