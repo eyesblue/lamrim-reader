@@ -99,17 +99,7 @@ public class MediaPlayerController {
 			public void onCompletion(MediaPlayer mp) {
 				Log.d(logTag,"Media player play completion! release WakeLock.");
 				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
-				mediaPlayer.stop();
 				mpState=MP_COMPLETE;
-				try {
-					prepareMedia();
-				} catch (IllegalStateException e) {
-					e.printStackTrace();
-					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, true);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					GaLogger.sendException("ReloadMediaAfterCompletePlay", e, true);
-				}
 			}});
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 			@Override
@@ -232,7 +222,7 @@ public class MediaPlayerController {
 		// Not tested.
 		if(!powerManager.isScreenOn())return;
 		
-		if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
+		
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(true);
 			subtitleTimer=null;
@@ -248,6 +238,7 @@ public class MediaPlayerController {
 				mediaPlayer.seekTo(regionStartMs);
 			}
 			changedListener.startRegionPlay();
+			if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
 		}
 		
 		/*if(regionStartMs != -1){
@@ -256,10 +247,17 @@ public class MediaPlayerController {
 		}*/
 		
 		// Avoid some problem.
-		if(mpState==MP_PREPARED || mpState==MP_PAUSE)
+		if(mpState>=MP_PREPARED)
 		synchronized(mediaPlayer){
-			mediaPlayer.start();
-			mpState=MP_PLAYING;
+			try{
+				mediaPlayer.start();
+				mpState=MP_PLAYING;
+				if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				e.printStackTrace();
+				GaLogger.sendException("mpState="+mpState, e, true);
+			}
 		}
 	}
 	
@@ -272,7 +270,14 @@ public class MediaPlayerController {
 	 * */
 	public int getCurrentPosition() {
 		synchronized(mediaPlayer){
-			return mediaPlayer.getCurrentPosition();
+			try{
+				return mediaPlayer.getCurrentPosition();
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				e.printStackTrace();
+				GaLogger.sendException("mpState="+mpState, e, true);
+			return 0;
+			}
 		}
 	}
 	/*
@@ -284,6 +289,7 @@ public class MediaPlayerController {
 				return mediaPlayer.getDuration();
 			}catch(Exception e){
 				changedListener.onPlayerError();
+				e.printStackTrace();
 				GaLogger.sendException("mpState="+mpState, e, true);
 				return 0;
 			}
@@ -300,6 +306,7 @@ public class MediaPlayerController {
 			}
 		} catch (IllegalStateException e) {
 			GaLogger.sendException(e, false);
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -433,11 +440,13 @@ public class MediaPlayerController {
 	 * Set prepare the media of MediaPlayer, call the MediaPlayerControllerListener.onMediaPrepared when ready. remember the subtitle prepare at setDataSource stage.
 	 * */
 	public void prepareMedia() throws IllegalStateException, IOException{
+		if(mediaPlayer==null)return;
 		synchronized(mediaPlayer){
 			try{
 				mediaPlayer.prepare();
 			}catch(Exception e){
-				changedListener.onPlayerError();
+//				changedListener.onPlayerError();
+				e.printStackTrace();
 				GaLogger.sendException("mpState="+mpState, e, true);
 			}
 		}

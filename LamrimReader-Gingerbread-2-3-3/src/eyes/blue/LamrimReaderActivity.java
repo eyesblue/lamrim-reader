@@ -334,7 +334,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 			}
 			@Override
 			public void onPlayerError(){
-				setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
+				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
 				GaLogger.sendEvent("error", "player_error", "error_happen", null);
 			}
 			@Override
@@ -349,10 +349,12 @@ public class LamrimReaderActivity extends SherlockActivity {
 								break;
 							case READING_MODE:
 								SpannableString str=new SpannableString (subtitleView.getText().toString());
-								
-								//Spannable WordtoSpan = (Spannable) subtitleView.getText();
-								str.setSpan(new ForegroundColorSpan(Color.parseColor("#CD78CE")), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-								subtitleView.setText(str);
+								try{
+									str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+									subtitleView.setText(str);
+								}catch(Exception e){
+									GaLogger.sendException("mediaIndex="+mediaIndex+", subtitleIndex="+index+", totalLen="+str.length(), e, true);
+								}
 								break;
 						};
 					
@@ -917,7 +919,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 		 * the prepare method call twice both in the two onResume, the second prepare will throw illegalStageExcteption, and will cause error
 		 * sometime, If the stage into PREPARING, it mean it preparing the media source at first onResume, then do nothing. 
 		 * */
-		try {
+/*		try {
 			if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARING){
 				Log.d(logTag,"onResume: The state of MediaPlayer is PAUSE, start play.");
 //				mpController.setAnchorView(LamrimReaderActivity.this.findViewById(android.R.id.content));
@@ -925,7 +927,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 				return;
 			}
 		} catch (IllegalStateException e) {	e.printStackTrace();}
-		
+*/		
 		mediaIndex=runtime.getInt("mediaIndex", -1);
 		
 		if(mediaIndex==-1)return;
