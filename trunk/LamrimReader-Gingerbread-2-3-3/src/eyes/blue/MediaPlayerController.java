@@ -269,6 +269,7 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
 	public int getCurrentPosition() {
+		if(mediaPlayer==null)return 0;
 		synchronized(mediaPlayer){
 			try{
 				return mediaPlayer.getCurrentPosition();
@@ -440,12 +441,15 @@ public class MediaPlayerController {
 	 * Set prepare the media of MediaPlayer, call the MediaPlayerControllerListener.onMediaPrepared when ready. remember the subtitle prepare at setDataSource stage.
 	 * */
 	public void prepareMedia() throws IllegalStateException, IOException{
+		
+		Log.d(logTag,"*** Call prepareMedia {"+Thread.currentThread().getName()+"}");
+		
 		if(mediaPlayer==null)return;
 		synchronized(mediaPlayer){
 			try{
 				mediaPlayer.prepare();
 			}catch(Exception e){
-//				changedListener.onPlayerError();
+				changedListener.onPlayerError();
 				e.printStackTrace();
 				GaLogger.sendException("mpState="+mpState, e, true);
 			}
