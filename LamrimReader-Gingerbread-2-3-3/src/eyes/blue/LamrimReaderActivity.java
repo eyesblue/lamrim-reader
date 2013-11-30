@@ -321,11 +321,14 @@ public class LamrimReaderActivity extends SherlockActivity {
 							break;
 						case READING_MODE:
 							//SpannableString str=new SpannableString (subtitleView.getText());
-							SpannableString str=new SpannableString (subtitleView.getText().toString());
+							SpannableString str=new SpannableString (readingModeAllSubtitle);
 							//Spannable WordtoSpan = (Spannable) subtitleView.getText();
-							
-							str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-							subtitleView.setText(str);
+							try{
+								str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+								subtitleView.setText(str);
+							}catch(Exception e){
+								GaLogger.sendException("mediaIndex="+mediaIndex+", subtitleIndex="+index+", totalLen="+str.length(), e, true);
+							}
 							break;
 						};
 		//			}
@@ -348,7 +351,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 								showSubtitleToast(subtitle.text+" - ("+getMsToHMS(subtitle.startTimeMs,"\"","'",false)+" - "+getMsToHMS(subtitle.endTimeMs,"\"","'",false)+')');
 								break;
 							case READING_MODE:
-								SpannableString str=new SpannableString (subtitleView.getText().toString());
+								SpannableString str=new SpannableString (readingModeAllSubtitle);
 								try{
 									str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 									subtitleView.setText(str);
