@@ -634,12 +634,12 @@ public class FileDownloader {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				synchronized(dlProgsKey){
-					if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
+					if(dlPrgsDialog==null && !dlPrgsDialog.isShowing())return;
 					if(title!=null)dlPrgsDialog.setTitle(title);
 					if(msg!=null)dlPrgsDialog.setMessage(msg);
-					}
+					
 				}
-			});
+			}});
 	}
 	
 	private void setDlProgress(final int progress){
