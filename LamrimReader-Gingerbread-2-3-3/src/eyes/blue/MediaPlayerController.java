@@ -285,6 +285,7 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
 	public int getDuration() {
+		if(mediaPlayer==null)return 0;
 		synchronized(mediaPlayer){
 			try{
 				return mediaPlayer.getDuration();
@@ -398,6 +399,7 @@ public class MediaPlayerController {
 	 * Set data source of MediaPlayer, and parse the file of subtitle if exist.
 	 * */
 	public void setDataSource(Context context,int index) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException{
+		if(mediaPlayer==null)return;
 		final File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
 		File speechFile=FileSysManager.getLocalMediaFile(index);
 		
