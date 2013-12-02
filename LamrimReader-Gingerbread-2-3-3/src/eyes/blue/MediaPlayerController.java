@@ -72,6 +72,7 @@ public class MediaPlayerController {
 	MediaPlayerControllerListener changedListener=null;
 	private SubtitleElement[] subtitle = null;
 	Object playingIndexKey=new Object();
+	Object mediaPlayerKey=new Object();
 //	FileInputStream fis = null;
 	int playingIndex=-2;
 //	long monInterval=100;
@@ -149,7 +150,8 @@ public class MediaPlayerController {
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
 		
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
+			if(mediaPlayer==null)return;
 			mpState=MP_PAUSE;
 			mediaPlayer.pause();
 		}
@@ -165,7 +167,8 @@ public class MediaPlayerController {
 		if(mpState<MP_PREPARED)return;
 		
 		if(subtitle==null){
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				mediaPlayer.seekTo(pos);
 			}
 			return;
@@ -177,7 +180,8 @@ public class MediaPlayerController {
 		
 		if(index<0){
 			if(regionStartMs!=-1 && pos<regionStartMs){
-				synchronized(mediaPlayer){
+				synchronized(mediaPlayerKey){
+					if(mediaPlayer==null)return;
 					mediaPlayer.seekTo(regionStartMs);
 				}
 				return;
@@ -186,20 +190,23 @@ public class MediaPlayerController {
 			synchronized(playingIndexKey){
 				playingIndex=0;
 			}
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				mediaPlayer.seekTo(pos);
 			}
 			return;
 		}
 
 		if(regionStartMs!=-1 && subtitle[index].startTimeMs<regionStartMs){
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				mediaPlayer.seekTo(regionStartMs);
 			}
 			return;
 		}
 		if(regionEndMs !=-1 && subtitle[index].endTimeMs>regionEndMs){
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				mediaPlayer.seekTo(regionEndMs);
 			}
 			return;
@@ -234,7 +241,8 @@ public class MediaPlayerController {
 		}
 		
 		if(isPlayRegion && regionStartMs != -1 && regionEndMs != -1){
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				mediaPlayer.seekTo(regionStartMs);
 			}
 			changedListener.startRegionPlay();
@@ -248,7 +256,7 @@ public class MediaPlayerController {
 		
 		// Avoid some problem.
 		if(mpState>=MP_PREPARED)
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
 			try{
 				mediaPlayer.start();
 				mpState=MP_PLAYING;
@@ -270,7 +278,7 @@ public class MediaPlayerController {
 	 * */
 	public int getCurrentPosition() {
 		if(mediaPlayer==null)return 0;
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
 			try{
 				return mediaPlayer.getCurrentPosition();
 			}catch(Exception e){
@@ -286,7 +294,7 @@ public class MediaPlayerController {
 	 * */
 	public int getDuration() {
 		if(mediaPlayer==null)return 0;
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
 			try{
 				return mediaPlayer.getDuration();
 			}catch(Exception e){
@@ -303,7 +311,7 @@ public class MediaPlayerController {
 	 * */
 	public boolean isPlaying() {
 		try{
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
 				return mediaPlayer.isPlaying();
 			}
 		} catch (IllegalStateException e) {
@@ -341,7 +349,7 @@ public class MediaPlayerController {
 		sb.setProgress(0);
 		updateSeekBar();
 		
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
 			Log.d("","============ Reset MediaPlayer ===============");
 			try{
 				if(mpState!=MP_IDLE)mediaPlayer.reset();
@@ -373,7 +381,8 @@ public class MediaPlayerController {
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
 		if(mediaPlayer!=null)
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return;
 				Log.d("","============ Release MediaPlayer ===============");
 				mediaPlayer.release();
 				mpState=MP_IDLE;
@@ -409,7 +418,8 @@ public class MediaPlayerController {
 		}
 		
 		Log.d(getClass().getName(),"MediaPlayer: Set data source to index: "+index);
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
+			if(mediaPlayer==null)return;
 			Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
 			if(mpState!=MP_IDLE)mediaPlayer.reset();
 			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
@@ -445,10 +455,9 @@ public class MediaPlayerController {
 	public void prepareMedia() throws IllegalStateException, IOException{
 		
 		Log.d(logTag,"*** Call prepareMedia {"+Thread.currentThread().getName()+"}");
-		
-		if(mediaPlayer==null)return;
-		synchronized(mediaPlayer){
+		synchronized(mediaPlayerKey){
 			try{
+				if(mediaPlayer==null)return;
 				mediaPlayer.prepare();
 			}catch(Exception e){
 				changedListener.onPlayerError();
@@ -778,7 +787,7 @@ public class MediaPlayerController {
 	final protected OnPreparedListener onPreparedListener = new OnPreparedListener() {
 		public void onPrepared(MediaPlayer mp) {
 			Log.d(getClass().getName(), "**** Into onPreparedListener of MediaPlayer ****");
-			synchronized(mediaPlayer){
+			synchronized(mediaPlayerKey){
 				mpState = MP_PREPARED;
 			}
 			

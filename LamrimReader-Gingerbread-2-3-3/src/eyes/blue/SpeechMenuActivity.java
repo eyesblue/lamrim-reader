@@ -382,10 +382,11 @@ public class SpeechMenuActivity extends Activity {
 				    	if (wakeLock.isHeld())wakeLock.release();
 				    }  
 				});
-				if(!wakeLock.isHeld()){wakeLock.acquire();}
+				
 				runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
+						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						dialog.show();
 					}});
 				

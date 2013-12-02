@@ -436,6 +436,21 @@ public class LamrimReaderActivity extends SherlockActivity {
 			public void stopRegionPlay(){
 				showNarmalToastMsg("停止區段播放");
 			}
+			@Override
+			public void startMoment() {
+				// TODO Auto-generated method stub
+				
+			}
+			@Override
+			public void endRegionSeted(int position) {
+				// TODO Auto-generated method stub
+				
+			}
+			@Override
+			public void endRegionDeset(int position) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 
 /*		LayoutInflater inflater = getLayoutInflater();
@@ -485,12 +500,14 @@ public class LamrimReaderActivity extends SherlockActivity {
 					int index=mpController.getSubtitleIndex(mpController.getCurrentPosition());
 					if(index==-1)return true;
 					//subtitleView.bringPointIntoView(readingModeSEindex[index][0]);
-					int line = subtitleView.getLayout ().getLineForOffset (readingModeSEindex[index][0]);
+					try{
+						int line = subtitleView.getLayout ().getLineForOffset (readingModeSEindex[index][0]);
+						subtitleView.scrollTo(subtitleView.getScrollX(),subtitleView.getLineBounds(line, null)-subtitleView.getLineHeight());
+					}catch(Exception et){
+						GaLogger.sendException("readingModeSEindex under contruct and read.", et, true);
+					}
+					
 
-				    //int y = (int) ((line + 0.5) * subtitleView.getLineHeight ());
-				    //subtitleView.scrollTo (0, y - subtitleView.getHeight () / 2);
-					subtitleView.scrollTo(subtitleView.getScrollX(),subtitleView.getLineBounds(line, null)-subtitleView.getLineHeight());
-					GaLogger.sendEvent("ui_action", "subtitle_event", "double_tap", line);
 				}
 				return true;
 			}
@@ -957,6 +974,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
+		toast.cancel();
 		GaLogger.activityStop(this);
 	}
 
