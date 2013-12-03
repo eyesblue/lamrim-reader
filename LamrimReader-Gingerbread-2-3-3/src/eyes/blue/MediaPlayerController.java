@@ -314,7 +314,7 @@ public class MediaPlayerController {
 			synchronized(mediaPlayerKey){
 				return mediaPlayer.isPlaying();
 			}
-		} catch (IllegalStateException e) {
+		} catch (Exception e) {
 			GaLogger.sendException(e, false);
 			e.printStackTrace();
 			return false;
@@ -380,7 +380,6 @@ public class MediaPlayerController {
 	public void release(){
 		if(subtitleTimer!=null)subtitleTimer.cancel(true);
 		subtitleTimer=null;
-		if(mediaPlayer!=null)
 			synchronized(mediaPlayerKey){
 				if(mediaPlayer==null)return;
 				Log.d("","============ Release MediaPlayer ===============");

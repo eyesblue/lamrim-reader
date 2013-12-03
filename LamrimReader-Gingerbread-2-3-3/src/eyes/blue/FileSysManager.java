@@ -74,7 +74,8 @@ public class FileSysManager {
 		statFs[INTERNAL]=new StatFs(Environment.getRootDirectory().getAbsolutePath());
 		statFs[EXTERNAL]=new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
 		srcRoot[INTERNAL]=context.getFileStreamPath(context.getString(R.string.app_name)).getAbsolutePath();
-		srcRoot[EXTERNAL]=context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsolutePath();
+		boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+		if(extWritable)srcRoot[EXTERNAL]=context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsolutePath();
               
 		FileSysManager.logTag=getClass().getName();
 		FileSysManager.context=context;

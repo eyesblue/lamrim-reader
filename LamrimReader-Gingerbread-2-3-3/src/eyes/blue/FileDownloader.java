@@ -637,7 +637,6 @@ public class FileDownloader {
 					if(dlPrgsDialog==null && !dlPrgsDialog.isShowing())return;
 					if(title!=null)dlPrgsDialog.setTitle(title);
 					if(msg!=null)dlPrgsDialog.setMessage(msg);
-					
 				}
 			}});
 	}
