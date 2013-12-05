@@ -361,7 +361,6 @@ public class FileSysManager {
         }
         
         public static void maintainStorages(){
-        	
         	File userSpecDir=null;
         	boolean isUseThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
         	if(isUseThirdDir){
@@ -409,12 +408,14 @@ public class FileSysManager {
 						return true;
 					return false;
 				}};
-				
-			for(File f:miDir.listFiles(filter))f.delete();
-			for(File f:meDir.listFiles(filter))f.delete();
-			for(File f:siDir.listFiles(filter))f.delete();
-			for(File f:seDir.listFiles(filter))f.delete();
-			if(userSpecDir!=null)for(File f:userSpecDir.listFiles(filter))f.delete();
+			
+			// Delete temp files.
+			File[] files=null;
+			if((files=miDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if((files=meDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if((files=siDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if((files=seDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if(userSpecDir!=null)if((files=userSpecDir.listFiles(filter))!=null)for(File f:files)f.delete();
         }
         
         // NOT test yet
@@ -481,9 +482,10 @@ public class FileSysManager {
         }
         
         public static boolean isFromUserSpecifyDir(File speechFile){
-        	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]) || speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))
-        		return false;
-        	return true;
+        	boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+        	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]))return true;
+        	if(extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return true;
+        	return false;
         }
         
         public static boolean isExtMemWritable(){

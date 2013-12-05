@@ -27,7 +27,7 @@ public class MyListView extends ListView {
 		if(scaleGestureDetector!=null && event.getPointerCount()==2){
 			// The scale gesture detector always return true.
 			res=scaleGestureDetector.onTouchEvent(event);
-			Log.d(getClass().getName(),"Scale return "+res);
+//			Log.d(getClass().getName(),"Scale return "+res);
 			return res;
 		}
 		res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;

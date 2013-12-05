@@ -334,7 +334,10 @@ public class MediaPlayerController {
 	 * */
 	public boolean canSeekForward() {return true;}
 // =================================================================
-
+	// sometimes large memory objects may get lost.
+	public boolean isPlayerReady(){
+		return (mediaPlayer!=null && mpState>=MP_PREPARED);
+	}
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
@@ -456,7 +459,10 @@ public class MediaPlayerController {
 		Log.d(logTag,"*** Call prepareMedia {"+Thread.currentThread().getName()+"}");
 		synchronized(mediaPlayerKey){
 			try{
-				if(mediaPlayer==null)return;
+				if(mediaPlayer==null){
+					Log.d(logTag,"The mediaPlayer is null, do nothing, return");
+					return;
+				}
 				mediaPlayer.prepare();
 			}catch(Exception e){
 				changedListener.onPlayerError();

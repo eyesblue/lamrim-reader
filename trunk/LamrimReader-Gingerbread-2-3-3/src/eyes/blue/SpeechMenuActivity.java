@@ -352,6 +352,12 @@ public class SpeechMenuActivity extends Activity {
 		File mediaFile=FileSysManager.getLocalMediaFile(index);
 		File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
 		
+		if(mediaFile==null || subtitleFile==null){
+			toast.setText(getString(R.string.dlgDescDownloadFail));
+			toast.show();
+			return;
+		}
+		
 		if(mediaFile.exists() && subtitleFile.exists()){
 			resultAndPlay(index);
 			return;
