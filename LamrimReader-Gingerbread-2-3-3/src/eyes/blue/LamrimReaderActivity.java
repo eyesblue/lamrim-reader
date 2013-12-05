@@ -48,6 +48,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.support.v4.app.FragmentManager;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
@@ -111,6 +112,7 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
 
@@ -128,7 +130,7 @@ import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 * 版本: $$Revision$$
 * ID  ：$$Id$$
 */
-public class LamrimReaderActivity extends SherlockActivity {
+public class LamrimReaderActivity extends SherlockFragmentActivity{
 	/** Called when the activity is first created. */
 	private static final long serialVersionUID = 4L;
 	final static String logTag = "LamrimReader";
@@ -187,6 +189,8 @@ public class LamrimReaderActivity extends SherlockActivity {
 	int[][] readingModeSEindex=null;
 	String readingModeAllSubtitle=null;
 	Point screenDim=new Point();
+	
+	private TaskFragment mTaskFragment;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -815,7 +819,17 @@ public class LamrimReaderActivity extends SherlockActivity {
 		//String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
 		String appSubtitle=getString(R.string.app_name) +" V"+pkgInfo.versionName;
 		getSupportActionBar().setSubtitle(appSubtitle);
+/*		FragmentManager fm = getSupportFragmentManager();
+	    mTaskFragment = (TaskFragment) fm.findFragmentByTag("PlayerTask");
+
+	    // If the Fragment is non-null, then it is currently being
+	    // retained across a configuration change.
+	    if (mTaskFragment == null) {
+	      mTaskFragment = new TaskFragment();
+	      fm.beginTransaction().add(mTaskFragment, "PlayerTask").commit();
+	    }
 		Log.d(funcLeave, "******* onCreate *******");
+*/
 		// LogRepoter.log("Leave OnCreate");
 	}
 	
@@ -852,10 +866,10 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public boolean onScale(ScaleGestureDetector detector) {
 				float size=adapter.getTextSize()*detector.getScaleFactor();
-   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+//   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
    				adapter.setTextSize(size);
    				adapter.notifyDataSetChanged();
-   				Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
+//   				Log.d(getClass().getName(),"set size after setting: "+adapter.getTextSize());
    				return true;
    			}
 			@Override
@@ -949,12 +963,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 		} catch (IllegalStateException e) {	e.printStackTrace();}
 */		
 		mediaIndex=runtime.getInt("mediaIndex", -1);
-		
 		if(mediaIndex==-1)return;
 		
-		startPlay(mediaIndex);
-		
-		
+		if(!mpController.isPlayerReady())startPlay(mediaIndex);
 		Log.d(logTag,"Leave onResume");
 	}
 
@@ -1177,10 +1188,23 @@ public class LamrimReaderActivity extends SherlockActivity {
 
 	public boolean startPlay(final int mediaIndex){
 		File f=FileSysManager.getLocalMediaFile(mediaIndex);
-		if(!f.exists()){
+		if(f==null || !f.exists()){
 			return false;
 		}
 		
+		
+
+/*	    if(!mTaskFragment.isRunning()){
+	    	Log.d(logTag,"*** Player Task not running ***");
+	    	mTaskFragment.start();
+	    	Log.d(logTag,"*** Player Task START has call ***");
+	    }
+	    if (mTaskFragment.isRunning()) {
+	      mButton.setText(getString(R.string.cancel));
+	    } else {
+	      mButton.setText(getString(R.string.start));
+	    }
+	    */
 		AsyncTask<Void, Void, Void> runner=new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
@@ -1215,7 +1239,47 @@ public class LamrimReaderActivity extends SherlockActivity {
 		
 		return true;
 	}
+/*
+// ========================== Functions of TaskFragment ==============================
+	@Override
+	public void onPreExecute() {}
+	
+	@Override
+	public Void doInBackground(Void... ignore){
+		try {
+			setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
+			mpController.setDataSource(getApplicationContext(), mediaIndex);
+			mpController.prepareMedia();
+		} catch (IllegalArgumentException e) {
+			setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
+			GaLogger.sendEvent("error", "player_error", "IllegalArgumentException", null);
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			setSubtitleViewText(getString(R.string.errSEwhileSetPlayerSrc));
+			GaLogger.sendEvent("error", "player_error", "SecurityException", null);
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			setSubtitleViewText(getString(R.string.errISEwhileSetPlayerSrc));
+			GaLogger.sendEvent("error", "player_error", "IllegalStateException", null);
+			e.printStackTrace();
+		} catch (IOException e) {
+			setSubtitleViewText(getString(R.string.errIOEwhileSetPlayerSrc));
+			GaLogger.sendEvent("error", "player_error", "IOException", null);
+			e.printStackTrace();
+		}
+		return null;
+	}
+	@Override
+	public void onProgressUpdate(int percent) {}
 
+	@Override
+	public void onCancelled() {}
+
+	@Override
+	public void onPostExecute() {}
+	
+// ========================== End of TaskFragment ==============================
+	*/
 	class TheoryListAdapter extends SimpleAdapter {
 		float textSize = 0;
 
@@ -1516,8 +1580,9 @@ public class LamrimReaderActivity extends SherlockActivity {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View v, final int position, long id) {
 				Log.d(logTag,"Region record menu: item "+RegionRecord.records.get(position).title+" clicked.");
-				
-				if(!FileSysManager.getLocalMediaFile(RegionRecord.records.get(position).mediaIndex).exists() || !FileSysManager.getLocalSubtitleFile(RegionRecord.records.get(position).mediaIndex).exists()){
+				File media=FileSysManager.getLocalMediaFile(RegionRecord.records.get(position).mediaIndex);
+				File subtitle=FileSysManager.getLocalSubtitleFile(RegionRecord.records.get(position).mediaIndex);
+				if(media == null || subtitle ==null || !media.exists() || !subtitle.exists()){
 					String msg=String.format(getString(R.string.dlgResNeedDownloadFirst), SpeechData.getNameId(RegionRecord.records.get(position).mediaIndex));
 					AlertDialog.Builder dialog = new AlertDialog.Builder(LamrimReaderActivity.this);
 					dialog.setTitle(msg); 
@@ -1757,5 +1822,7 @@ public class LamrimReaderActivity extends SherlockActivity {
 //	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
 		return mst+minuteSign+ss+((hasDecimal)?"."+sub:"")+secSign;
 	}
+
+
 }
 
