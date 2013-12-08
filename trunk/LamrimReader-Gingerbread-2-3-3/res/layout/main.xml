@@ -1,30 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<eyes.blue.modified.MyLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="fill_parent"
     android:gravity="fill"
     android:orientation="vertical" >
-<!--android:screenOrientation="landscape" -->    	
 
-<eyes.blue.modified.MyHorizontalScrollView
-    android:id="@+id/horizontalScrollView1"
-    android:layout_width="match_parent"
-    android:layout_height="fill_parent"
-    android:layout_gravity="center"
-    android:layout_weight="1"
-    android:fillViewport="true"
-    android:scrollbars="none" >
+    <!-- android:screenOrientation="landscape" -->
 
-    <eyes.blue.modified.MyListView
-        android:id="@+id/bookPageGrid"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:stretchMode="columnWidth" >
+        android:layout_weight="1" >
 
-    </eyes.blue.modified.MyListView>
-</eyes.blue.modified.MyHorizontalScrollView>
+        <eyes.blue.modified.MyHorizontalScrollView
+            android:id="@+id/horizontalScrollView1"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:fillViewport="true"
+            android:scrollbars="none" >
+
+            <eyes.blue.modified.MyListView
+                android:id="@+id/bookPageGrid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:stretchMode="columnWidth" >
+            </eyes.blue.modified.MyListView>
+        </eyes.blue.modified.MyHorizontalScrollView>
+
+        <Button
+            android:id="@+id/modeSwBtn"
+            style="@style/swButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/subtitleView"
@@ -37,4 +49,4 @@
         android:text="@string/app_name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-</eyes.blue.modified.MyLinearLayout>
+</LinearLayout>

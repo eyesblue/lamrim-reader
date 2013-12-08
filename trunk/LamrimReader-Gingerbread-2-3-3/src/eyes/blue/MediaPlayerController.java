@@ -277,7 +277,7 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
 	public int getCurrentPosition() {
-		if(mediaPlayer==null)return 0;
+
 		synchronized(mediaPlayerKey){
 			try{
 				return mediaPlayer.getCurrentPosition();
@@ -293,7 +293,6 @@ public class MediaPlayerController {
 	 * Same as function of MediaPlayer but not throw IllegalStateException(return 0).
 	 * */
 	public int getDuration() {
-		if(mediaPlayer==null)return 0;
 		synchronized(mediaPlayerKey){
 			try{
 				return mediaPlayer.getDuration();
@@ -421,12 +420,17 @@ public class MediaPlayerController {
 		
 		Log.d(getClass().getName(),"MediaPlayer: Set data source to index: "+index);
 		synchronized(mediaPlayerKey){
-			if(mediaPlayer==null)return;
-			Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
-			if(mpState!=MP_IDLE)mediaPlayer.reset();
-			mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
-			//mediaPlayer.setDataSource(fis.getFD());
-			mpState=MP_INITED;
+			try{
+				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
+				if(mpState!=MP_IDLE)mediaPlayer.reset();
+				mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
+			//	mediaPlayer.setDataSource(fis.getFD());
+				mpState=MP_INITED;
+			}catch(Exception e){
+				changedListener.onPlayerError();
+				e.printStackTrace();
+				GaLogger.sendException("mpState="+mpState, e, true);
+			}
 		}
 		
 		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);

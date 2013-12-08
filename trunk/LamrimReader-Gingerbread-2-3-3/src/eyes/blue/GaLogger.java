@@ -7,6 +7,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.ExceptionParser;
 import com.google.analytics.tracking.android.ExceptionReporter;
+import com.google.analytics.tracking.android.Fields;
 import com.google.analytics.tracking.android.GAServiceManager;
 import com.google.analytics.tracking.android.GoogleAnalytics;
 import com.google.analytics.tracking.android.MapBuilder;
@@ -33,6 +34,9 @@ public class GaLogger{
 				return "UNCHATCHED: V"+android.os.Build.VERSION.RELEASE+", "+getDeviceName()+", "+"Thread: {" + threadId + "}, Exception: " + ExceptionUtils.getStackTrace(throwable);
 			}});
 	    }
+	    
+	    easyTracker.set(Fields.SCREEN_NAME, activity_.getClass().getName());
+	    easyTracker.send(MapBuilder.createAppView().build());
 	}
 	
 	public static void activityStop(Activity actvity){EasyTracker.getInstance(actvity).activityStop(actvity);}
@@ -64,41 +68,32 @@ public class GaLogger{
 		easyTracker.send(builder);
 	}
 	
-	public static void sendException(Throwable ta,boolean isFatal){
-		easyTracker.send(MapBuilder
-			      .createException("CATCHED: V"+android.os.Build.VERSION.RELEASE+", "+getDeviceName()+", "+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
-			                       .getDescription(Thread.currentThread().getName(),    // The name of the thread on which the exception occurred.
-			                    		   ta),                                  // The exception.
-			                    		   isFatal)                                               // False indicates a fatal exception
-			      .build());
-	}
+	public static void sendException(Throwable ta,boolean isFatal){sendException(null, ta, isFatal);}
 	public static void sendException(String msg, Throwable ta,boolean isFatal){
-		easyTracker.send(MapBuilder
-			      .createException("CATCHED: V"+android.os.Build.VERSION.RELEASE+","+getDeviceName()+", "+msg+": "+new StandardExceptionParser(activity, null)              // Context and optional collection of package names to be used in reporting the exception.
-			                       .getDescription(Thread.currentThread().getName(),    // The name of the thread on which the exception occurred.
-			                    		   ta),                                  // The exception.
-			                    		   isFatal)                                               // False indicates a fatal exception
-			      .build());
+		String s="CATCHED: V"+android.os.Build.VERSION.RELEASE+", ";
+		s+=getDeviceName()+", ";
+		if(msg!=null)s+=msg+": ";
+		s+=ExceptionUtils.getStackTrace(ta);
+		s+=" {"+Thread.currentThread().getName()+"}";
+		easyTracker.send(MapBuilder.createException(s,isFatal).build());
 	}
 	
 	public static String getDeviceName() {
 		  String manufacturer = Build.MANUFACTURER;
 		  String model = Build.MODEL;
-		  if (model.startsWith(manufacturer)) {
+		  if (model.startsWith(manufacturer))
 		    return capitalize(model);
-		  } else {
+		  else
 		    return capitalize(manufacturer) + " " + model;
-		  }
 		}
 
 
 	private static String capitalize(String s) {
 		if (s == null || s.length() == 0)return "";
 		char first = s.charAt(0);
-		if (Character.isUpperCase(first)) {
+		if (Character.isUpperCase(first))
 			return s;
-		} else {
+		else
 			return Character.toUpperCase(first) + s.substring(1);
-		}
 		} 
 }
