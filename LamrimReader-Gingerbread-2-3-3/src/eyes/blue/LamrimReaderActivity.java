@@ -119,8 +119,6 @@ import com.google.analytics.tracking.android.MapBuilder;
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 import eyes.blue.modified.MyListView;
 import eyes.blue.modified.MyHorizontalScrollView;
-import eyes.blue.modified.MyLinearLayout;
-import eyes.blue.modified.MyLinearLayoutController;
 import eyes.blue.modified.OnDoubleTapEventListener;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 
@@ -161,7 +159,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 	FileSysManager fileSysManager = null;
 //	FileDownloader fileDownloader = null;
-	MyLinearLayout rootLayout = null;
+	LinearLayout rootLayout = null;
 	
 	Typeface educFont = null;
 	View toastLayout = null;
@@ -189,6 +187,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	int[][] readingModeSEindex=null;
 	String readingModeAllSubtitle=null;
 	Point screenDim=new Point();
+	Button modeSwBtn=null;
 	
 	private TaskFragment mTaskFragment;
 	
@@ -219,6 +218,74 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 		actionBarControlPanel = factory.inflate(R.layout.action_bar_control_panel, null);
+		
+		modeSwBtn=(Button)findViewById(R.id.modeSwBtn);
+		modeSwBtn.setOnTouchListener(new View.OnTouchListener(){
+			boolean pressed=false;
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				
+				Log.d(logTag, "Action Code= "+event.getAction());
+				if(event.getAction()==MotionEvent.ACTION_UP || event.getAction()==MotionEvent.ACTION_CANCEL){
+					Log.d(logTag, "Leave event received");
+					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_button));
+					pressed=false;
+					return true;
+				}
+				
+				Log.d(logTag, "Into onScroll, y="+event.getRawY());
+				if(!pressed){
+					Log.d(logTag, "Set pressed color");
+					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_press_button));
+					pressed=true;
+				}
+				
+				int height=(int) (screenDim.y - event.getRawY());
+				float upBoundDp=(float)getResources().getInteger(R.integer.subtitleScrollTouchBtnHeightPercentDp)/100*screenDim.y;
+				int minHeight=(int) subtitleView.getLineHeight();
+				int maxHeight=(int) (rootLayout.getHeight()-upBoundDp);
+				//int maxHeight=(int) (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
+				
+		//		synchronized (mpController){
+				// set Subtitle mode
+				if(height<=minHeight){
+					height=minHeight;
+					renderMode=SUBTITLE_MODE;
+					subtitleView.setGravity(Gravity.CENTER);
+					subtitleView.setMovementMethod(null);
+					if(mpController.getMediaPlayerState()==MediaPlayerController.MP_PLAYING && mpController.getSubtitle()!=null){
+						if(mpController.getCurrentPosition()==-1)return true;
+						setSubtitleViewText(mpController.getSubtitle(mpController.getCurrentPosition()).text);
+					}
+					else
+						setSubtitleViewText(getString(R.string.dlgHintMpController));
+				}
+				// set reading mode
+				else{
+					// It is first time into reading mode, set the all text to subtitleView, but not set text every time.
+					if(renderMode==SUBTITLE_MODE){
+						if(mpController==null || !mpController.isSubtitleReady() || readingModeAllSubtitle==null){
+							showNarmalToastMsg("尚無字幕，無法切換到閱讀模式！");
+							return true;
+						}
+						subtitleView.setGravity(Gravity.LEFT);
+							setSubtitleViewText(readingModeAllSubtitle);
+//							subtitleView.setScroller(new Scroller(LamrimReaderActivity.this)); 
+							subtitleView.setScrollBarStyle(TextView.SCROLLBARS_INSIDE_OVERLAY);
+							//subtitleView.setMovementMethod(new ScrollingMovementMethod());
+							subtitleView.setMovementMethod(ScrollingMovementMethod.getInstance());
+							renderMode=READING_MODE;
+					}
+				}
+		//		}
+				
+				Log.d(logTag, "Set height to: "+height);
+				if(height>maxHeight)height=maxHeight;
+				subtitleView.setHeight(height);
+
+				return true;
+			}});
+		
 		bookIcon=(ImageView) actionBarControlPanel.findViewById(R.id.bookIcon);
 /*		bookIcon.setOnClickListener(new View.OnClickListener(){
 			@Override
@@ -616,7 +683,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		setTheoryArea(bookPage, bookPageShift);
 		
 //		bookView.setScrollingCacheEnabled( false );
-		rootLayout = (MyLinearLayout) findViewById(R.id.rootLayout);
+		rootLayout = (LinearLayout) findViewById(R.id.rootLayout);
 		rootLayout.setLongClickable(false);
 
 /*		rootLayout.setGestureListener(new GestureDetector(this,new SimpleOnGestureListener(){
@@ -728,7 +795,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			}
 			}));
 */		
-		rootLayout.setOnInterceptTouchEvent(new MyLinearLayoutController(){
+/*		rootLayout.setOnInterceptTouchEvent(new MyLinearLayoutController(){
 			@Override
 			public boolean onInterceptTouchEvent(MotionEvent ev){
 				
@@ -812,6 +879,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				return true;
 			}
 		});
+*/
+
 
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
@@ -913,6 +982,23 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	protected void onStart() {
 		super.onStart();
 		Log.d(funcInto, "**** onStart() ****");
+		
+		try {
+			getWindowManager().getDefaultDisplay().getSize(screenDim);
+	    } catch (java.lang.NoSuchMethodError ignore) { // Older device
+	    	screenDim.x = getWindowManager().getDefaultDisplay().getWidth();
+	    	screenDim.y = getWindowManager().getDefaultDisplay().getHeight();
+	    }
+		// The value will get portrait but not landscape value sometimes, exchange it if happen.
+		if(screenDim.x < screenDim.y)screenDim.set(screenDim.y, screenDim.x);
+		
+		
+		Log.d(logTag,"Into onResume");
+		float modeSwBtnHeight=(float)getResources().getInteger(R.integer.subtitleScrollTouchBtnHeightPercentDp)/100*screenDim.y;
+		float modeSwBtnWidth=(float)getResources().getInteger(R.integer.subtitleScrollTouchBtnWidthPercentDp)/100*screenDim.x;
+		modeSwBtn.getLayoutParams().width=(int) modeSwBtnWidth;
+		modeSwBtn.getLayoutParams().height=(int) modeSwBtnHeight;
+		
 		GaLogger.activityStart(this);
 		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart", null);
 		
@@ -938,14 +1024,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	@Override
 	protected void onResume() {
 		super.onResume();
-		try {
-			getWindowManager().getDefaultDisplay().getSize(screenDim);
-	    } catch (java.lang.NoSuchMethodError ignore) { // Older device
-	    	screenDim.x = getWindowManager().getDefaultDisplay().getWidth();
-	    	screenDim.y = getWindowManager().getDefaultDisplay().getHeight();
-	    }
-		
-		Log.d(logTag,"Into onResume");
 		
 		/*
 		 * While in the sleep mode, the life cycle into onPause, when user active the application the life cycle become 
