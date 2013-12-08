@@ -225,7 +225,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				
-				Log.d(logTag, "Action Code= "+event.getAction());
+//				Log.d(logTag, "Action Code= "+event.getAction());
 				if(event.getAction()==MotionEvent.ACTION_UP || event.getAction()==MotionEvent.ACTION_CANCEL){
 					Log.d(logTag, "Leave event received");
 					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_button));
@@ -233,7 +233,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					return true;
 				}
 				
-				Log.d(logTag, "Into onScroll, y="+event.getRawY());
+//				Log.d(logTag, "Into onScroll, y="+event.getRawY());
 				if(!pressed){
 					Log.d(logTag, "Set pressed color");
 					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_press_button));
@@ -279,7 +279,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				}
 		//		}
 				
-				Log.d(logTag, "Set height to: "+height);
+//				Log.d(logTag, "Set height to: "+height);
 				if(height>maxHeight)height=maxHeight;
 				subtitleView.setHeight(height);
 
@@ -643,7 +643,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					return stScaleGestureDetector.onTouchEvent(event);
 				}
 				boolean res= subtitleViewGestureListener.onTouchEvent(event);
-				Log.d(logTag, "Subtitle OnTouchListener return "+res);
+//				Log.d(logTag, "Subtitle OnTouchListener return "+res);
 				return res;
 			}
 			
