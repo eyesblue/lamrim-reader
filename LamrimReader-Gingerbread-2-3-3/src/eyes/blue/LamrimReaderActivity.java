@@ -228,7 +228,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 //				Log.d(logTag, "Action Code= "+event.getAction());
 				if(event.getAction()==MotionEvent.ACTION_UP || event.getAction()==MotionEvent.ACTION_CANCEL){
 					Log.d(logTag, "Leave event received");
-					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_button));
+					if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN)
+						modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_button));
+					else
+						modeSwBtn.setBackgroundDrawable(getResources().getDrawable(R.drawable.mode_sw_button));
 					pressed=false;
 					return true;
 				}
@@ -236,7 +239,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 //				Log.d(logTag, "Into onScroll, y="+event.getRawY());
 				if(!pressed){
 					Log.d(logTag, "Set pressed color");
-					modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_press_button));
+					if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN)
+						modeSwBtn.setBackground(getResources().getDrawable(R.drawable.mode_sw_press_button));
+					else
+						modeSwBtn.setBackgroundDrawable(getResources().getDrawable(R.drawable.mode_sw_press_button));
+					
 					pressed=true;
 				}
 				
