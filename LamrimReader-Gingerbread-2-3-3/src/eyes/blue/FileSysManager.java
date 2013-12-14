@@ -517,7 +517,9 @@ public class FileSysManager {
         	String[] dirs={context.getString(R.string.audioDirName),context.getString(R.string.subtitleDirName)};
         	
         	for(String s: dirs){
-        		File[] fs=new File(srcRoot[locate]+File.separator+s).listFiles();
+        		File dir=new File(srcRoot[locate]+File.separator+s);
+        		if(!dir.exists() || !dir.isDirectory())continue;
+        		File[] fs=dir.listFiles();
         		for(File f:fs)
         			total+=f.length();
         	}

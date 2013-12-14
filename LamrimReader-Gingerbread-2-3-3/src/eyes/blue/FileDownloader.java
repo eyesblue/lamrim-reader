@@ -240,25 +240,20 @@ public class FileDownloader {
         }
        
         private void startDownloadThread(final int... index){
-               
-                downloader=new Downloader();
-                activity.runOnUiThread(new Runnable() {
-                        public void run() {
-                                synchronized(dlProgsKey){
-                                        if(dlPrgsDialog != null){
-                                                dlPrgsDialog.dismiss();
-                                                dlPrgsDialog=null;
-                                        }
-                                }
-                                dlPrgsDialog = getDlprgsDialog();
-                                dlPrgsDialog.setCanceledOnTouchOutside(false);
-                                dlPrgsDialog.setTitle("下載檔案");
-                                dlPrgsDialog.setMessage("下載中，請稍候 ...");
-                                dlPrgsDialog.setMax(index.length);
-                                if(!dlPrgsDialog.isShowing() && activity!=null && !activity.isFinishing() && !activity.isRestricted())dlPrgsDialog.show();
-                                if(!wakeLock.isHeld()){wakeLock.acquire();}
-                                downloader.execute(downloadTasks);
-                        }});
+
+        	downloader=new Downloader();
+        	activity.runOnUiThread(new Runnable() {
+        		public void run() {
+        			dismissDlProgress();
+        			dlPrgsDialog = getDlprgsDialog();
+        			dlPrgsDialog.setCanceledOnTouchOutside(false);
+        			dlPrgsDialog.setTitle("下載檔案");
+        			dlPrgsDialog.setMessage("下載中，請稍候 ...");
+        			dlPrgsDialog.setMax(index.length);
+        			if(!dlPrgsDialog.isShowing() && activity!=null && !activity.isFinishing() && !activity.isRestricted())dlPrgsDialog.show();
+        			if(!wakeLock.isHeld()){wakeLock.acquire();}
+        			downloader.execute(downloadTasks);
+        		}});
                
                 return ;
         }

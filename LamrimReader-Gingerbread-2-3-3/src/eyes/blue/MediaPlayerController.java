@@ -335,6 +335,7 @@ public class MediaPlayerController {
 // =================================================================
 	// sometimes large memory objects may get lost.
 	public boolean isPlayerReady(){
+		Log.d(logTag,"mediaplayer="+mediaPlayer+", state="+MP_PREPARED);
 		return (mediaPlayer!=null && mpState>=MP_PREPARED);
 	}
 	/*
