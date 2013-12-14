@@ -1,5 +1,6 @@
 package eyes.blue.modified;
 
+import eyes.blue.GaLogger;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -24,13 +25,25 @@ public class MyListView extends ListView {
 	public boolean onTouchEvent(MotionEvent event) {
 		
 		boolean res=false;
-		if(scaleGestureDetector!=null && event.getPointerCount()==2){
+		if(scaleGestureDetector==null)return false;
+		if(event.getPointerCount()==2){
 			// The scale gesture detector always return true.
-			res=scaleGestureDetector.onTouchEvent(event);
+			try{// Here will throw IllegalArgumentException sometimes.
+				res=scaleGestureDetector.onTouchEvent(event);
+			}catch(IllegalArgumentException iae){
+				GaLogger.sendException(iae, true);
+				return false;
+			}
 //			Log.d(getClass().getName(),"Scale return "+res);
 			return res;
 		}
-		res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;
+		
+		try{// Here will throw IllegalArgumentException sometimes.
+			res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;
+		}catch(IllegalArgumentException iae){
+			GaLogger.sendException(iae, true);
+			return false;
+		}
 //		Log.d(getClass().getName(),"TheoryPageView onTouchEvent return "+res);
 		return res;
 	}
