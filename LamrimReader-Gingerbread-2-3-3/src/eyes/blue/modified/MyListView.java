@@ -31,6 +31,7 @@ public class MyListView extends ListView {
 			try{// Here will throw IllegalArgumentException sometimes.
 				res=scaleGestureDetector.onTouchEvent(event);
 			}catch(Exception e){
+				e.printStackTrace();
 				GaLogger.sendException(e, true);
 				return false;
 			}
@@ -41,6 +42,7 @@ public class MyListView extends ListView {
 		try{// Here will throw IllegalArgumentException sometimes.
 			res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;
 		}catch(Exception e){
+			e.printStackTrace();
 			GaLogger.sendException(e, true);
 			return false;
 		}

@@ -405,6 +405,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 								subtitleView.setText(str);
 							}catch(Exception e){
+								e.printStackTrace();
 								GaLogger.sendException("mediaIndex="+mediaIndex+", subtitleIndex="+index+", totalLen="+str.length(), e, true);
 							}
 							break;
@@ -434,6 +435,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)), readingModeSEindex[index][0], readingModeSEindex[index][1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 									subtitleView.setText(str);
 								}catch(Exception e){
+									e.printStackTrace();
 									GaLogger.sendException("mediaIndex="+mediaIndex+", subtitleIndex="+index+", totalLen="+str.length(), e, true);
 								}
 								break;
@@ -582,6 +584,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						int line = subtitleView.getLayout ().getLineForOffset (readingModeSEindex[index][0]);
 						subtitleView.scrollTo(subtitleView.getScrollX(),subtitleView.getLineBounds(line, null)-subtitleView.getLineHeight());
 					}catch(Exception et){
+						et.printStackTrace();
 						GaLogger.sendException("readingModeSEindex under contruct and read.", et, true);
 					}
 					
