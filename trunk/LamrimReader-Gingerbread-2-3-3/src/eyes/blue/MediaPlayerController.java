@@ -314,8 +314,8 @@ public class MediaPlayerController {
 				return mediaPlayer.isPlaying();
 			}
 		} catch (Exception e) {
-			GaLogger.sendException(e, false);
 			e.printStackTrace();
+			GaLogger.sendException(e, false);
 			return false;
 		}
 	}
@@ -358,6 +358,7 @@ public class MediaPlayerController {
 				if(mpState!=MP_IDLE)mediaPlayer.reset();
 				mpState=MP_IDLE;
 			}catch(Exception e){
+				e.printStackTrace();
 				changedListener.onPlayerError();
 				GaLogger.sendException("mpState="+mpState, e, true);
 			}
@@ -870,8 +871,8 @@ public class MediaPlayerController {
 					lastState=getMediaPlayerState();
 					pause();
 				} catch (IllegalStateException e) {
-					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK", e, false);
 					e.printStackTrace();
+					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK", e, false);
 				}
 				// mpController.stopSubtitleTimer();
 				break;
