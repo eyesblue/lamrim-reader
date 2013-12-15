@@ -30,8 +30,8 @@ public class MyListView extends ListView {
 			// The scale gesture detector always return true.
 			try{// Here will throw IllegalArgumentException sometimes.
 				res=scaleGestureDetector.onTouchEvent(event);
-			}catch(IllegalArgumentException iae){
-				GaLogger.sendException(iae, true);
+			}catch(Exception e){
+				GaLogger.sendException(e, true);
 				return false;
 			}
 //			Log.d(getClass().getName(),"Scale return "+res);
@@ -40,8 +40,8 @@ public class MyListView extends ListView {
 		
 		try{// Here will throw IllegalArgumentException sometimes.
 			res=super.onTouchEvent(event) | gestureListener.onTouchEvent(event) ;
-		}catch(IllegalArgumentException iae){
-			GaLogger.sendException(iae, true);
+		}catch(Exception e){
+			GaLogger.sendException(e, true);
 			return false;
 		}
 //		Log.d(getClass().getName(),"TheoryPageView onTouchEvent return "+res);
