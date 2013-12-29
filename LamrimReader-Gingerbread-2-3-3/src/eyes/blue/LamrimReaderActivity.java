@@ -980,7 +980,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				adapter.setTextSize(theoryTextSize);
 				bookView.setSelectionFromTop(pageIndex, pageShift);
 				adapter.notifyDataSetChanged();
-				subtitleView.setTextSize(subtitleTextSize);
+				subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, subtitleTextSize);
 				jumpPage.setText(Integer.toString(pageIndex));
 			}
 		});
