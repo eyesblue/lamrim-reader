@@ -208,7 +208,12 @@ public class FileDownloader {
                         handler.post(new Runnable(){
                                 @Override
                                 public void run() {
+                                	try{
                                         if(!activity.isFinishing() && !mkDlTaskDialog.isShowing())mkDlTaskDialog.show();
+                                	}catch(Exception e){
+                                		e.printStackTrace();
+                                        GaLogger.sendEvent("exception", "FileDownloader", "ShowDownloadTaskDialog", null);
+                                	}
                         }});
                 }
                 Log.d(getClass().getName(),"Creat a source check task and start.");
@@ -629,9 +634,14 @@ public class FileDownloader {
                 activity.runOnUiThread(new Runnable() {
                         public void run() {
                                 synchronized(dlProgsKey){
+                                	try{
                                         if(dlPrgsDialog==null && !dlPrgsDialog.isShowing())return;
                                         if(title!=null)dlPrgsDialog.setTitle(title);
                                         if(msg!=null)dlPrgsDialog.setMessage(msg);
+                                	}catch(Exception e){
+                                        e.printStackTrace();
+                                        GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);
+                                }
                                 }
                         }});
         }
@@ -640,8 +650,13 @@ public class FileDownloader {
                 activity.runOnUiThread(new Runnable() {
                         public void run() {
                                 synchronized(dlProgsKey){
+                                	try{
                                         if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
                                                 dlPrgsDialog.setProgress(progress);
+                                	}catch(Exception e){
+                                        e.printStackTrace();
+                                        GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);
+                                }
                                 }
                         }
                 });
@@ -651,8 +666,13 @@ public class FileDownloader {
                 activity.runOnUiThread(new Runnable() {
                         public void run() {
                                 synchronized(dlProgsKey){
+                                	try{
                                         if(dlPrgsDialog!=null && dlPrgsDialog.isShowing())
                                         dlPrgsDialog.setMax(max);
+                                	}catch(Exception e){
+                                        e.printStackTrace();
+                                        GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);
+                                }
                                 }
                         }
                 });
@@ -667,8 +687,8 @@ public class FileDownloader {
                                                 try{
                                                         dlPrgsDialog.dismiss();
                                                         dlPrgsDialog=null;
-                                                }catch(IllegalArgumentException iae){
-                                                        iae.printStackTrace();
+                                                }catch(Exception e){
+                                                        e.printStackTrace();
                                                         GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);
                                                 }
                                 }

@@ -416,7 +416,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			}
 			@Override
 			public void onPlayerError(){
-				//setSubtitleViewText("準備播放器時發生錯誤，請再試一次！");
+				setSubtitleViewText(getString(R.string.app_name));
 				GaLogger.sendEvent("error", "player_error", "error_happen", null);
 			}
 			@Override
@@ -640,7 +640,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			@Override
 			public void onScaleEnd(ScaleGestureDetector detector){
 				SharedPreferences.Editor editor = runtime.edit();
-				editor.putInt(getString(R.string.subtitleFontSizeKey), (int) adapter.getTextSize());
+				editor.putInt(getString(R.string.subtitleFontSizeKey), (int) subtitleView.getTextSize());
 				editor.commit();
 				GaLogger.sendEvent("ui_action", "subtitle_event", "scale_end", null);
 			}
@@ -649,18 +649,34 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		subtitleView.setOnTouchListener(new View.OnTouchListener(){
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				if(event.getPointerCount()==2){
-					return stScaleGestureDetector.onTouchEvent(event);
-				}
-				boolean res= subtitleViewGestureListener.onTouchEvent(event);
+				try{
+					if(event.getPointerCount()==2){
+						return stScaleGestureDetector.onTouchEvent(event);
+					}
+					boolean res= subtitleViewGestureListener.onTouchEvent(event);
+					return res;
 //				Log.d(logTag, "Subtitle OnTouchListener return "+res);
-				return res;
+				}catch(Exception e){
+                    e.printStackTrace();
+                    GaLogger.sendEvent("exception", "SubtitleView", "ScaleGestureDetector", null);
+                    return true;
+				}
+				
 			}
 			
 		});
 		
 		
 //		fileDownloader = new FileDownloader(LamrimReaderActivity.this,downloadListener);
+		bookList = new ArrayList<HashMap<String, String>>();
+        int pIndex = 0;
+
+        for (String value : TheoryData.content) {
+                HashMap<String, String> item = new HashMap<String, String>();
+                item.put("page", value);
+                item.put("desc", "第 " + (++pIndex) + " 頁");
+                bookList.add(item);
+        }
 		bookView = (MyListView) findViewById(R.id.bookPageGrid);
 		bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
 		bookView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -687,6 +703,43 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			public void onScrollStateChanged(AbsListView view, int scrollState) {
 			}});
 		
+		bookView.setScaleGestureDetector(new ScaleGestureDetector(this.getApplicationContext(),new SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScaleBegin(ScaleGestureDetector detector) {
+				Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
+				GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_start", null);
+				return true;
+			}
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				float size=adapter.getTextSize()*detector.getScaleFactor();
+//   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+   				adapter.setTextSize(size);
+   				adapter.notifyDataSetChanged();
+//   				Log.d(getClass().getName(),"set size after setting: "+adapter.getTextSize());
+   				return true;
+   			}
+			@Override
+			public void onScaleEnd(ScaleGestureDetector detector){
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putInt(getString(R.string.bookFontSizeKey), (int) adapter.getTextSize());
+				editor.commit();
+				GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_end", null);
+			}
+			}));
+		bookView.setOnDoubleTapEventListener(new OnDoubleTapEventListener(){
+			@Override
+			public boolean onDoubleTap(MotionEvent e){
+				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return true;
+				final int pageNum=SpeechData.refPage[mediaIndex]-1;
+				if(pageNum==-1)return true;
+				//bookView.setItemChecked(pageNum, true);
+				setTheoryArea(pageNum, 0);
+				Log.d(logTag,"Jump to theory page index "+pageNum);
+				GaLogger.sendEvent("ui_action", "bookview_event", "jump_to_audio_start", null);
+				return true;
+			}
+		});
 		
 		int bookPage=runtime.getInt("bookPage", 0);
 		int bookPageShift=runtime.getInt("bookPageShift", 0);
@@ -917,64 +970,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
 		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey),defTheoryTextSize);
-//		final int bookPage=runtime.getInt("bookPage", 0);
-//WG		final int bookPageShift=runtime.getInt("bookPageShift", 0);
-//		String[] bookArray=getResources().getStringArray(R.array.book);
-
-		bookList = new ArrayList<HashMap<String, String>>();
-        int pIndex = 0;
-
-        for (String value : TheoryData.content) {
-                HashMap<String, String> item = new HashMap<String, String>();
-                item.put("page", value);
-                item.put("desc", "第 " + (++pIndex) + " 頁");
-                bookList.add(item);
-        }
-		
-        
         
 		adapter = new TheoryListAdapter(this, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
 		bookView.setAdapter(adapter);
-		bookView.setScaleGestureDetector(new ScaleGestureDetector(this.getApplicationContext(),new SimpleOnScaleGestureListener() {
-			@Override
-			public boolean onScaleBegin(ScaleGestureDetector detector) {
-				Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
-				GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_start", null);
-				return true;
-			}
-			@Override
-			public boolean onScale(ScaleGestureDetector detector) {
-				float size=adapter.getTextSize()*detector.getScaleFactor();
-//   				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
-   				adapter.setTextSize(size);
-   				adapter.notifyDataSetChanged();
-//   				Log.d(getClass().getName(),"set size after setting: "+adapter.getTextSize());
-   				return true;
-   			}
-			@Override
-			public void onScaleEnd(ScaleGestureDetector detector){
-				SharedPreferences.Editor editor = runtime.edit();
-				editor.putInt(getString(R.string.bookFontSizeKey), (int) adapter.getTextSize());
-				editor.commit();
-				GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_end", null);
-			}
-			}));
-		bookView.setOnDoubleTapEventListener(new OnDoubleTapEventListener(){
-			@Override
-			public boolean onDoubleTap(MotionEvent e){
-				if(mediaIndex<0 || mediaIndex>=SpeechData.name.length)return true;
-				final int pageNum=SpeechData.refPage[mediaIndex]-1;
-				if(pageNum==-1)return true;
-				//bookView.setItemChecked(pageNum, true);
-				setTheoryArea(pageNum, 0);
-				Log.d(logTag,"Jump to theory page index "+pageNum);
-				GaLogger.sendEvent("ui_action", "bookview_event", "jump_to_audio_start", null);
-				return true;
-			}
-		});
-		
-		adapter.notifyDataSetChanged();
-		//bookView.setOnTouchListener(l);
 		Log.d(logTag,"Update theory font size: "+theoryTextSize+", subtitle font size: "+subtitleTextSize);
 		
 		runOnUiThread(new Runnable() {
