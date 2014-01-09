@@ -114,6 +114,9 @@ public class MediaPlayerController {
 				return false;
 			}
 		});
+
+		// Fix the player bug of Android 4.4
+		mediaPlayer.setWakeMode(activity, PowerManager.PARTIAL_WAKE_LOCK);
 		
 		mediaController = new MediaController(activity);
 		mediaController.setMediaPlayer(this);
