@@ -406,10 +406,9 @@ public class MediaPlayerController {
 				mediaPlayer.release();
 				mpState=MP_IDLE;
 			}
-		audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver);
-		audioManager.abandonAudioFocus(audioFocusChangeListener);
+		if(audioManager != null && remoteControlReceiver != null)audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver);
+		if(audioManager != null && audioFocusChangeListener != null)audioManager.abandonAudioFocus(audioFocusChangeListener);
 		
-
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	
@@ -821,7 +820,7 @@ public class MediaPlayerController {
 				mpState = MP_PREPARED;
 			}
 			
-			AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+			audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
 			int result = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 			
 			// could not get audio focus.
