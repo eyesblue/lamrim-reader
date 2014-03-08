@@ -155,7 +155,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	ArrayList<HashMap<String, String>> bookList = null;
 	TheoryListAdapter adapter = null;
 	
-	MenuItem speechMenu, saveRegion, playRegionRec, prjWeb, exitApp;
+	MenuItem speechMenu, setTextSize, saveRegion, playRegionRec, prjWeb, exitApp;
 
 	FileSysManager fileSysManager = null;
 //	FileDownloader fileDownloader = null;
@@ -1141,8 +1141,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		SubMenu rootMenu = menu.addSubMenu("");
 		speechMenu=rootMenu.add(getString(R.string.menuStrSelectSpeech));
 		speechMenu.setIcon(R.drawable.speech);
-//		setTextSize=rootMenu.add(getString(R.string.menuStrTextSize));
-//		setTextSize.setIcon(R.drawable.font_size);
+		setTextSize=rootMenu.add(getString(R.string.menuStrTextSize));
+		setTextSize.setIcon(R.drawable.font_size);
 		saveRegion=rootMenu.add(getString(R.string.menuStrSavePlayRegion));
 		saveRegion.setIcon(R.drawable.save);
 		playRegionRec=rootMenu.add(getString(R.string.menuStrPlayRegionRec));
@@ -1197,9 +1197,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
-			/*}
+		}
 		else if(item.getTitle().equals(getString(R.string.menuStrTextSize))){
-			showSetTextSizeDialog();*/
+			showSetTextSizeDialog();
 		}else if(item.getTitle().equals(getString(R.string.menuStrSavePlayRegion))){
 			showSaveRegionDialog();
 		}else if(item.getTitle().equals(getString(R.string.menuStrPlayRegionRec))){
@@ -1434,7 +1434,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 	}
 
-	
+*/	
 	private void updateTheoryTextSize(final int size) {
 		Log.d(logTag,"Update theory font size: "+size);
 		runOnUiThread(new Runnable() {
@@ -1449,7 +1449,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		});
 
 	}
-*/
+
 	/*
 	 * Set the message on the subtitle view, there should check the subtitleView
 	 * is not playing, or hide the message.
@@ -1546,7 +1546,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	}
 
 
-/*	private void showSetTextSizeDialog(){
+	private void showSetTextSizeDialog(){
 		LayoutInflater factory = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
 	    final SeekBar theorySb=(SeekBar) v.findViewById(R.id.theorySizeBar);
@@ -1579,7 +1579,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						if(seekBar.equals(theorySb))
 							updateTheoryTextSize(progress+minSize);
 							//theorySample.setTextSize;
-						else subtitleView.setTextSize(progress+minSize);
+						else subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, progress+minSize);
 							//subtitleSample.setTextSize(prog);
 	//					Log.d(logTag,"theorySample size: "+theorySample.getTextSize()+", subtitleSample size: "+subtitleSample.getTextSize());		
 						seekBar.setProgress(progress);
@@ -1616,7 +1616,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	    setTextSizeDialog.setCanceledOnTouchOutside(true);
 	    setTextSizeDialog.show();
 	}
-*/	
+	
 	private void showSaveRegionDialog(){
 		int regionStartMs=mpController.getRegionStartPosition();
 		int regionEndMs=mpController.getRegionEndPosition();
