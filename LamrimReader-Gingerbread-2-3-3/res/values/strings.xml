@@ -10,9 +10,7 @@
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
     
     <!-- Default Value -->
-    <integer name="bookFontSizeMax">32</integer>
-    <integer name="bookFontSizeMin">8</integer>
-    <integer name="textMaxSize">40</integer>
+    <integer name="textMaxSize">64</integer>
     <integer name="textMinSize">8</integer>
     <integer name="defFontSize">18</integer> 
     <integer name="theorySmallTextSizePercent">90</integer>
