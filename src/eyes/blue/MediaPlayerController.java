@@ -67,7 +67,8 @@ public class MediaPlayerController {
 	int mpState = 0;
 	
 	AudioManager audioManager=null;
-	LamrimReaderActivity activity=null;
+	//LamrimReaderActivity activity=null;
+	Activity activity=null;
 	String logTag=null;
 	MediaPlayer mediaPlayer=new MediaPlayer();
 	MediaController mediaController=null;
@@ -825,7 +826,8 @@ public class MediaPlayerController {
 			
 			// could not get audio focus.
 			if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-				activity.setSubtitleViewText(activity.getResources().getString(R.string.soundInUseError));
+				//activity.setSubtitleViewText(activity.getResources().getString(R.string.soundInUseError));
+				changedListener.getAudioFocusFail();
 				return;
 			}
 
