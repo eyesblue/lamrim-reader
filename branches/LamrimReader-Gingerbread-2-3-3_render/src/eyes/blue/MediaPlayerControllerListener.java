@@ -29,4 +29,5 @@ public interface MediaPlayerControllerListener {
 	public void endRegionDeset(int position);
 	public void startRegionPlay();
 	public void stopRegionPlay();
+	public void getAudioFocusFail();
 }

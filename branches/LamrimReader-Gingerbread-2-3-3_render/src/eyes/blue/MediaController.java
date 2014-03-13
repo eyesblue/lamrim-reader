@@ -16,6 +16,7 @@ package eyes.blue;
  * limitations under the License.
  */
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -98,8 +99,9 @@ public class MediaController extends FrameLayout {
     private ImageButton         mRewButton;
     private ImageButton         mNextButton;
     private ImageButton         mPrevButton;
-
-
+    
+    private Activity activity;
+    
     public MediaController(Context context, AttributeSet attrs) {
         super(context, attrs);
         mRoot = this;
@@ -107,6 +109,17 @@ public class MediaController extends FrameLayout {
         mUseFastForward = true;
         mFromXml = true;
     }
+    
+    public MediaController(Activity activity, AttributeSet attrs) {
+        super(activity, attrs);
+        mRoot = this;
+        mContext = activity;
+        this.activity=activity;
+        mUseFastForward = true;
+        mFromXml = true;
+    }
+    
+ 
 
     @Override
     public void onFinishInflate() {
@@ -148,11 +161,12 @@ public class MediaController extends FrameLayout {
             } catch (Exception e) {  
             e.printStackTrace();  
         }  
-        
+       
 //        mWindow = PolicyManager.makeNewWindow(mContext);
 //        mWindow = new Window();
-        mWindow.setWindowManager(mWindowManager, null, null);
         mWindow.requestFeature(Window.FEATURE_NO_TITLE);
+        mWindow.setWindowManager(mWindowManager, null, null);
+        
         mDecor = mWindow.getDecorView();
         mDecor.setOnTouchListener(mTouchListener);
         mWindow.setContentView(this);
