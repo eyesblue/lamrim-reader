@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import eyes.blue.VideoControllerView.MediaPlayerControl;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -47,6 +48,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 //import android.widget.MediaController;
@@ -56,7 +58,7 @@ import android.widget.Toast;
  * The class maintain the MediaPlayer, MediaPlayController and subtitle. There are many stage of MediaPlayer while play media, all stage maintain in the class, call functions of this function Instead of the functions of MediaPlayer,
  * Then you will get the better controller of MediaPlayer.
  * */
-public class MediaPlayerController {
+public class MediaPlayerController implements VideoControllerView.MediaPlayerControl{
 	final public static int MP_IDLE = 0; // after create()
 	final public static int MP_INITED = 1; // after setDataSource()
 	final public static int MP_PREPARING = 2; // prepare()
@@ -70,7 +72,7 @@ public class MediaPlayerController {
 	LamrimReaderActivity activity=null;
 	String logTag=null;
 	MediaPlayer mediaPlayer=new MediaPlayer();
-	MediaController mediaController=null;
+	VideoControllerView mediaController=null;
 	SubtitleTimer subtitleTimer=null;
 	private PowerManager powerManager=null;
 	private PowerManager.WakeLock wakeLock = null;
@@ -88,13 +90,16 @@ public class MediaPlayerController {
 	int regionStartMs = -1;
 	int regionEndMs = -1;
 
-	View anchorView=null;
+	ViewGroup anchorView=null;
+	
+//	VideoControllerView controller;
+	
 	/*
 	 * Give The constructor the Activity and changedListener for build object. You can change the LamrimReaderActivity to your activity and modify the code of UI control to meet your logic. 
 	 * */
 	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, final MediaPlayerControllerListener changedListener){
 		this.activity=activity;
-		this.anchorView=anchorView;
+		this.anchorView=(ViewGroup) anchorView;
 		logTag=activity.getResources().getString(R.string.app_name);
 		powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
@@ -126,7 +131,7 @@ public class MediaPlayerController {
 		// Fix the player bug of Android 4.4
 		mediaPlayer.setWakeMode(activity, PowerManager.PARTIAL_WAKE_LOCK);
 		
-		mediaController = new MediaController(activity);
+		mediaController = new VideoControllerView(activity);
 		mediaController.setMediaPlayer(this);
 	
 		mediaController.setPrevNextListeners(
@@ -145,12 +150,12 @@ public class MediaPlayerController {
 						onPreviousClick();
 					}}
 		);
-		
+		mediaController.setAnchorView(this.anchorView);
 		mediaController.setEnabled(true);
 		// Use for static broadcast receiver - RemoteControlReceiver
 		mpController=this;
 	}
-	
+
 /*	public void setAnchorView(View view){
 		mediaController.setAnchorView(view);
 	}
@@ -241,7 +246,6 @@ public class MediaPlayerController {
 		// It will play mp3 in Android 4.1 while screen blank. this line solve the problem
 		// Not tested.
 		if(!powerManager.isScreenOn())return;
-		
 		
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(false);
@@ -345,6 +349,22 @@ public class MediaPlayerController {
 	 * Always return true.
 	 * */
 	public boolean canSeekForward() {return true;}
+	
+	@Override
+	public boolean isFullScreen() {
+		Log.d(getClass().getName(),"isFullScreen been called.");
+		return false;
+	}
+
+	@Override
+	public void toggleFullScreen() {
+		Log.d(getClass().getName(),"toggleFullScreen been called.");
+	}
+	
+	@Override
+	public void	onSaveClick(){
+		changedListener.onSaveRegion();
+	}
 // =================================================================
 	// sometimes large memory objects may get lost.
 	public boolean isPlayerReady(){
@@ -527,11 +547,15 @@ public class MediaPlayerController {
 		
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				mediaController.setAnchorView(anchorView);
+//				mediaController.setAnchorView(anchorView);
 				mediaController.show();
-				//updateSeekBar();
 			}
 		});
+	}
+	
+	public void hideMediaPlayerController(){
+		if(mediaController.isShowing())
+			mediaController.hide();
 	}
 	
 	// ================================ Functions for region play ================================
@@ -541,7 +565,10 @@ public class MediaPlayerController {
 		synchronized(playingIndexKey){
 			int currentIndex=playingIndex-1;
 			if(currentIndex<0){seekTo(subtitle[0].startTimeMs);}
-			else seekTo(subtitle[currentIndex].startTimeMs);
+			else {
+				int i=subtitle[currentIndex].startTimeMs;
+				if(i>=0)seekTo(i);
+			}
 		}
 	}
 	
@@ -549,8 +576,14 @@ public class MediaPlayerController {
 		if(subtitle==null)return;
 		synchronized(playingIndexKey){
 			int currentIndex=playingIndex+1;
-			if(currentIndex>=subtitle.length){seekTo(subtitle[subtitle.length-1].startTimeMs);}
-			else seekTo(subtitle[currentIndex].startTimeMs);
+			if(currentIndex>=subtitle.length){
+				int i=subtitle[subtitle.length-1].startTimeMs;
+				if(i>=0)seekTo(i);
+			}
+			else {
+				int i=subtitle[currentIndex].startTimeMs;
+				if(i>=0)seekTo(i);
+			}
 		}
 	}
 	
@@ -558,27 +591,28 @@ public class MediaPlayerController {
 		if(subtitle==null)return;
 		
 		// delay the hide time of controller.
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
+		activity.runOnUiThread(new Runnable() {	public void run() {
 				mediaController.show();
-			}
-		});
+		}});
+
 		synchronized(playingIndexKey){
 			if(playingIndex < 0)
 				playingIndex = 0;
 		}
-		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.prev);
+//		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.prev);
 
 		// Set or deSet
 		if(regionStartMs!=-1){
 			regionStartMs=-1;
 			isPlayRegion = false;
 			
-			ib.setImageResource(R.drawable.ic_media_rew_d);
+//			ib.setImageResource(R.drawable.ic_media_rew_d);
+			mediaController.setPreviousButtonEnable(false);
 			changedListener.startRegionDeset(subtitle[playingIndex].startTimeMs);
 			updateSeekBar();
 			return;
 		}
+		
 		if(regionEndMs!=-1 && subtitle[playingIndex].startTimeMs>regionEndMs){
 //			BaseDialogs.showToast(activity, "標記錯誤，開始標記大於結束標記");
 			Log.d(logTag,"User operation error: the region start > region end!");
@@ -590,8 +624,10 @@ public class MediaPlayerController {
 		}
 		
 		if(regionStartMs != -1 && regionEndMs != -1)isPlayRegion = true;
-		ib.setImageResource(R.drawable.ic_media_rew);
+//		ib.setImageResource(R.drawable.ic_media_rew);
+		mediaController.setPreviousButtonEnable(true);
 		updateSeekBar();
+//		mediaController.setSaveButtonEnable(canPlayRegion());
 		changedListener.startRegionSeted(regionStartMs);
 	}
 	
@@ -603,25 +639,24 @@ public class MediaPlayerController {
 		if(subtitle==null)return;
 		
 		// delay the hide time of controller.
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
-				mediaController.show();
-			}
-		});
-		
+		activity.runOnUiThread(new Runnable() {	public void run() {
+			mediaController.show();
+		}});
+
 		synchronized(playingIndexKey){
 			if(playingIndex < 0)
 				playingIndex = 0;
 		}
 				
-		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.next);
+//		ImageButton ib= (ImageButton)mediaController.findViewById(R.id.next);
 		
 		// Set or deSet
 		if(regionEndMs!=-1){
 			regionEndMs=-1;
 			isPlayRegion = false;
 			
-			ib.setImageResource(R.drawable.ic_media_ff_d);
+			mediaController.setNextButtonEnable(false);
+//			ib.setImageResource(R.drawable.ic_media_ff_d);
 			changedListener.endRegionDeset(subtitle[playingIndex].endTimeMs);
 			updateSeekBar();
 			return;
@@ -637,7 +672,9 @@ public class MediaPlayerController {
 		}
 		
 		if(regionStartMs != -1 && regionEndMs != -1)isPlayRegion = true;
-		ib.setImageResource(R.drawable.ic_media_ff);
+		mediaController.setNextButtonEnable(true);
+//		ib.setImageResource(R.drawable.ic_media_ff);
+//		mediaController.setSaveButtonEnable(canPlayRegion());
 		changedListener.endRegionSeted(regionEndMs);
 		updateSeekBar();
 	}
@@ -785,7 +822,10 @@ public class MediaPlayerController {
 	}
 	
 	public boolean isPlayRegion(){return isPlayRegion;}
-	public boolean canPlayRegion(){return (regionStartMs>=0 && regionEndMs >0);}
+	public boolean canPlayRegion(){
+		Log.d(getClass().getName(),"Region start="+regionStartMs+", end="+regionEndMs);
+		return (regionStartMs>=0 && regionEndMs >0);
+	}
 	
 	public int getRegionStartPosition(){
 		return regionStartMs;
@@ -1136,5 +1176,5 @@ public class MediaPlayerController {
 		Log.e(getClass().getName(), msg, new Exception(msg));
 		return -1;
 	}
-	
+
 }

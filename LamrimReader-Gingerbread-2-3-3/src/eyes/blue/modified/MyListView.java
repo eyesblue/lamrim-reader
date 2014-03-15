@@ -1,24 +1,98 @@
 package eyes.blue.modified;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import eyes.blue.GaLogger;
+import eyes.blue.R;
+import eyes.blue.SpeechData;
+import eyes.blue.TheoryData;
+import eyes.blue.TheoryPageView;
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
+import android.widget.AbsListView;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 public class MyListView extends ListView {
 	Context context;
+	SharedPreferences runtime = null;
+	Typeface educFont = null;
+	TheoryListAdapter adapter = null;
+	ArrayList<HashMap<String, String>> bookList = null;
 	ScaleGestureDetector scaleGestureDetector=null;
 	OnDoubleTapEventListener doubleTapEventListener=null;
-	public MyListView(Context context) {super(context);this.context=context;}
+//	View.OnTouchListener onTouchListener=null;
+	int mFadeColor=0;
+	
+	public MyListView(Context context) {
+		super(context);this.context=context;
+		init();
+	}
+	
 	public MyListView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.context=context;
+		init();
+	}
+	
+	private void init(){
+		runtime = context.getSharedPreferences(context.getString(R.string.runtimeStateFile), 0);
+		educFont=Typeface.createFromAsset(context.getAssets(), "EUDC.TTF");
+		bookList = new ArrayList<HashMap<String, String>>();
+        int pIndex = 0;
+
+        for (String value : TheoryData.content) {
+                HashMap<String, String> item = new HashMap<String, String>();
+                item.put("page", value);
+                item.put("desc", "第 " + (++pIndex) + " 頁");
+                bookList.add(item);
+        }
+        
+        adapter = new TheoryListAdapter(context, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
+		setAdapter(adapter);
+    	
+    	setScaleGestureDetector(new ScaleGestureDetector(context,new SimpleOnScaleGestureListener() {
+    		@Override
+    		public boolean onScaleBegin(ScaleGestureDetector detector) {
+    			Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
+    			GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_start", null);
+    			return true;
+    		}
+    		@Override
+    		public boolean onScale(ScaleGestureDetector detector) {
+    			float size=adapter.getTextSize()*detector.getScaleFactor();
+//    				Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
+    				adapter.setTextSize(size);
+    				adapter.notifyDataSetChanged();
+//    				Log.d(getClass().getName(),"set size after setting: "+adapter.getTextSize());
+    				return true;
+    			}
+    		@Override
+    		public void onScaleEnd(ScaleGestureDetector detector){
+    			SharedPreferences.Editor editor = runtime.edit();
+    			editor.putInt(context.getString(R.string.bookFontSizeKey), (int) adapter.getTextSize());
+    			editor.commit();
+    			GaLogger.sendEvent("ui_action", "bookview_event", "change_text_size_end", null);
+    		}
+    		}));
+    	
 	}
 
 	@Override
@@ -26,6 +100,7 @@ public class MyListView extends ListView {
 		
 		boolean res=false;
 		if(scaleGestureDetector==null)return false;
+//		if(onTouchListener!=null)onTouchListener.
 		if(event.getPointerCount()==2){
 			// The scale gesture detector always return true.
 			try{// Here will throw IllegalArgumentException sometimes.
@@ -49,7 +124,7 @@ public class MyListView extends ListView {
 //		Log.d(getClass().getName(),"TheoryPageView onTouchEvent return "+res);
 		return res;
 	}
-	
+//	public void setOnTouchListener(View.OnTouchListener onTouchListener){this.onTouchListener=onTouchListener;}
 	public void setScaleGestureDetector(ScaleGestureDetector scaleGestureDetector){this.scaleGestureDetector=scaleGestureDetector;}
 	
 	GestureDetector gestureListener=new GestureDetector(context ,new android.view.GestureDetector.SimpleOnGestureListener(){
@@ -93,7 +168,9 @@ public class MyListView extends ListView {
 		}
 	});
 	
-	int mFadeColor=0;
+	
+	
+	
 	@Override
 	  public int getSolidColor()
 	  {
@@ -110,4 +187,50 @@ public class MyListView extends ListView {
 	  }
 	  
 	public void setOnDoubleTapEventListener(OnDoubleTapEventListener listener){this.doubleTapEventListener=listener;}
+	public void setTextSize(float size){adapter.setTextSize(size);}
+	public float getTextSize(){return adapter.getTextSize();}
+	public void refresh(){adapter.notifyDataSetChanged();}
+	
+	
+	
+	class TheoryListAdapter extends SimpleAdapter {
+		float textSize = 0;
+
+		public TheoryListAdapter(Context context,List<? extends Map<String, ?>> data, int resource,	String[] from, int[] to) {
+			super(context, data, resource, from, to);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View row = convertView;
+			if (row == null) {
+				Log.d(getClass().getName(), "row=null, construct it.");
+				LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+				row = inflater.inflate(R.layout.theory_page_view, parent, false);
+			}
+
+
+			// / Log.d(logTag, "row=" + row+", ConvertView="+convertView);
+			TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
+			bContent.setHorizontallyScrolling(true);
+			// bContent.drawPoints(new int[0][0]);
+			bContent.setTypeface(educFont);
+			if (bContent.getTextSize() != textSize)
+				bContent.setTextSize(textSize);
+			bContent.setText(bookList.get(position).get("page"));
+			// bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
+			TextView pNum = (TextView) row.findViewById(R.id.pageNumView);
+			if (pNum.getTextSize() != textSize)
+				pNum.setTextSize(textSize);
+			pNum.setText(bookList.get(position).get("desc"));
+			return row;
+		}
+
+		public void setTextSize(float size) {
+			textSize = size;
+		}
+		public float getTextSize(){
+			return textSize;
+		}
+	}
 }

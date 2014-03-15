@@ -3,28 +3,35 @@
 
     <!-- Runtime options -->
     <string name="runtimeStateFile">runtime</string>
+
     <integer name="isInit">0</integer>
+
     <string name="isAllowNetAccess">false</string>
     <string name="isShowNetAccessWarn">true</string>
     <string name="isUseThirdDir">useThirdDir</string>
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
-    
+
     <!-- Default Value -->
     <integer name="textMaxSize">64</integer>
     <integer name="textMinSize">8</integer>
-    <integer name="defFontSize">18</integer> 
+    <integer name="defFontSize">18</integer>
     <integer name="theorySmallTextSizePercent">90</integer>
+
     <color name="theoryNumTextColor">#0000CC</color>
     <color name="theoryDotTextColor">#835930</color>
     <color name="theoryBoldColor">#006600</color>
+
     <integer name="subtitleMonInterval">100</integer>
     <integer name="downloadBufferSize">16384</integer>
+
     <string name="mediaCheckSumWhileDownload">true</string>
+
     <integer name="MEDIA_TYPE">0</integer>
     <integer name="SUBTITLE_TYPE">1</integer>
     <integer name="THEORY_TYPE">2</integer>
-	<string name="downloadTmpPostfix">.dltmp</string>
-	<string name="audioDirName">Audio</string>
+
+    <string name="downloadTmpPostfix">.dltmp</string>
+    <string name="audioDirName">Audio</string>
     <string name="subtitleDirName">Subtitle</string>
     <string name="theoryDirName">Theory</string>
     <!-- <string name="defMediaType">MP3</string> -->
@@ -32,19 +39,18 @@
     <string name="defTheoryType">TXT</string>
     <string name="regionRecordFile">RegionRecord</string>
     <string name="regionRecordColumeName">records</string>
-    
-	<!-- For Option Panel -->
-	<string name="bookFontSize">論文</string>
-    <string name="subtitleFontSize">字幕</string> 
+
+    <!-- For Option Panel -->
+    <string name="bookFontSize">論文</string>
+    <string name="subtitleFontSize">字幕</string>
     <string name="bookFontSizeKey">BookFontSize</string>
     <string name="subtitleFontSizeKey">SubtitleFontSize</string>
     <string name="setupFontSizeStr">設定字型大小</string>
     <string name="setupTextSizeSample">廣論</string>
-    
-    
-    <!--  For LamrimReaderActivity -->
-	<string name="app_name">LamrimReader</string>
-	<string name="menuStrSelectSpeech">選擇音檔</string>
+
+    <!-- For LamrimReaderActivity -->
+    <string name="app_name">LamrimReader</string>
+    <string name="menuStrSelectSpeech">選擇音檔</string>
     <string name="menuStrTextSize">設定字體</string>
     <string name="menuStrSavePlayRegion">儲存區段</string>
     <string name="menuStrPlayRegionRec">播放區段</string>
@@ -64,37 +70,35 @@
     <string name="errSEwhileSetPlayerSrc">開啟語音檔時發生安全性錯誤!</string>
     <string name="errISEwhileSetPlayerSrc">開啟語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhileSetPlayerSrc">開啟語音檔時發生輸出入錯誤!</string>
-	<string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
+    <string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhilePrepPlayer">準備語音檔時發生輸出入錯誤!</string>
     <string name="dlgResNeedDownloadFirst">您所選擇的紀錄需要先下載資源  %1$s ，請於下載完成後再點選此記錄播放。</string>
-	<string name="inputTitleHint">請輸入標題！</string>
+    <string name="inputTitleHint">請輸入標題！</string>
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
+
     <color name="subtitleBGcolor">#0F395E</color>
     <color name="subtitleRedingModeHilightColor">#FFF82A</color>
     <color name="subtitleScrollPressColor">#E17D37</color>
+
     <integer name="subtitleScrollTouchBtnHeightPercentDp">3</integer>
     <integer name="subtitleScrollTouchBtnWidthPercentDp">10</integer>
-    
+
     <!-- For Speech Menu -->
     <string name="musicSign">♬</string>
     <string name="subtitleSign">❏</string>
-	<string name="dlgMsgDlNotComplete">媒體檔案  %1$s 尚未下載完成，是否再次下載？</string>
-    
-    
-    
-    
+    <string name="dlgMsgDlNotComplete">媒體檔案  %1$s 尚未下載完成，是否再次下載？</string>
+
     <string-array name="remoteSite">
         <item>https://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/</item>
     </string-array>
-
 
     <string name="aboutDesc"><![CDATA[<br>廣論為宗喀巴大師所造，本App內容為<small>上</small>日<small>下</small>常法師講譯的內容。本App內容若有錯誤的部份，請至<a href="https://lamrimreader.eyes-blue.com/">本計畫網站</a>反應，也歡迎各界人士發心加入字幕標記的工作。</br><br></br><br>指導：馮垂中</br><br>計畫主持：李嵩興</br><br>字幕編輯：</br><br>陳冠今</br><br>林信宏</br><br>楊伯翰</br><br>謝宗榮</br><br>謝杭霖</br><br>林政由</br><br>古登云</br><br>尤冠人</br><br>劉穎南</br><br>黃仁甫</br><br>陳悅其</br><br>黃逸平</br><br>吳采柔</br><br>楊雅清</br><br>林鴻志</br><br>黃子淇</br>]]></string>
 
     <!-- FileSysManager -->
     <integer name="reservSpacePercent">10</integer>
     <integer name="subtitleReservSizeK">102400</integer>
-    
+
     <!-- Dialogs -->
     <string name="dlgTitleDownloadFail">下載失敗</string>
     <string name="dlgDescDownloadFail">下載資源失敗，請確認磁碟空間充足及您所在區域的網路品質是否正常</string>
@@ -104,7 +108,6 @@
     <string name="dlgDescDownloading">%1$s %2$s下載中，請稍候...</string>
     <string name="dlgDescPrepareSubtitle">字幕準備中，請稍候...</string>
     <string name="dlgDescPrepareSpeech">音檔準備中，請稍候...</string>
-    
     <string name="dlgOk">確定</string>
     <string name="dlgCancel">取消</string>
     <string name="dlgAllow">允許</string>
@@ -133,8 +136,15 @@
     <string name="cancel">取消</string>
     <string name="create">儲存</string>
     <string name="no_data">無資料</string>
+
     <color name="gray">#ffff0000</color>
+
     <string name="err">錯誤</string>
     <string name="title_activity_file_dialog">FileDialogActivity</string>
 
+    <!-- For ChangeLog -->
+    <string name="changelog_full_title">修正記錄</string>
+    <string name="changelog_title">What\'s New</string>
+    <string name="changelog_ok_button">確定</string>
+    <string name="changelog_show_full">更多...</string>
 </resources>

@@ -41,7 +41,6 @@
             android:descendantFocusability="blocksDescendants"
             android:focusable="false"
             android:src="@drawable/delete" />
-
     </LinearLayout>
 
     <TextView

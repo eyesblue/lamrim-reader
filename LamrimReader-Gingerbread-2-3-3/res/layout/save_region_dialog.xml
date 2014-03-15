@@ -33,7 +33,6 @@
             android:layout_height="wrap_content"
             android:text="00:00:00.000"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
     </LinearLayout>
 
     <LinearLayout

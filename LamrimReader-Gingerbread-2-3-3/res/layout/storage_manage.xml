@@ -36,7 +36,6 @@
                     android:layout_margin="20dp"
                     android:text="外部儲存空間"
                     android:textAppearance="?android:attr/textAppearanceLarge" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -59,9 +58,7 @@
                     android:layout_margin="20dp"
                     android:text="內部儲存空間"
                     android:textAppearance="?android:attr/textAppearanceLarge" />
-
             </LinearLayout>
-
         </LinearLayout>
 
         <TableLayout
@@ -107,7 +104,6 @@
                     android:layout_marginLeft="10dp"
                     android:text="計算中..."
                     android:textAppearance="?android:attr/textAppearanceMedium" />
-
             </TableRow>
 
             <TableRow
@@ -148,7 +144,6 @@
                     android:layout_marginLeft="10dp"
                     android:text="計算中..."
                     android:textAppearance="?android:attr/textAppearanceMedium" />
-
             </TableRow>
 
             <TableRow
@@ -190,7 +185,6 @@
                     android:layout_marginLeft="10dp"
                     android:text="計算中..."
                     android:textAppearance="?android:attr/textAppearanceMedium" />
-
             </TableRow>
 
             <TableRow
@@ -231,9 +225,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="計算中..."
                     android:textAppearance="?android:attr/textAppearanceMedium" />
-
             </TableRow>
-
         </TableLayout>
 
         <LinearLayout
@@ -274,7 +266,6 @@
                 android:drawableLeft="@drawable/delete"
                 android:enabled="false"
                 android:text="刪除" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -309,7 +300,6 @@
                     android:layout_height="wrap_content"
                     android:text="使用者指定" />
             </RadioGroup>
-
         </LinearLayout>
 
         <LinearLayout
@@ -342,7 +332,6 @@
                 android:paddingLeft="2dp"
                 android:paddingRight="2dp"
                 android:src="@drawable/folder" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -373,9 +362,7 @@
             android:layout_height="wrap_content"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:text="@string/dlgOk"
-            />
-           
+            android:text="@string/dlgOk" />
     </LinearLayout>
 
 </ScrollView>

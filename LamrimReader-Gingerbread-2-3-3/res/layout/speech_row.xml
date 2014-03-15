@@ -45,7 +45,6 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="14dp"
             android:src="@drawable/subtitle" />
-
     </TableRow>
 
     <TableRow
@@ -59,7 +58,6 @@
             android:layout_height="wrap_content"
             android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall" />
-
     </TableRow>
 
 </LinearLayout>

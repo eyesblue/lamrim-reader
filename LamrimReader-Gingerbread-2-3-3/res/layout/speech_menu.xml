@@ -55,23 +55,20 @@
                 android:layout_height="wrap_content"
                 android:text="儲存管理"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
-
         </LinearLayout>
 
         <ListView
             android:id="@+id/list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" >
-
         </ListView>
-
     </LinearLayout>
 
-     <TextView android:id="@android:id/empty"
-               android:layout_width="match_parent"
-               android:layout_height="match_parent"
-               android:background="#FF0000"
-               android:text="No data"/>
-    
+    <TextView
+        android:id="@android:id/empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FF0000"
+        android:text="No data" />
 
 </LinearLayout>

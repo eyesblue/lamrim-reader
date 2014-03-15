@@ -23,11 +23,10 @@
         android:focusableInTouchMode="true"
         android:imeOptions="actionGo"
         android:inputType="numberDecimal"
-        android:numeric="integer"
         android:maxLength="3"
+        android:numeric="integer"
         android:singleLine="true"
         android:text="1" >
-
     </EditText>
 
     <ImageView
@@ -38,8 +37,8 @@
 
     <SeekBar
         android:id="@+id/volumeController"
+        style="@style/SeekBarholo"
         android:layout_width="140dp"
-        android:layout_height="wrap_content"
-        style="@style/SeekBarholo" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

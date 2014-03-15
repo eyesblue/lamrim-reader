@@ -3,14 +3,10 @@
 <!-- Generated with http://android-holo-colors.com -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <style name="holo" parent="@style/Theme.Sherlock">
-
-    <item name="android:buttonStyle">@style/Buttonholo</item>
-
-    <item name="android:imageButtonStyle">@style/ImageButtonholo</item>
-
-    <item name="android:seekBarStyle">@style/SeekBarholo</item>
-
-  </style>
+    <style name="holo" parent="@style/Theme.Sherlock">
+        <item name="android:buttonStyle">@style/Buttonholo</item>
+        <item name="android:imageButtonStyle">@style/ImageButtonholo</item>
+        <item name="android:seekBarStyle">@style/SeekBarholo</item>
+    </style>
 
 </resources>

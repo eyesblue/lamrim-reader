@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <style type='text/css'>
+      a            { color:#a0a0e0 }
+      div.title    { 
+          color:#C0F0C0; 
+          font-size:1.2em; 
+          font-weight:bold; 
+          margin-top:1em; 
+          margin-bottom:0.5em; 
+          text-align:center }
+      div.subtitle { 
+          color:#C0F0C0; 
+          font-size:0.8em; 
+          margin-bottom:1em; 
+          text-align:center }
+      div.freetext { color:#F0F0F0 }
+      div.list     { color:#C0C0F0 }
+    </style>
+  </head>
+  <body>
+  
+  	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
+  	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
+$ 121
+  % Version 1.1.121
+  _ 2014-03-15
+	! 此版本改動較大，若有裝置無法執行，請到<a href="http://www.facebook.com/lamrimreader">執行問題反應區</a>反應，謝謝！!
+    * 修正於Samsung裝置最新韌體執行問題。
+	* 修正於[上一句]與[下一句]操作時所發生強制關閉問題。
+	* [儲存區段]功能改放置於[多媒體控制面板]。
+$ 118
+  % Version 1.1.118
+  _ 2014-03-8
+    * 於選單中加入字體大小調整功能，此功能協助Android TV box類產品調整字體大小用。
+	* 修改字體大小最大值從40改為64，以利大銀幕裝置顯示更大字體。
+$ 116
+  % Version 1.1.116
+  _ 2014-01-18
+    * 修正Nexus7中播放控制面板中沒有搜尋條問題。
+    * 加入藍牙、線控支援，目前已支援控制項有播放、話機(話筒圖示)、上一句、下一句。
+    ! 末學手中目前只有Samsung的線控耳機，上面是一個話筒的圖示，根據規格中所描述，可能存在的控制項有話機(話筒提示)、播放/暫停、上一句、下一句、回轉、快轉、調大音量與調小音量等控制項，不同廠商可能實作不同的控制項。!
+$ END_OF_CHANGE_LOG
+  </body>
+</html>
