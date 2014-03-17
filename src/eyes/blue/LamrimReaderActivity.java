@@ -196,7 +196,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	String readingModeAllSubtitle=null;
 	static Point screenDim=new Point();
 	Button modeSwBtn=null;
-	boolean isShowModeSwBtn=false;
+	boolean isShowModeSwBtn=true;
 	
 	private TaskFragment mTaskFragment;
 	
@@ -339,7 +339,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
 		Log.d(logTag,"subtitleView="+subtitleView+", EDUC="+educFont);
 		subtitleView.setTypeface(educFont);
-		int color=runtime.getInt(getString(R.string.subtitleFgColorKey),0xFFFFFF);
+		int color=runtime.getInt(getString(R.string.subtitleFgColorKey),subtitleView.getTextColors().getDefaultColor());
 		subtitleView.setTextColor(color);
 		color=runtime.getInt(getString(R.string.subtitleBgColorKey),getResources().getColor(R.color.subtitleBGcolor));
 		subtitleView.setBackgroundColor(color);
@@ -999,6 +999,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		}
 		else if(item.getTitle().equals("字幕透明度")){
 			final EditText input=new EditText(this);
+			int alpha=runtime.getInt(getString(R.string.subtitleAlphaKey),100);
+			input.setText(alpha);
 			input.setSingleLine();
 			input.setInputType(InputType.TYPE_CLASS_NUMBER);
 			new AlertDialog.Builder(this).setTitle("請輸入透明度(0~255)").setIcon(
