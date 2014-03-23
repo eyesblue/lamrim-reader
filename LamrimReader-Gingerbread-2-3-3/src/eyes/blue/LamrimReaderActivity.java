@@ -1099,8 +1099,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		SubMenu rootMenu = menu.addSubMenu("");
 		speechMenu = rootMenu.add(getString(R.string.menuStrSelectSpeech));
 		speechMenu.setIcon(R.drawable.speech);
-		globalLamrim = rootMenu.add(getString(R.string.globalLamrim));
-		globalLamrim.setIcon(R.drawable.global_lamrim);
+//		globalLamrim = rootMenu.add(getString(R.string.globalLamrim));
+//		globalLamrim.setIcon(R.drawable.global_lamrim);
 		setTextSize = rootMenu.add(getString(R.string.menuStrTextSize));
 		setTextSize.setIcon(R.drawable.font_size);
 		playRegionRec = rootMenu.add(getString(R.string.menuStrPlayRegionRec));
@@ -1498,9 +1498,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 	private void showRecordListPopupMenu() {
 		LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-		final View popupView = inflater.inflate(R.layout.popup_record_list,
-				null);
-
+		final View popupView = inflater.inflate(R.layout.popup_record_list,	null);
 		Rect rectgle = new Rect();
 		Window window = getWindow();
 		window.getDecorView().getWindowVisibleDisplayFrame(rectgle);
@@ -1509,8 +1507,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				.getTop();
 		int titleBarHeight = contentViewTop - StatusBarHeight;
 		int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
-		int subtitleViewHeight = ((TextView) findViewById(R.id.subtitleView))
-				.getHeight();
+		int subtitleViewHeight = ((TextView) findViewById(R.id.subtitleView)).getHeight();
 		// int listViewHeight=screenHeight-titleBarHeight-subtitleViewHeight;
 		int listViewHeight = screenHeight - contentViewTop;
 
@@ -1600,10 +1597,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		// AnimationUtils.loadAnimation(getApplicationContext(),R.anim.bounce);
 		popupWindow.setAnimationStyle(R.style.AnimationPopup);
 		popupWindow.update();
-		popupWindow.showAtLocation(findViewById(R.id.rootLayout), Gravity.LEFT
-				| Gravity.TOP, 0, contentViewTop);
-		GaLogger.sendEvent("ui_action", "show_dialog",
-				"record_list_popup_menu_count", regionRecordAdapter.getCount());
+		popupWindow.showAtLocation(findViewById(R.id.rootLayout), Gravity.LEFT| Gravity.TOP, 0, contentViewTop);
+		GaLogger.sendEvent("ui_action", "show_dialog", "record_list_popup_menu_count", regionRecordAdapter.getCount());
 		// popupWindow.showAsDropDown(findViewById(R.id.subtitleView),0, 0);
 		// popupWindow.showAsDropDown(findViewById(R.id.subtitleView));
 	}
@@ -1665,8 +1660,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			editButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					RegionRecord rr = RegionRecord.getRegionRecord(
-							LamrimReaderActivity.this, position);
+					RegionRecord rr = RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
 					Runnable callBack = new Runnable() {
 						@Override
 						public void run() {
@@ -1687,15 +1681,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			delButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					BaseDialogs.showDelWarnDialog(LamrimReaderActivity.this,
-							"記錄", null, new DialogInterface.OnClickListener() {
+					BaseDialogs.showDelWarnDialog(LamrimReaderActivity.this, "記錄", null, new DialogInterface.OnClickListener() {
 								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									RegionRecord
-											.removeRecord(
-													LamrimReaderActivity.this,
-													position);
+								public void onClick(DialogInterface dialog,	int which) {
+									RegionRecord.removeRecord(LamrimReaderActivity.this, position);
 									regionFakeList.remove(position);
 									regionRecordAdapter.notifyDataSetChanged();
 								}

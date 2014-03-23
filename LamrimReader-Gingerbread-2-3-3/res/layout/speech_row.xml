@@ -57,7 +57,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Small Text"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#0F395E"
+            android:textSize="16sp" />
+
     </TableRow>
 
 </LinearLayout>

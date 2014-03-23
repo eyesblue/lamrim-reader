@@ -801,8 +801,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
 		ibn.setImageResource(R.drawable.ic_media_ff);
 		
-		updateSeekBar();
-*/		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
+*/		updateSeekBar();
+		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
 	}
 	
 	public void desetPlayRegion(){
@@ -814,7 +814,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	
 //	public boolean isPlayRegion(){return (mpState==MP_PLAYING && canPlayRegion());}
 	public boolean isRegionPlay(){
-		Log.d(getClass().getName(),Thread.currentThread().getName()+": Region start="+regionStartMs+", end="+regionEndMs);
+//		Log.d(getClass().getName(),Thread.currentThread().getName()+": Region start="+regionStartMs+", end="+regionEndMs);
 		return (regionStartMs>=0 && regionEndMs >=0);
 	}
 	
@@ -1016,7 +1016,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 							Log.d(logTag,"SubtitleTimer: the mpState is MP_COMPLETE, terminate subtitleTimer");
 							return null;
 						}
-						Log.d(logTag,"SubtitleTimer: the mpState is not MP_COMPLETE.");
+//						Log.d(logTag,"SubtitleTimer: the mpState is not MP_COMPLETE.");
 						int playPoint=mediaPlayer.getCurrentPosition();
                         int playArrayIndex=subtitleBSearch(se, playPoint);
                        
@@ -1033,7 +1033,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
                                 playingIndex=playArrayIndex;
                                 if(playArrayIndex!=-1)changedListener.onSubtitleChanged(playArrayIndex, subtitle[playArrayIndex]);
                         }
-                        Log.d(logTag,"SubtitleTimer: release playingIndexKey.");
+//                        Log.d(logTag,"SubtitleTimer: release playingIndexKey.");
 					}
 					// The last of subtitle has reached.
 					//if(playArrayIndex==se.length-1)return null;
