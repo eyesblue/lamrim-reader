@@ -504,13 +504,10 @@ public class MediaControllerView extends FrameLayout {
         ImageButton btn=(ImageButton) mRoot.findViewById(R.id.saveIcon);
         if(b){
                 btn.setImageResource(R.drawable.save);
-//              btn.setBackgroundColor(0x00FF00);
-//              btn.getBackground().setAlpha(255);
                 btn.setOnClickListener(onSaveListener);
         }
         else{
                 btn.setImageResource(R.drawable.save_d);
-//              btn.getBackground().setAlpha(0);
                 btn.setOnClickListener(null);
         }
     }

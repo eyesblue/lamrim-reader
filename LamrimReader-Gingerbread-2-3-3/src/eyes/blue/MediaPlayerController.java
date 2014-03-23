@@ -351,7 +351,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	
 	@Override
 	public void	onSaveClick(){
-		changedListener.onSaveRegion();
+		if(isRegionPlay())
+			changedListener.onSaveRegion();
 	}
 // =================================================================
 	
@@ -738,7 +739,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setClickable(b);
 	}
 	
-	public void setPreviousButtonIconEnable(boolean b) {
+	public void setPrevButtonIconEnable(boolean b) {
 		mediaController.setPreviousButtonEnable(b);
 		updateSeekBar();
 	}
@@ -769,6 +770,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(playingIndexKey){
 			regionStartMs=subtitle[subIndex].startTimeMs;
 		}
+		updateSeekBar();
 	}
 	public void setPlayRegionEndMs(int endMs){
 		// Clear region start time.
@@ -788,6 +790,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(playingIndexKey){
 			regionEndMs=subtitle[subIndex].endTimeMs;
 		}
+		updateSeekBar();
 	}
 	
 	public void setPlayRegion(int startTimeMs,int endTimeMs){
@@ -801,8 +804,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
 		ibn.setImageResource(R.drawable.ic_media_ff);
 		
-*/		updateSeekBar();
-		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
+		updateSeekBar();
+*/		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
 	}
 	
 	public void desetPlayRegion(){
@@ -1022,7 +1025,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
                        
                         //Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
                         // Play region function has set, and over the region, stop play.
-                        if(isRegionPlay() && playPoint > regionEndMs){
+                        //if(isRegionPlay() && playPoint > regionEndMs){
+                        if(regionEndMs > 0 && playPoint > regionEndMs){
                                 Log.d(logTag,"Stop Play: play point="+playPoint+", regionEndMs="+regionEndMs);
                                 pause();
                                 changedListener.stopRegionPlay();
