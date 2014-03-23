@@ -22,10 +22,11 @@
   
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
-$ 125
-  % Version 1.1.125
+$ 126
+  % Version 1.1.126
   _ 2014-03-24
 	! 此版本改動較大，若有裝置無法執行，請到<a href="http://www.facebook.com/lamrimreader">執行問題反應區</a>反應，謝謝！!
+	* 修正安裝後第一次執行會失敗的錯誤。
     * 修正[上一句]與[下一句]的功能，使能正確切換到句子。
 	* 修正播放面板在某些情況下會不顯示的問題。 
 	* 修正在載入音檔後，字幕區顯示不正常問題。

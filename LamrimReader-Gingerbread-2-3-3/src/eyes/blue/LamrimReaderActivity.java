@@ -162,7 +162,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	Typeface educFont = null;
 	View toastLayout = null;
 	TextView toastTextView = null;
-	Toast toast = null;
 	ImageView toastSubtitleIcon;
 	ImageView toastInfoIcon;
 	int regionPlayIndex = -1;
@@ -639,8 +638,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 * findViewById(R.id.toastLayout)); toastTextView = (TextView)
 		 * toastLayout.findViewById(R.id.text);
 		 * toastTextView.setTypeface(educFont);
-		 */toast = new Toast(getApplicationContext());
-		/*
+		 * toast = new Toast(getApplicationContext());
+		 *
 		 * toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 		 * toast.setDuration(Toast.LENGTH_LONG); toast.setView(layout);
 		 * toast.show();
@@ -927,9 +926,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Log.d(funcInto, "**** onStart() ****");
+		Log.d(getClass().getName(), "**** onStart() ****");
 
-		Log.d(logTag, "Into onResume");
 		float modeSwBtnHeight = (float) getResources().getInteger(
 				R.integer.subtitleScrollTouchBtnHeightPercentDp)
 				/ 100 * screenDim.y;
@@ -940,14 +938,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		modeSwBtn.getLayoutParams().height = (int) modeSwBtnHeight;
 
 		GaLogger.activityStart(this);
-		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart",
-				null);
+		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart", null);
 
 		// Dump default settings to DB
 		int isInit = runtime.getInt("mediaIndex", -1);
 		if (isInit == -1) {
-			Log.d(logTag,
-					"This is first time launch LamrimReader, initial default settings.");
+			Log.d(logTag, "This is first time launch LamrimReader, initial default settings.");
 			subtitleView.setTextSize(getResources().getInteger(R.integer.defFontSize));
 			// int currentIndex=mpController.getCurrentPosition();
 			SharedPreferences.Editor editor = runtime.edit();
@@ -969,7 +965,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		
 
-		Log.d(funcLeave, "**** onStart() ****");
+		Log.d(getClass().getName(), "**** Leave onStart() ****");
 	}
 
 	public static Point getScreenDim() {
@@ -979,7 +975,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
+		Log.d(getClass().getName(), "**** Into onResume() ****");
 		/*
 		 * While in the sleep mode, the life cycle into onPause, when user
 		 * active the application the life cycle become onResume -> onPause ->
@@ -1001,13 +997,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 */
 
 		mediaIndex = runtime.getInt("mediaIndex", -1);
+		Log.d(getClass().getName(), "Media index = "+mediaIndex);
 		if (mediaIndex == -1)
 			return;
 
 		if (!mpController.isPlayerReady())
 			startPlay(mediaIndex);
 
-		Log.d(logTag, "Leave onResume");
+		Log.d(getClass().getName(), "**** Leave onResume() ****");
 	}
 
 	@Override
@@ -1027,7 +1024,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		toast.cancel();
 		GaLogger.activityStop(this);
 	}
 
@@ -1037,7 +1033,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		Log.d(funcInto, "**** onDestroy ****");
 		// fileDownloader.finish();
 		mpController.finish();
-		toast.cancel();
 		Log.d(funcLeave, "**** onDestroy ****");
 	}
 
@@ -1049,8 +1044,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		View v = bookView.getChildAt(0);
 		int bookShift = (v == null) ? 0 : v.getTop();
 
-		Log.d(logTag,
-				"MediaPlayer status=" + mpController.getMediaPlayerState());
+		Log.d(logTag, "MediaPlayer status=" + mpController.getMediaPlayerState());
 		editor.putInt("mediaIndex", mediaIndex);
 		// editor.putInt("playerStatus", mpController.getMediaPlayerState());
 		if (mpController.getMediaPlayerState() > MediaPlayerController.MP_PREPARING) {
@@ -1059,8 +1053,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		}
 		editor.putInt("bookPage", bookPosition);
 		editor.putInt("bookPageShift", bookShift);
-		Log.d(logTag,
-				"Save content: mediaIndex=" + mediaIndex
+		Log.d(logTag, "Save content: mediaIndex=" + mediaIndex
 						+ ", playPosition(write)=" + ", playPosition(read)="
 						+ runtime.getInt("playPosition", -1) + ", book index="
 						+ bookPosition + ", book shift=" + bookShift);
@@ -1198,9 +1191,16 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				return;
 			}
 			
+			if(intent == null){
+				GaLogger.sendException("SpeechMenuActivity return data to LamrimRaderActivity Failure(Failure delivering result ResultInfo).", null, true);
+				return;
+			}
+			
 			final int selected = intent.getIntExtra("index", -1);
 			Log.d(logTag, "OnResult: the user select index=" + selected);
+			if(selected == -1)return;
 			// Flag for runtime
+			
 			
 			editor.putInt("mediaIndex", selected);
 			editor.putInt("playPosition", 0);
@@ -1208,7 +1208,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			regionPlayIndex = -1;
 			GLamrimSectIndex = -1;
 			
-			final int pageNum = SpeechData.refPage[mediaIndex] - 1;
+			final int pageNum = SpeechData.refPage[selected] - 1;
 			if (pageNum != -1){
 				bookViewMountPoint[0]=pageNum;
 				bookViewMountPoint[1]=0;
@@ -1225,6 +1225,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			break;
 		case GLOBAL_LAMRIM_RESULT:
 			if (resultCode == RESULT_CANCELED)return;
+			
+			if(intent == null){
+				GaLogger.sendException("CalendarActivity return data to LamrimRaderActivity Failure(Failure delivering result ResultInfo).", null, true);
+				return;
+			}
 			
 			if(glRecord==null)glRecord=new GlRecord();
 			glRecord.dateStart=intent.getStringExtra("dateStart");

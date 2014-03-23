@@ -52,7 +52,6 @@ public class SpeechMenuActivity extends Activity {
 	ArrayList<HashMap<String,Boolean>> fakeList = new ArrayList<HashMap<String,Boolean>>();
 	SimpleAdapter adapter=null;
 	ListView speechList=null;
-	Intent playWindow=null;
 	private PowerManager.WakeLock wakeLock = null;
 	SharedPreferences runtime = null;
 	// The handle for close the dialog.
@@ -72,7 +71,6 @@ public class SpeechMenuActivity extends Activity {
 	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
 	btnMaintain=(ImageButton) findViewById(R.id.btnMaintain);
 	btnManageStorage=(ImageButton) findViewById(R.id.btnManageStorage);
-	playWindow=new Intent(SpeechMenuActivity.this,LamrimReaderActivity.class);
 	 
 	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
@@ -287,10 +285,11 @@ public class SpeechMenuActivity extends Activity {
 	}
 	
 	private void resultAndPlay(int position){
-		Log.d(getString(R.string.app_name),"Speech menu "+position+"th item clicked.");
+		Log.d(getClass().getName(),"Speech menu "+position+"th item clicked.");
+		Intent playWindow = new Intent();
 		
 		playWindow.putExtra("index", position);
-		setResult(RESULT_OK,new Intent().putExtras(playWindow));
+		setResult(Activity.RESULT_OK, playWindow);
 		if(wakeLock.isHeld())wakeLock.release();
 		finish();
 	}

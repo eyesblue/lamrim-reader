@@ -75,7 +75,6 @@ public class CalendarActivity extends SherlockFragmentActivity {
 	ProgressDialog downloadPDialog = null;
 	SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy/MM/dd");
 	Date glRangeStart=null, glRangeEnd=null;
-	Toast toast=null;
 	
 	GlRecord selectedGlr=null;
 			
@@ -86,7 +85,6 @@ public class CalendarActivity extends SherlockFragmentActivity {
 		getSupportActionBar();
 		
 		initialCalendarView();
-		toast = new Toast(getApplicationContext());
 	}
 
 	long userSelectDay=-1;
@@ -168,6 +166,7 @@ public class CalendarActivity extends SherlockFragmentActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		GaLogger.activityStart(this);
 		
 		new Thread(new Runnable(){
 			@Override
@@ -187,11 +186,22 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			}}).start();
 	}
 	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		GaLogger.activityStop(this);
+	}
+	
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 		if (resultCode == RESULT_CANCELED || selectedGlr==null || !isFileExist(selectedGlr)) 
 			finish();
 
+		if(intent == null){
+			GaLogger.sendException("SpeechMenuActivity return data to CalendarActivity Failure(Failure delivering result ResultInfo).", null, true);
+			return;
+		}
+		
 		setResult(Activity.RESULT_OK, getResultIntent(selectedGlr));
 		finish();
 	}
