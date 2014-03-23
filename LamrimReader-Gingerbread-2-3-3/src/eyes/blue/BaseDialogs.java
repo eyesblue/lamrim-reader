@@ -44,7 +44,7 @@ public class BaseDialogs {
 	}
 	
 	//public static void showEditRegionDialog(final Activity activity,final int mediaIndex, final int startTimeMs, final int endTimeMs,final String titleStr,final SimpleAdapter adapter, final int recIndex){
-	public static void showEditRegionDialog(final Activity activity,final int mediaIndex, final int startTimeMs, final int endTimeMs,final String titleStr, final String info, final int recIndex, final Runnable PositiveListener){
+	public static void showEditRegionDialog(final Activity activity,final int mediaIndex, final int startTimeMs, final int endTimeMs,final String titleStr, final String info, final int recIndex, final Runnable positiveListener){
 		LayoutInflater factory = (LayoutInflater)activity.getSystemService(activity.LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.save_region_dialog, null);
 	    final EditText regionTitle=(EditText) v.findViewById(R.id.regionTitle);
@@ -82,7 +82,7 @@ public class BaseDialogs {
 				else
 					RegionRecord.updateRecord(activity, 0, regionTitle.getText().toString(), mediaIndex, startTimeMs, endTimeMs, recIndex);
 
-				PositiveListener.run();
+				if(positiveListener!=null)positiveListener.run();
 				dialog.dismiss();
 			}});
 	    builder.setNegativeButton(activity.getString(R.string.cancel), new DialogInterface.OnClickListener(){

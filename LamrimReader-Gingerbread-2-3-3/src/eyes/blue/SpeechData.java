@@ -10,6 +10,23 @@ public class SpeechData {
 	public static String getTheoryName(int i){
 		return name[i].substring(3, 7);
 	}
+	public static int getNameToId(String str){
+		int res=-1;
+		str=str.toUpperCase();
+		if(str.matches("\\d+A") || str.matches("\\d+B")){
+//			Log.d("SpeechData","Parse "+str+" to media ID");
+			res=Integer.parseInt(str.substring(0, str.length()-1));
+			res*=2;
+			if(str.charAt(str.length()-1)=='A')
+				res-=2;
+			else if(str.charAt(str.length()-1)=='B')
+				res-=1;
+			else return -1;
+		}
+		
+		return res;
+	}
+	
 	public final static String[] name={
 		"LR-001A-序.mp3",
 		"LR-001B-序.mp3",

@@ -4,5 +4,4 @@
     <style name="styleName" parent="android:Widget.Holo.Button">
         <item name="android:background">@drawable/mode_sw_button</item>
     </style>
-
 </resources>

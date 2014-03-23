@@ -1,8 +1,8 @@
 package eyes.blue;
-public class RemoteSource {
-	public String getName(){return "";}
-	public String getMediaFileAddress(int i){return null;}
-	public String getSubtitleFileAddress(int i){return null;}
-	public String getTheoryFileAddress(int i){return null;}
-
+public interface RemoteSource {
+	public String getName();
+	public String getMediaFileAddress(int i);
+	public String getSubtitleFileAddress(int i);
+	public String getTheoryFileAddress(int i);
+	public String getGlobalLamrimSchedule();
 }

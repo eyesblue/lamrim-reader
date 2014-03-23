@@ -13,6 +13,8 @@ import eyes.blue.TheoryPageView;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -40,6 +42,7 @@ public class MyListView extends ListView {
 	OnDoubleTapEventListener doubleTapEventListener=null;
 //	View.OnTouchListener onTouchListener=null;
 	int mFadeColor=0;
+	int highlineLine[][];//[PageIndex][startLine][endLine]
 	
 	public MyListView(Context context) {
 		super(context);this.context=context;
@@ -190,8 +193,73 @@ public class MyListView extends ListView {
 	public void setTextSize(float size){adapter.setTextSize(size);}
 	public float getTextSize(){return adapter.getTextSize();}
 	public void refresh(){adapter.notifyDataSetChanged();}
+	public void setHighlightLine(int startPage, int startLine,int endPage, int endLine){
+		int pageCount=endPage-startPage+1;
+		highlineLine=new int[pageCount][3];
+		if(pageCount==1){
+			highlineLine[0][0]=startPage;
+			highlineLine[0][1]=startLine;
+			highlineLine[0][2]=endLine;
+		}
+		else{
+			highlineLine[0][0]=startPage;
+			highlineLine[0][1]=startLine;
+			highlineLine[0][2]=-1;
+			for(int i=1;i<pageCount-1;i++){
+				highlineLine[i][0]=startPage+i;
+				highlineLine[i][1]=0;
+				highlineLine[i][2]=-1;
+			}
+			highlineLine[pageCount-1][0]=endPage;
+			highlineLine[pageCount-1][1]=0;
+			highlineLine[pageCount-1][2]=endLine;
+		}
+		
+		// debug
+		System.out.println("Content of highlineLine:");
+		for(int i=0;i<pageCount;i++){
+			System.out.println("["+highlineLine[i][0]+"] ["+highlineLine[i][1]+"] ["+highlineLine[i][2]+"]");
+		}
+		
+		refresh();
+	}
+	public void clearHighlightLine(){
+		highlineLine=null;
+		((Activity)context).runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+				refresh();
+			}});
+		
+	}
 	
+	public float setViewToPosition(int page,int line){
+/*		int firstView=getFirstVisiblePosition()+1;
+		Log.d(getClass().getName(),"First view index: "+firstView);
+		View v=getChildAt(firstView);
+		TextView tpView=(TextView)v.findViewById(R.id.pageContentView);
+
+		int padding=tpView.getPaddingTop();
+*/		
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.LINEAR_TEXT_FLAG);
+		paint.setStyle(Paint.Style.FILL);
+		paint.setTextAlign(Paint.Align.CENTER);
+		paint.setTextSize(adapter.getTextSize());
+		Rect bounds = new Rect();
+		paint.getTextBounds("a", 0, 1, bounds);
+		
+		float textSize=bounds.height();
+//		float shift=textSize*line/context.getResources().getDisplayMetrics().densityDpi*160f;
+		float shift=-textSize*line*2.4f;
+		Log.d(getClass().getName(),"Move view to page "+page+" shift "+shift);
+		setSelectionFromTop(page, (int) shift);
+		refresh();
+		return shift;
+	}
 	
+	public void search(String str){
+		
+	}
 	
 	class TheoryListAdapter extends SimpleAdapter {
 		float textSize = 0;
@@ -209,7 +277,6 @@ public class MyListView extends ListView {
 				row = inflater.inflate(R.layout.theory_page_view, parent, false);
 			}
 
-
 			// / Log.d(logTag, "row=" + row+", ConvertView="+convertView);
 			TheoryPageView bContent = (TheoryPageView) row.findViewById(R.id.pageContentView);
 			bContent.setHorizontallyScrolling(true);
@@ -218,6 +285,10 @@ public class MyListView extends ListView {
 			if (bContent.getTextSize() != textSize)
 				bContent.setTextSize(textSize);
 			bContent.setText(bookList.get(position).get("page"));
+			if(highlineLine!=null && position>=highlineLine[0][0] && position<=highlineLine[highlineLine.length-1][0]){
+				int index=position-highlineLine[0][0];
+				bContent.setHighlightLine(highlineLine[index][1], highlineLine[index][2]);
+			}
 			// bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
 			TextView pNum = (TextView) row.findViewById(R.id.pageNumView);
 			if (pNum.getTextSize() != textSize)

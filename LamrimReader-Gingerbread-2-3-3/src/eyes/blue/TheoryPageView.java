@@ -1,7 +1,9 @@
 package eyes.blue;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,6 +15,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
@@ -49,6 +52,45 @@ public class TheoryPageView extends TextView {
         super(context, attrs);
  //       this.setOnTouchListener(touchListener);
     }
+	
+	public void highlightWord(int startIndex, int length){
+		SpannableStringBuilder text=new SpannableStringBuilder(getText());
+		String str=text.toString();
+		int invalidStrCount=0;
+		for(int i=startIndex;i<startIndex+length;i++){
+			if(str.charAt(i)=='\n')
+				invalidStrCount++;
+		}
+		
+		int strLen=length+invalidStrCount;
+		text.setSpan(new BackgroundColorSpan(0xFFFFFF00), startIndex, strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		super.setText(text);
+	}
+	
+	
+	/*
+	 * Set highlight to whole line, from startLine to endLine, assign -1 to endLine that mean to whole end of line, if you want clear highlight call setText(String text).
+	 * */
+	public void setHighlightLine(int startLine, int endLine){
+		Log.d(getClass().getName(),"get setHighlightLine call: startLine="+startLine+", endLine="+endLine);
+		SpannableStringBuilder text=new SpannableStringBuilder(getText());
+		String str=text.toString();
+		String[] lines = str.split("\n");
+		if(endLine==-1){
+			endLine=lines.length-1;
+			Log.d(getClass().getName(),"highlight to end: "+endLine);
+		}
+		int wordCounter=0;
+
+		for(int i=0;i<lines.length;i++){
+			if(i>=startLine && i<=endLine){
+				Log.d(getClass().getName(),"highlight: start="+wordCounter+", end="+wordCounter+lines[i].length());
+				text.setSpan(new BackgroundColorSpan(0xFFFFFF00), wordCounter, wordCounter+lines[i].length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+			}
+			wordCounter+=lines[i].length()+1;
+		}
+		super.setText(text);
+	}
 
 	public void setText(String text){
 		int lineCounter=0;
@@ -177,13 +219,14 @@ public class TheoryPageView extends TextView {
 		super.setText(page);
     }
 	
+	
+	
 	@Override
 	public void setTextSize(float size){
 		super.setTextSize(size);
 //		this.setOnTouchListener(touchListener);
 		if(debug)Log.d("LamrimLeader","TheoryPageView.setTextSize() Set font size to "+size);
 	}
-	
 	
 	@Override
     protected void onDraw(Canvas canvas)
@@ -214,7 +257,7 @@ public class TheoryPageView extends TextView {
 		}
 		
 		getPaint().setTextSize(orgTextSize);
-		super.onDraw(canvas);
+/////		super.onDraw(canvas);
     }
 /*
 	@Override

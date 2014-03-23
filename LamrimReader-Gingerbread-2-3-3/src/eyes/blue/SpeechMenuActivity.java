@@ -54,7 +54,6 @@ public class SpeechMenuActivity extends Activity {
 	ListView speechList=null;
 	Intent playWindow=null;
 	private PowerManager.WakeLock wakeLock = null;
-	Toast toast = null;
 	SharedPreferences runtime = null;
 	// The handle for close the dialog.
 	AlertDialog itemManageDialog = null;
@@ -84,8 +83,6 @@ public class SpeechMenuActivity extends Activity {
 	//if(wakeLock.isHeld())wakeLock.release();
 	new FileSysManager(this);
 	downloader=new FileDownloader(SpeechMenuActivity.this);
-	
-	toast = Toast.makeText(this, "", Toast.LENGTH_LONG);
 	
 	final QuickAction mQuickAction 	= new QuickAction(this);
 	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
@@ -253,8 +250,13 @@ public class SpeechMenuActivity extends Activity {
 		
 		Bundle b=this.getIntent().getExtras();
 		if(b==null)return;
-		int downloadIndex=b.getInt("index");
-		downloadSrc(downloadIndex);
+		String downloadIndexs=b.getString("index");
+		String[] indexs=downloadIndexs.split(",");
+		int resource[]=new int[indexs.length];
+		for(int i=0;i<indexs.length;i++)
+			resource[i]=Integer.parseInt(indexs[i]);
+		
+		downloadSrc(resource);
 	}
 	
 	@Override
@@ -348,45 +350,41 @@ public class SpeechMenuActivity extends Activity {
 			}});
 	}
 	
-	private void downloadSrc(final int index){
-		File mediaFile=FileSysManager.getLocalMediaFile(index);
-		File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
+	private void downloadSrc(final int... index){
+		for(int i=0;i<index.length;i++){
+			File mediaFile=FileSysManager.getLocalMediaFile(index[i]);
+			File subtitleFile=FileSysManager.getLocalSubtitleFile(index[i]);
 		
-		if(mediaFile==null || subtitleFile==null){
-			toast.setText(getString(R.string.dlgDescDownloadFail));
-			toast.show();
-			return;
+			if(mediaFile==null || subtitleFile==null){
+				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+				return;
+			}
 		}
-		
-		if(mediaFile.exists() && subtitleFile.exists()){
-			resultAndPlay(index);
-			return;
-		}
-		
+
 		downloader.setDownloadListener(new DownloadListener(){
 			boolean everFail=false;
 			@Override
 			public void allPrepareFinish(int... i){
 				if(!everFail){
 					if (wakeLock.isHeld())wakeLock.release();
-					resultAndPlay(index);
+					resultAndPlay(index[0]);
 					return;
 				}
 				
 				Log.d(getClass().getName(), "There is download fail, show download again dialog.");
-				String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index));
+				String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index[0]));
 				final AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
 				dialog.setTitle(msg); 
 				dialog.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {  
 				    public void onClick(DialogInterface dialog, int which) {
 				    	downloadSrc(index);
-				    }  
-				}); 
+				    }
+				});
 				dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
 				    public void onClick(DialogInterface dialog, int which) {
 				    	dialog.dismiss();
 				    	if (wakeLock.isHeld())wakeLock.release();
-				    }  
+				    }
 				});
 				
 				runOnUiThread(new Runnable(){
@@ -395,7 +393,6 @@ public class SpeechMenuActivity extends Activity {
 						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						dialog.show();
 					}});
-				
 			}
 			@Override
 			public void prepareFinish(int i, int type){
@@ -404,11 +401,7 @@ public class SpeechMenuActivity extends Activity {
 			@Override
 			public void prepareFail(final int i, int type){
 				if(type==FileSysManager.MEDIA_FILE)everFail=true;
-				runOnUiThread(new Runnable() {
-					public void run() {
-						toast.setText("下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
-						toast.show();
-				}});
+				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
 				updateUi(i);
 			}
 			
@@ -435,11 +428,7 @@ public class SpeechMenuActivity extends Activity {
 			}
 			@Override
 			public void prepareFail(final int i, int type){
-				runOnUiThread(new Runnable() {
-					public void run() {
-						toast.setText("下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
-						toast.show();
-				}});
+				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
 				updateUi(i);
 			}
 			

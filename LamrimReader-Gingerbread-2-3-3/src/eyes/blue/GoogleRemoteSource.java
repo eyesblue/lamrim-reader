@@ -8,21 +8,23 @@ import java.net.URLEncoder;
 
 import android.content.Context;
 
-public class GoogleRemoteSource extends RemoteSource{
+public class GoogleRemoteSource implements RemoteSource{
 	Context context=null;
-	final static String baseURL="https://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/";
+	final static String baseURL="http://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/";
 //	final static String mediaSubName="MP3";
 //	final static String subtitleSubName="SRT";
 //	final static String theorySubName="TXT";
 	String audioDirName=null;
 	String subtitleDirName=null;
 	String theoryDirName=null;
+	String globalLamrimDirName=null;
 	
 	public GoogleRemoteSource(Context context) {
 		this.context=context;
 		this.audioDirName=context.getResources().getString(R.string.audioDirName).toLowerCase();
 		this.subtitleDirName=context.getResources().getString(R.string.subtitleDirName).toLowerCase();
 		this.theoryDirName=context.getResources().getString(R.string.theoryDirName).toLowerCase();
+		this.globalLamrimDirName=context.getResources().getString(R.string.globalLamrimDirName).toLowerCase();
 	}
 	
 	@Override
@@ -46,4 +48,11 @@ public class GoogleRemoteSource extends RemoteSource{
 	public String getTheoryFileAddress(int i){return baseURL+theoryDirName+"/"+SpeechData.getNameId(i)+"."+context.getResources().getString(R.string.defTheoryType);}
 	@Override
 	public String getName(){return "Google";}
+
+	@Override
+	public String getGlobalLamrimSchedule() {
+		String url=null;
+		url = baseURL+globalLamrimDirName+"/"+context.getResources().getString(R.string.globalLamrimScheduleFile)+"."+context.getResources().getString(R.string.globalLamrimScheduleFileFormat)+"?attredirects=0&d=1";
+		return url;
+	}
 }

@@ -13,17 +13,129 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import eyes.blue.LamrimReaderActivity.RegionRecordAdapter;
+import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class Util {
-	static String logTag="LamrimReader";
+	static Toast toast = null;
+	static ArrayList<HashMap<String,String>> regionFakeList = new ArrayList<HashMap<String,String>>();
+	static HashMap<String,String> fakeSample = new HashMap();
+
+	public static void showSaveRegionDialog(final Activity activity, MediaPlayerController mpController, Runnable callBack){
+		int regionStartMs=mpController.getRegionStartPosition();
+		int regionEndMs=mpController.getRegionEndPosition();
+	    final SubtitleElement startSubtitle=mpController.getSubtitle(regionStartMs);
+	    final SubtitleElement endSubtitle=mpController.getSubtitle(regionEndMs-1);
+	    String info=startSubtitle.text+" ~ "+endSubtitle.text;
+
+	    Log.d("Util","Check size of region list before: "+RegionRecord.records.size());
+/*		Runnable callBack=new Runnable(){
+			@Override
+			public void run() {
+				activity.runOnUiThread(new Runnable(){
+				@Override
+				public void run() {
+					regionFakeList.add(fakeSample);
+					if(regionRecordAdapter!=null)Log.d(logTag,"Warring: the regionRecordAdapter = null !!!");
+					else regionRecordAdapter.notifyDataSetChanged();
+					Log.d(logTag,"Check size of region list after: "+RegionRecord.records.size());
+				}});
+			}};
+*/		
+			BaseDialogs.showEditRegionDialog(activity, mpController.playingIndex , regionStartMs, regionEndMs, null, info, -1, callBack);
+			GaLogger.sendEvent("ui_action", "show_dialog", "save_region", null);
+	}
+	
+	public static void showSubtitleToast(final Activity activity,final String s){
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				if(toast!=null)toast.cancel();
+				toast = new Toast(activity.getApplicationContext());
+
+				LayoutInflater inflater = activity.getLayoutInflater();
+				View toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
+				TextView toastTextView = (TextView) toastLayout.findViewById(R.id.text);
+				Typeface educFont=Typeface.createFromAsset(activity.getAssets(), "EUDC.TTF");
+				toastTextView.setTypeface(educFont);
+				toastTextView.setText(s);
+				
+				toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+				toast.setDuration(Toast.LENGTH_LONG);
+				toast.setView(toastLayout);
+				toast.show();
+			}
+		});
+	}
+	
+	public static void showNarmalToastMsg(final Activity activity, final String s){
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				if(toast!=null)toast.cancel();
+                toast = new Toast(activity.getApplicationContext());
+
+                LayoutInflater inflater = activity.getLayoutInflater();
+                View toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
+                TextView toastTextView = (TextView) toastLayout.findViewById(R.id.text);
+                Typeface educFont=Typeface.createFromAsset(activity.getAssets(), "EUDC.TTF");
+                toastTextView.setTypeface(educFont);
+                toastTextView.setText(s);
+               
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.setDuration(Toast.LENGTH_LONG);
+                toast.setView(toastLayout);
+                toast.show();
+			}
+		});
+	}
+	
+	public static void cancelToast(){
+		if(toast==null)return;
+		toast.cancel();
+	}
+	
+	/**
+	   * Enables/Disables all child views in a view group.
+	   * 
+	   * @param viewGroup the view group
+	   * @param enabled <code>true</code> to enable, <code>false</code> to disable
+	   * the views.
+	   */
+	  public static void enableDisableViewGroup(ViewGroup viewGroup, boolean enabled) {
+	    int childCount = viewGroup.getChildCount();
+	    for (int i = 0; i < childCount; i++) {
+	      View view = viewGroup.getChildAt(i);
+	      view.setEnabled(enabled);
+	      if (view instanceof ViewGroup) {
+	        enableDisableViewGroup((ViewGroup) view, enabled);
+	      }
+	    }
+	  }
 	
 	public static String getMsToHMS(int ms){
+		return getMsToHMS(ms,"'","\"",true);
+	}
+	
+	public static String getMsToHMS(int ms,String minuteSign,String secSign,boolean hasDecimal){
 		String sub=""+(ms%1000);
 		if(sub.length()==1)sub="00"+sub;
 		else if(sub.length()==2)sub="0"+sub;
@@ -42,7 +154,7 @@ public class Util {
 		if(ss.length()==1)ss="0"+ss;
 	
 //	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
-		return mst+'分'+ss+"."+sub+'秒';
+		return mst+minuteSign+ss+((hasDecimal)?"."+sub:"")+secSign;
 	}
 	
 	public static boolean unZip( String zipname , String extractTo)
@@ -103,7 +215,7 @@ public class Util {
 		long sum = checksum.getValue();
 		boolean isCorrect=(crc32==sum);
 		int spend=(int) (System.currentTimeMillis()-startTime);
-		Log.d(logTag,"CRC Check result: "+((isCorrect)?"Correct!":"Incorrect!")+", ( Sum="+sum+", record="+crc32+"), length: "+file.length()+", spend time: "+spend+"ms, File path: "+file.getAbsolutePath());
+		Log.d("Util","CRC Check result: "+((isCorrect)?"Correct!":"Incorrect!")+", ( Sum="+sum+", record="+crc32+"), length: "+file.length()+", spend time: "+spend+"ms, File path: "+file.getAbsolutePath());
 		return isCorrect;
 	}
 	
