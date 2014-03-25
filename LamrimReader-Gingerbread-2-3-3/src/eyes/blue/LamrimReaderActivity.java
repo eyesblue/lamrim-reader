@@ -192,6 +192,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	int GLamrimHighlightRegion[]=new int[4];//{startPage, startLine, endPage, endLine}
 	int[][] GLamrimSect=new int[2][3];
 	int GLamrimSectIndex=-1;
+	String GLamrimSelectedDay="";
+	
 	PrevNextListener prevNextListener = null;
 	GLamrimModePrevNextListener glModePrevNextListener = new GLamrimModePrevNextListener();
 	NormalModePrevNextListener normalModePrevNextListener = new NormalModePrevNextListener();
@@ -533,19 +535,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							
 
 							ActionBar actionBar=getSupportActionBar();
-							if(actionBar != null)actionBar.setTitle(SpeechData.getNameId(mediaIndex));
-							Log.d(logTag, "Check media static before show controller: media player state: "
-											+ mpController.getMediaPlayerState()
-											+ ", normal should equal or bigger then "
-											+ MediaPlayerController.MP_PREPARED);
+							
 							
 //							-View nextBtn=mpController.getControllerView().findViewById(R.id.next);
 //							View prevBtn=mpController.getControllerView().findViewById(R.id.prev);
 //							prevBtn.setVisibility(View.VISIBLE);
 //							nextBtn.setVisibility(View.VISIBLE);-
 							if(GLamrimSectIndex!=-1){
-								
 								Log.d(logTag, "GlobalLamrim mode: play index "+GLamrimSect[GLamrimSectIndex][0]+", Sec: "+GLamrimSect[GLamrimSectIndex][1]+":"+GLamrimSect[GLamrimSectIndex][2]);
+								if(actionBar != null)actionBar.setTitle(getString(R.string.globalLamrimShortName)+": "+GLamrimSelectedDay);
 								bookView.setHighlightLine(GLamrimHighlightRegion[0], GLamrimHighlightRegion[1], GLamrimHighlightRegion[2], GLamrimHighlightRegion[3]);
 								int regionStart=GLamrimSect[GLamrimSectIndex][1];
 								int regionEnd=GLamrimSect[GLamrimSectIndex][2];
@@ -578,7 +576,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								mpController.showControllerView(LamrimReaderActivity.this);
 							}
 							else if (regionPlayIndex != -1) {
-								Log.d(logTag, "This play event is region play, set play region.");
+								Log.d(logTag, "Region Mode: This play event is region play, set play region.");
+								if(actionBar != null)actionBar.setTitle(getString(R.string.menuStrPlayRegionRecShortName)+": "+RegionRecord.records.get(regionPlayIndex).title);
 								setMediaControllerView(RegionRecord.records.get(regionPlayIndex).startTimeMs,RegionRecord.records.get(regionPlayIndex).endTimeMs, true, true, normalModePrevNextListener.getPrevListener(), true, true, normalModePrevNextListener.getNextListener());
 //								mpController.setPlayRegion(RegionRecord.records.get(regionPlayIndex).startTimeMs,RegionRecord.records.get(regionPlayIndex).endTimeMs);
 								mpController.seekTo(RegionRecord.records.get(regionPlayIndex).startTimeMs);
@@ -586,7 +585,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								mpController.start();
 								regionPlayIndex = -1;
 							} else {
-								Log.d(logTag, "The play event is fire by user select a new speech.");
+								Log.d(logTag, "Normal mode: The play event is fire by user select a new speech.");
+								if(actionBar != null)actionBar.setTitle(SpeechData.getNameId(mediaIndex));
 								setMediaControllerView(-1, -1, false, true, normalModePrevNextListener.getPrevListener(), false, true, normalModePrevNextListener.getNextListener());
 								int seekPosition = runtime.getInt("playPosition", 0);
 								Log.d(logTag, "Seek to last play positon " + seekPosition);
@@ -1170,9 +1170,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 * AboutActivity.class); if (wakeLock.isHeld())wakeLock.release();
 		 * this.startActivity(aboutPanel); break; }
 		 */
-		Log.d(funcLeave,
-				"**** Into Options selected, select item=" + item.getItemId()
-						+ " ****");
+		Log.d(funcLeave, "**** Into Options selected, select item=" + item.getItemId()+ " ****");
 		return true;
 	}
 
@@ -1236,7 +1234,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			glRecord.subtitleLineStart=intent.getStringExtra("subtitleLineStart");
 			glRecord.subtitleLineEnd=intent.getStringExtra("subtitleLineEnd");
 			glRecord.desc=intent.getStringExtra("desc");
+			GLamrimSelectedDay=intent.getStringExtra("selectedDay");
 			Log.d(getClass().getName(),"Get data: "+glRecord);
+			
+			String sec[]=GLamrimSelectedDay.split("/");
+			GLamrimSelectedDay=sec[1]+"/"+sec[2];
 			
 			final int[] theoryStart=GlRecord.getTheoryStrToInt(glRecord.theoryLineStart);// {page,line}
 			int[] theoryEnd=GlRecord.getTheoryStrToInt(glRecord.theoryLineEnd);// {page,line}

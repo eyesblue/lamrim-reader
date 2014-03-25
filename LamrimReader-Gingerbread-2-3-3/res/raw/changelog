@@ -23,7 +23,7 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
   	
-$ 130
+$ 131
   % Version 1.2.1
   _ 2014-03-25
   ! 此版本改動較大，若有裝置無法執行，請到<a href="http://www.facebook.com/lamrimreader">執行問題反應區</a>反應，謝謝！!
@@ -32,6 +32,7 @@ $ 130
 	* 移動設定字體大小功能於標題列中。 
 	* 修正於設定字幕大小時，字幕區跟隨字幕大小調整區域。 
 	* 修正設定字幕大小視窗中字幕區設定條與字幕大小不批配問題。 
+	* 標題跟隨模式(全廣、區段)改變。
 	* 版本次碼演進。
   
 $ 128

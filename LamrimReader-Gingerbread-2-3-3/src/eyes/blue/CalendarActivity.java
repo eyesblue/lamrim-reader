@@ -80,14 +80,17 @@ public class CalendarActivity extends SherlockActivity {
 	SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy/MM/dd");
 	Date glRangeStart=null, glRangeEnd=null;
 	
-	GlRecord selectedGlr=null;
-	boolean dialogShowing=false;
+	
 	// For Calendar view.
 	private RobotoCalendarView robotoCalendarView;
     private Calendar currentCalendar;
     private int currentMonthIndex;
     
-	@Override
+    GlRecord selectedGlr=null;
+	boolean dialogShowing=false;
+	String selectedDay=null;
+	
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_calendar);
@@ -187,6 +190,7 @@ public class CalendarActivity extends SherlockActivity {
 				
 				robotoCalendarView.markDayAsSelectedDay(date);
 				String key=dateFormater.format(date);
+				selectedDay=key;
 				final GlRecord glr=glSchedule.get(key);
 				if(glr==null){
 					Log.d(getClass().getName(),"No record for: "+key);
@@ -534,6 +538,7 @@ public class CalendarActivity extends SherlockActivity {
 	
 	private Intent getResultIntent(GlRecord glr){
 		Intent data=new Intent();
+		data.putExtra("selectedDay", selectedDay);
     	data.putExtra("dateStart", glr.dateStart);
     	data.putExtra("dateEnd", glr.dateEnd);
     	data.putExtra("speechPositionStart", glr.speechPositionStart);

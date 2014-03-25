@@ -73,9 +73,9 @@ public class FileSysManager {
 		statFs=new StatFs[2];
 		statFs[INTERNAL]=new StatFs(Environment.getRootDirectory().getAbsolutePath());
 		statFs[EXTERNAL]=new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
-		srcRoot[INTERNAL]=context.getFileStreamPath(context.getString(R.string.app_name)).getAbsolutePath();
+		srcRoot[INTERNAL]=context.getFileStreamPath(context.getString(R.string.filePathRoot)).getAbsolutePath();
 		boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
-		if(extWritable)srcRoot[EXTERNAL]=context.getExternalFilesDir(File.separator+context.getString(R.string.app_name)).getAbsolutePath();
+		if(extWritable)srcRoot[EXTERNAL]=context.getExternalFilesDir(File.separator+context.getString(R.string.filePathRoot)).getAbsolutePath();
               
 		FileSysManager.logTag=getClass().getName();
 		FileSysManager.context=context;
@@ -116,7 +116,7 @@ public class FileSysManager {
             		if(!subDir.exists())subDir.mkdirs();
             	}
             	
-            	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
+/*            	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
             	File oldDirRoot=new File(srcRoot[EXTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
             	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
             	oldDirRoot=new File(oldDirRoot.getAbsolutePath()+File.separator+"LamrimReader");
@@ -126,6 +126,7 @@ public class FileSysManager {
             		subDir.delete();
             		oldSubDir.renameTo(subDir);
             	}
+*/
         	}
         	
         	// Make file structure of internal storage
@@ -144,7 +145,7 @@ public class FileSysManager {
         		if(!subDir.exists())subDir.mkdirs();
         	}
         	
-        	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
+/*        	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
         	File oldDirRoot=new File(srcRoot[INTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
         	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
         	oldDirRoot=new File(oldDirRoot.getAbsolutePath()+File.separator+"LamrimReader");
@@ -154,7 +155,7 @@ public class FileSysManager {
         		subDir.delete();
         		oldSubDir.renameTo(subDir);
         	}
-        }
+*/		}
         
         /*
          * The location of media file is [PackageDir]\[AppName](LamrimReader)\Audio

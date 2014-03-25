@@ -3,7 +3,7 @@
 
     <!-- Runtime options -->
     <string name="runtimeStateFile">runtime</string>
-
+	<string name="filePathRoot">lamrimreader</string>
     <integer name="isInit">0</integer>
 
     <string name="isAllowNetAccess">false</string>
@@ -47,6 +47,7 @@
     
     <!-- For Global Lamrim -->
     <string name="globalLamrim">全球廣論</string>
+    <string name="globalLamrimShortName">全廣</string>
     <string name="title_activity_calendar">全球廣論進度</string>
     <string name="downloadSchedule">更新進度</string>
     <string name="localGlobalLamrimScheduleFileNotFound">開啟全廣進度錯誤，請重新下載！</string>
@@ -70,7 +71,8 @@
     <string name="menuStrGlobalLamrim">全球廣論</string>
     <string name="menuStrTextSize">設定字體</string>
     <string name="menuStrSavePlayRegion">儲存區段</string>
-    <string name="menuStrPlayRegionRec">播放區段</string>
+    <string name="menuStrPlayRegionRec">區段播放</string>
+    <string name="menuStrPlayRegionRecShortName">區段</string>
     <string name="menuStrOpenProjectWeb">計劃網頁</string>
     <string name="projectWebUrl">http://lamrimreader.eyes-blue.com/</string>
     <string name="exitApp">關閉</string>
