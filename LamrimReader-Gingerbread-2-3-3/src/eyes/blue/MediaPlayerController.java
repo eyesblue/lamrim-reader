@@ -52,6 +52,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.ProgressBar;
 //import android.widget.MediaController;
 import android.widget.Toast;
 //import android.widget.MediaController.MediaPlayerControl;
