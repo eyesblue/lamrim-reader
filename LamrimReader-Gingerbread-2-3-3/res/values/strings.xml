@@ -42,10 +42,13 @@
     <string name="regionRecordColumeName">records</string>
     <string name="globalLamrimScheduleFile">GlobalLamrimSchedule</string>
     <string name="globalLamrimScheduleFileFormat">CSV</string>
+    <color name="theoryHighColor">#CFFFCD</color>
+    
     
     <!-- For Global Lamrim -->
     <string name="globalLamrim">全球廣論</string>
     <string name="title_activity_calendar">全球廣論進度</string>
+    <string name="downloadSchedule">更新進度</string>
     <string name="localGlobalLamrimScheduleFileNotFound">開啟全廣進度錯誤，請重新下載！</string>
     <string name="localGlobalLamrimScheduleFileReadErr">全廣進度讀取錯誤，請重新下載！</string>
     <string name="localGlobalLamrimScheduleFileRangeFmtErr">讀取全廣進度範圍標記錯誤，請重新下載！</string>
@@ -62,7 +65,7 @@
     <string name="setupTextSizeSample">廣論</string>
 
     <!-- For LamrimReaderActivity -->
-    <string name="app_name">LamrimReader</string>
+    <string name="app_name">廣論App</string>
     <string name="menuStrSelectSpeech">選擇音檔</string>
     <string name="menuStrGlobalLamrim">全球廣論</string>
     <string name="menuStrTextSize">設定字體</string>

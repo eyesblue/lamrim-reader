@@ -26,8 +26,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import eyes.blue.R;
 
 public class TheoryPageView extends TextView {
+	Context context;
 	boolean onCmd=false;
 	final static boolean debug=false;
 
@@ -44,12 +46,14 @@ public class TheoryPageView extends TextView {
 	
 	public TheoryPageView(Context context) {
 		super(context);
+		this.context=context;
 //		this.setOnTouchListener(touchListener);
 	}
 
 	public TheoryPageView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
+        this.context=context;
  //       this.setOnTouchListener(touchListener);
     }
 	
@@ -63,7 +67,8 @@ public class TheoryPageView extends TextView {
 		}
 		
 		int strLen=length+invalidStrCount;
-		text.setSpan(new BackgroundColorSpan(0xFFFFFF00), startIndex, strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		int color=context.getResources().getColor(R.color.theoryHighColor);
+		text.setSpan(new BackgroundColorSpan(color), startIndex, strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		super.setText(text);
 	}
 	
@@ -81,11 +86,12 @@ public class TheoryPageView extends TextView {
 			Log.d(getClass().getName(),"highlight to end: "+endLine);
 		}
 		int wordCounter=0;
-
+		int color=context.getResources().getColor(R.color.theoryHighColor);
+		
 		for(int i=0;i<lines.length;i++){
 			if(i>=startLine && i<=endLine){
 				Log.d(getClass().getName(),"highlight: start="+wordCounter+", end="+wordCounter+lines[i].length());
-				text.setSpan(new BackgroundColorSpan(0xFFFFFF00), wordCounter, wordCounter+lines[i].length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+				text.setSpan(new BackgroundColorSpan(color), wordCounter, wordCounter+lines[i].length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 			}
 			wordCounter+=lines[i].length()+1;
 		}

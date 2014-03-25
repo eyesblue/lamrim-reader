@@ -132,7 +132,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 						if(isRegionPlay())subIndex=regionEndMs;
 						seekTo(subIndex);
 					}
-					if(isRegionPlay())changedListener.stopRegionPlay();
+					Log.d(getClass().getName(),"Call changedListener.onComplatePlay()");
+					changedListener.onComplatePlay();
 				}
 			}});
 		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -178,6 +179,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+		changedListener.onPause();
 	}
 	
 	/*
@@ -237,6 +239,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		if(!powerManager.isScreenOn())return;
 		if(mediaPlayer==null)return;
 		
+		changedListener.onStartPlay();
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(false);
 			subtitleTimer=null;
@@ -1029,7 +1032,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
                         if(regionEndMs > 0 && playPoint > regionEndMs){
                                 Log.d(logTag,"Stop Play: play point="+playPoint+", regionEndMs="+regionEndMs);
                                 pause();
-                                changedListener.stopRegionPlay();
+                                changedListener.onComplatePlay();
                                 return null;
                         }
                        
@@ -1139,10 +1142,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return (SubtitleElement[]) subtitleList.toArray(new SubtitleElement[0]);

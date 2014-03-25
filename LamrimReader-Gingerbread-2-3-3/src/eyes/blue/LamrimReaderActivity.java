@@ -180,6 +180,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	ImageView bookIcon = null;
 	EditText jumpPage = null;
 	SeekBar volumeController = null;
+	ImageButton textSize = null;
 
 	int[][] readingModeSEindex = null;
 	String readingModeAllSubtitle = null;
@@ -366,15 +367,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		});
 
 		final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-		int maxVolume = audioManager
-				.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-		volumeController = (SeekBar) actionBarControlPanel
-				.findViewById(R.id.volumeController);
+		volumeController = (SeekBar) actionBarControlPanel.findViewById(R.id.volumeController);
 		volumeController.setMax(maxVolume);
 		volumeController.setProgress(curVolume);
-		volumeController
-				.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+		volumeController.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 					@Override
 					public void onStopTrackingTouch(SeekBar arg0) {
 					}
@@ -392,7 +390,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								"volume_control_arg1", null);
 					}
 				});
-
+		textSize=(ImageButton) actionBarControlPanel.findViewById(R.id.textSize);
+		textSize.setOnClickListener(new View.OnClickListener (){
+			@Override
+			public void onClick(View v) {
+				showSetTextSizeDialog();
+			}});
+		
 		fakeSample.put(null, null);
 		RegionRecord.init(this);
 		regionFakeList = new ArrayList<HashMap<String, String>>();
@@ -558,8 +562,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								}
 								else if(GLamrimSectIndex == 0){
 									setMediaControllerView(regionStart, regionEnd, false, false, glModePrevNextListener.getPrevListener(), true, true, glModePrevNextListener.getNextListener());
-									mpController.setPrevButtonIconEnable(false);
-									mpController.setNextButtonIconEnable(true);
+//									mpController.setPrevButtonIconEnable(false);
+//									mpController.setNextButtonIconEnable(true);
 //									prevBtn.setVisibility(View.GONE);
 //									highlightView(nextBtn);
 								}else{
@@ -595,32 +599,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							mpController.setControllerViewClickable(true);
 						}
 
-						// @Override
-						// public void endRegionSeted(int
-						// position){showNarmalToastMsg("區段結束位置設定完成: "+getMsToHMS(position,"\"","'",false));}
-						// @Override
-						// public void endRegionDeset(int
-						// position){showNarmalToastMsg("區段結束位置已清除: ");}
-						@Override
-						public void startRegionPlay() {
-							Util.showNarmalToastMsg(LamrimReaderActivity.this, "開始區段播放");
-						}
-
-						@Override
-						public void stopRegionPlay() {
-							// Global lamrim play mode
-							Util.showNarmalToastMsg(LamrimReaderActivity.this, "停止區段播放");
-							
-/*								if(repeatPlay){
-									Log.d(getClass().getName(),"The SECOND section play complete, repeat flag is true, switch to section 1.");
-									GLamrimSectIndex = 0;
-									mpController.reset();
-									startPlay(GLamrimSect[GLamrimSectIndex][0]);
-								}
-*/							
-						}
-
-
 						@Override
 						public void onSaveRegion() {
 							showSaveRegionDialog();
@@ -632,13 +610,20 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						}
 
 						@Override
+						public void onStartPlay() {
+							Log.d(getClass().getName(),"Hide Title bar.");
+//							hideTitle();
+						}
+						@Override
+						public void onPause() {
+							Log.d(getClass().getName(),"Show Title bar.");
+///							showTitle();
+						}
+						@Override
 						public void onComplatePlay() {
-							// Normal play mode
-/*							if(repeatPlay){
-								mpController.seekTo(0);
-								mpController.start();
-							}
-*/						}
+							Log.d(getClass().getName(),"Show Title bar.");
+///							showTitle();
+						}
 					});
 
 		/*
@@ -683,8 +668,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					@Override
 					public boolean onSingleTapConfirmed(MotionEvent e) {
 						Log.d(logTag, "SubtitleView been clicked, Show media plyaer control panel.");
-						if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED)
+						if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED){
 							mpController.showControllerView(LamrimReaderActivity.this);
+///							showTitle();
+						}
 						GaLogger.sendEvent("ui_action", "subtitle_event", "single_tap", null);
 						return true;
 					}
@@ -866,6 +853,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		bookView.setOnDoubleTapEventListener(new OnDoubleTapEventListener() {
 			@Override
 			public boolean onDoubleTap(MotionEvent e) {
+				if(bookViewMountPoint[0]==-1)return true;
 				bookView.setSelectionFromTop(bookViewMountPoint[0], bookViewMountPoint[1]);
 				Log.d(getClass().getName(), "Jump to theory page index " + bookViewMountPoint[0]+" shift "+bookViewMountPoint[1]);
 				GaLogger.sendEvent("ui_action", "bookview_event", "jump_to_audio_start", null);
@@ -1101,10 +1089,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		SubMenu rootMenu = menu.addSubMenu("");
 		speechMenu = rootMenu.add(getString(R.string.menuStrSelectSpeech));
 		speechMenu.setIcon(R.drawable.speech);
-//		globalLamrim = rootMenu.add(getString(R.string.globalLamrim));
-//		globalLamrim.setIcon(R.drawable.global_lamrim);
-		setTextSize = rootMenu.add(getString(R.string.menuStrTextSize));
-		setTextSize.setIcon(R.drawable.font_size);
+		globalLamrim = rootMenu.add(getString(R.string.globalLamrim));
+		globalLamrim.setIcon(R.drawable.global_lamrim);
+//		setTextSize = rootMenu.add(getString(R.string.menuStrTextSize));
+//		setTextSize.setIcon(R.drawable.font_size);
 		playRegionRec = rootMenu.add(getString(R.string.menuStrPlayRegionRec));
 		playRegionRec.setIcon(R.drawable.region);
 		prjWeb = rootMenu.add(getString(R.string.menuStrOpenProjectWeb));
@@ -1153,8 +1141,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			final Intent calendarMenu = new Intent(LamrimReaderActivity.this,	CalendarActivity.class);
 			if (wakeLock.isHeld())wakeLock.release();
 			startActivityForResult(calendarMenu, GLOBAL_LAMRIM_RESULT);
-		}else if (item.getTitle().equals(getString(R.string.menuStrTextSize))) {
-			showSetTextSizeDialog();
+//		}else if (item.getTitle().equals(getString(R.string.menuStrTextSize))) {
+//			showSetTextSizeDialog();
 		} else if (item.getTitle().equals(
 				getString(R.string.menuStrSavePlayRegion))) {
 			showSaveRegionDialog();
@@ -1222,10 +1210,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				bookViewMountPoint[0]=pageNum;
 				bookViewMountPoint[1]=0;
 			}
-			
-			// bookView.setItemChecked(pageNum, true);
-			// isRegionPlay=false;
-			// mpController.desetPlayRegion();
+
 			Log.d(logTag, "Call reset player in onActivityResult.");
 			mpController.reset();
 			GaLogger.sendEvent("activity", "SpeechMenu_result", "select_index_"	+ selected, null);
@@ -1260,7 +1245,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			
 			Log.d(getClass().getName(),"Parse result: Theory: P"+theoryStart[0]+"L"+ theoryStart[1]+" ~ P"+theoryEnd[0]+"L"+theoryEnd[1]);
 			Log.d(getClass().getName(),"Parse result: Speech: "+speechStart[0]+":"+ speechStart[1]+":"+speechStart[2]+" ~ "+speechEnd[0]+":"+speechEnd[1]+":"+speechEnd[2]);
-			
 			
 			GLamrimHighlightRegion[0]=theoryStart[0];
 			GLamrimHighlightRegion[1]=theoryStart[1];
@@ -1377,13 +1361,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	}
 
 	private void showSetTextSizeDialog() {
-		LayoutInflater factory = (LayoutInflater) this
-				.getSystemService(LAYOUT_INFLATER_SERVICE);
-		final View v = factory
-				.inflate(R.layout.set_text_size_dialog_view, null);
+		LayoutInflater factory = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+		final View v = factory.inflate(R.layout.set_text_size_dialog_view, null);
 		final SeekBar theorySb = (SeekBar) v.findViewById(R.id.theorySizeBar);
-		final SeekBar subtitleSb = (SeekBar) v
-				.findViewById(R.id.subtitleSizeBar);
+		final SeekBar subtitleSb = (SeekBar) v.findViewById(R.id.subtitleSizeBar);
 		final int orgTheorySize = runtime.getInt(getString(R.string.bookFontSizeKey),
 				getResources().getInteger(R.integer.defFontSize)) - getResources().getInteger(R.integer.textMinSize);
 		final int orgSubtitleSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), getResources().getInteger(R.integer.defFontSize))
@@ -1423,10 +1404,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							bookView.refresh();
 						}
 						// theorySample.setTextSize;
-						else
+						else{
+							if(subtitleViewRenderMode == SUBTITLE_MODE){
+								int lineCount = subtitleView.getLineCount();// There will return 0 sometimes.
+								if (lineCount < 1)
+									lineCount = 1;
+								subtitleView.setHeight(subtitleView.getLineHeight() * lineCount);
+							}
 							subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, progress + minSize);
-						// subtitleSample.setTextSize(prog);
-						// Log.d(logTag,"theorySample size: "+theorySample.getTextSize()+", subtitleSample size: "+subtitleSample.getTextSize());
+						}
 						seekBar.setProgress(progress);
 					}
 				});
@@ -1579,6 +1565,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				popupWindow.dismiss();
 				mediaIndex = RegionRecord.records.get(position).mediaIndex;
 				regionPlayIndex = position;
+				GLamrimSectIndex=-1;
+				bookViewMountPoint[0]=-1;
+				bookViewMountPoint[1]=-1;
 				startPlay(mediaIndex);
 				GaLogger.sendEvent("dialog_action", "select_record", "play_saved_region", position);
 				// The procedure will not return to onStart or onResume, start
@@ -1618,14 +1607,23 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	}
 
 	private void hideTitle(){
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
-	    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-	    getSupportActionBar().hide();
+		runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+//				getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
+			    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+			    getSupportActionBar().hide();
+			}});
 	}
+
 	private void showTitle(){
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
-	    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-	    getSupportActionBar().show();
+		runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+//				getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
+				getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+				getSupportActionBar().show();
+			}});
 	}
 
 	private void highlightView(View v){
@@ -1696,13 +1694,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				@Override
 				public void onClick(View v) {
 					BaseDialogs.showDelWarnDialog(LamrimReaderActivity.this, "記錄", null, new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,	int which) {
-									RegionRecord.removeRecord(LamrimReaderActivity.this, position);
-									regionFakeList.remove(position);
-									regionRecordAdapter.notifyDataSetChanged();
-								}
-							}, null, null);
+						@Override
+						public void onClick(DialogInterface dialog,	int which) {
+							RegionRecord.removeRecord(LamrimReaderActivity.this, position);
+							regionFakeList.remove(position);
+							regionRecordAdapter.notifyDataSetChanged();
+						}
+					}, null, null);
 				}
 			});
 			return row;
@@ -1710,11 +1708,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	};
 	
 	private void setMediaControllerView(int regStartMs, int regEndMs, boolean prevBtnEnable,boolean prevBtnVisiable, OnClickListener prev, boolean nextBtnEnable, boolean nextBtnVisiable,OnClickListener next){
+		mpController.setPrevNextListeners(next, prev);
 		mpController.setPrevButtonIconEnable(prevBtnEnable);
 		mpController.setNextButtonIconEnable(nextBtnEnable);
 		mpController.setPlayRegionStartMs(regStartMs);
 		mpController.setPlayRegionEndMs(regEndMs);
-		mpController.setPrevNextListeners(next, prev);
 		View nextBtn=mpController.getControllerView().findViewById(R.id.next);
 		View prevBtn=mpController.getControllerView().findViewById(R.id.prev);
 		if(prevBtnVisiable)prevBtn.setVisibility(View.VISIBLE);	else prevBtn.setVisibility(View.GONE);

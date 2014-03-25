@@ -283,7 +283,7 @@ public class MyListView extends ListView {
 			// bContent.drawPoints(new int[0][0]);
 			bContent.setTypeface(educFont);
 			if (bContent.getTextSize() != textSize)
-				bContent.setTextSize(textSize);
+				bContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 			bContent.setText(bookList.get(position).get("page"));
 			if(highlineLine!=null && position>=highlineLine[0][0] && position<=highlineLine[highlineLine.length-1][0]){
 				int index=position-highlineLine[0][0];
@@ -292,7 +292,7 @@ public class MyListView extends ListView {
 			// bContent.setText(Html.fromHtml("<font color=\"#FF0000\">No subtitle</font>"));
 			TextView pNum = (TextView) row.findViewById(R.id.pageNumView);
 			if (pNum.getTextSize() != textSize)
-				pNum.setTextSize(textSize);
+				pNum.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 			pNum.setText(bookList.get(position).get("desc"));
 			return row;
 		}

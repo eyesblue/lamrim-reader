@@ -41,4 +41,11 @@
         android:layout_width="140dp"
         android:layout_height="wrap_content" />
 
+    <ImageButton
+        android:id="@+id/textSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#00000000"
+        android:src="@drawable/font_size" />
+
 </LinearLayout>

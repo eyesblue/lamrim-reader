@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/eyes.blue">
 
-    <net.simonvt.calendarview.CalendarView
+<!--     <net.simonvt.calendarview.CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -17,5 +17,25 @@
         app:cv_unfocusedMonthDateColor="#E4E2ED"
         app:cv_weekNumberColor="#FDFDFD"
         app:cv_weekSeparatorLineColor="#944A03" />
+ -->
+
+	<ScrollView
+	    android:id="@+id/scrollView1"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content" >
+
+	    <LinearLayout
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:orientation="vertical" >
+
+	        <com.disegnator.robotocalendar.RobotoCalendarView
+	            android:id="@+id/robotoCalendarPicker"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content" >
+	        </com.disegnator.robotocalendar.RobotoCalendarView>
+
+	    </LinearLayout>
+	</ScrollView>
 
 </LinearLayout>

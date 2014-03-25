@@ -10,7 +10,8 @@
     </style>
 
     <!-- For CalendarView -->
-    <style name="CalendarTheme" parent="@android:style/Theme">
+<!--     <style name="CalendarTheme" parent="@android:style/Theme">
         <item name="calendarViewStyle">@style/Widget.Holo.CalendarView</item>
     </style>
+ -->    
 </resources>

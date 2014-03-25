@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Locale;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -46,10 +47,14 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 
-import net.simonvt.calendarview.CalendarView;
+//import net.simonvt.calendarview.CalendarView;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.csvreader.CsvReader;
+import com.disegnator.robotocalendar.RobotoCalendarView;
+import com.disegnator.robotocalendar.RobotoCalendarView.RobotoCalendarListener;
 
 import eyes.blue.FileDownloader.MySSLSocketFactory;
 import android.os.Bundle;
@@ -63,48 +68,125 @@ import android.graphics.Color;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class CalendarActivity extends SherlockFragmentActivity {
+public class CalendarActivity extends SherlockActivity {
 	Hashtable<String,GlRecord> glSchedule=new Hashtable<String,GlRecord>();
 	ProgressDialog downloadPDialog = null;
 	SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy/MM/dd");
 	Date glRangeStart=null, glRangeEnd=null;
 	
 	GlRecord selectedGlr=null;
-			
+	boolean dialogShowing=false;
+	// For Calendar view.
+	private RobotoCalendarView robotoCalendarView;
+    private Calendar currentCalendar;
+    private int currentMonthIndex;
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_calendar);
 		getSupportActionBar();
 		
+		///initialCalendarView();
 		initialCalendarView();
 	}
 
-	long userSelectDay=-1;
-	private void initialCalendarView(){
-		final CalendarView cv=(CalendarView) findViewById(R.id.calendarView);
-		cv.setShownWeekCount(4);
-		cv.setShowWeekNumber(false);
-		cv.setFocusedMonthDateColor(Color.WHITE);
-		cv.setUnfocusedMonthDateColor(Color.rgb(100, 100, 100));
-		userSelectDay=cv.getDate();
-	    cv.setOnDateChangeListener(new CalendarView.OnDateChangeListener(){
+	
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		GaLogger.activityStart(this);
+		
+		new Thread(new Runnable(){
 			@Override
-			public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-				if(cv.getDate()==userSelectDay)return;
-				userSelectDay=cv.getDate();
-				String mStr=""+(month+1);
-				String dStr=""+dayOfMonth;
-				if(mStr.length()==1)mStr="0"+mStr;
-				if(dStr.length()==1)dStr="0"+dStr;
-				String key=year+"/"+mStr+"/"+dStr;
+			public void run() {
+				File schedule=getLocalScheduleFile();
+				if(schedule!=null){
+					reloadSchedule(schedule);
+					if(glRangeEnd.getTime()>System.currentTimeMillis())
+						return;
+				}
+
+				dialogShowing=true;
+				if(!downloadSchedule())return;
+				schedule=getLocalScheduleFile();
+				if(schedule==null)return;
+				reloadSchedule(schedule);
+			}}).start();
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		GaLogger.activityStop(this);
+	}
+	
+	@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(getString(R.string.downloadSchedule))
+            .setIcon(R.drawable.update)
+            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+        return true;
+    }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if(dialogShowing)return true;
+		dialogShowing=true;
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				if(!downloadSchedule())return;
+				
+				File schedule=getLocalScheduleFile();
+				if(schedule == null)return;
+				reloadSchedule(schedule);
+			}}).start();
+		return true;
+	}
+	
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		super.onActivityResult(requestCode, resultCode, intent);
+		if (resultCode == RESULT_CANCELED || selectedGlr==null || !isFileExist(selectedGlr)) 
+			finish();
+
+		if(intent == null){
+			GaLogger.sendException("", new Exception("SpeechMenuActivity return data to CalendarActivity Failure(Failure delivering result ResultInfo)."), true);
+			return;
+		}
+		
+		setResult(Activity.RESULT_OK, getResultIntent(selectedGlr));
+		finish();
+	}
+	
+	private void initialCalendarView(){
+		robotoCalendarView = (RobotoCalendarView) findViewById(R.id.robotoCalendarPicker);
+		
+
+        // Initialize the RobotoCalendarPicker with the current index and date
+        currentMonthIndex = 0;
+        currentCalendar = Calendar.getInstance(Locale.getDefault());
+        robotoCalendarView.initializeCalendar(currentCalendar);
+
+        // Mark current day
+        robotoCalendarView.markDayAsCurrentDay(currentCalendar.getTime());
+ 
+        robotoCalendarView.setRobotoCalendarListener(new RobotoCalendarListener(){
+
+			@Override
+			public void onDateSelected(Date date) {
+				if(dialogShowing)return;
+				dialogShowing=true;
+				
+				robotoCalendarView.markDayAsSelectedDay(date);
+				String key=dateFormater.format(date);
 				final GlRecord glr=glSchedule.get(key);
 				if(glr==null){
 					Log.d(getClass().getName(),"No record for: "+key);
@@ -125,16 +207,18 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			    builder.setMessage(msg);
 			    builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {
 			        public void onClick(DialogInterface dialog, int id) {
-			        	
-						
 						if (isFileExist(glr)){
 							setResult(Activity.RESULT_OK, getResultIntent(glr));
+							dialog.dismiss();
+							dialogShowing=false;
 							finish();
 						}
 						else{
 							final Intent speechMenu = new Intent(CalendarActivity.this,	SpeechMenuActivity.class);
 							int[] speechStart=GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
 							int[] speechEnd=GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
+							dialog.dismiss();
+							dialogShowing=false;
 							speechMenu.putExtra("index", speechStart[0]+","+speechEnd[0]);
 							startActivityForResult(speechMenu, 0);
 						}
@@ -143,68 +227,75 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			    builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
 			        public void onClick(DialogInterface dialog, int id) {
 			            dialog.cancel();
+			            dialogShowing=false;
 			        }
 			    });
 				builder.create().show();
-		}});
-	    
-	    ImageButton loadHistory=(ImageButton) cv.findViewById(R.id.loadHistory);
-	    ImageButton downloadSche=(ImageButton) cv.findViewById(R.id.downloadSche);
-	    
-	    downloadSche.setOnClickListener(new View.OnClickListener(){
-			@Override
-			public void onClick(View v) {
-				new Thread(new Runnable(){
-					@Override
-					public void run() {
-						downloadSchedule();
-						reloadSchedule(getLocalScheduleFile());
-					}}).start();
-			}});
-	}
+			}
 
-	@Override
-	protected void onStart() {
-		super.onStart();
-		GaLogger.activityStart(this);
-		
-		new Thread(new Runnable(){
+			@Override
+			public void onRightButtonClick() {
+				currentMonthIndex++;
+		        updateCalendar();
+		        if(currentMonthIndex == 0)robotoCalendarView.markDayAsCurrentDay(currentCalendar.getTime());
+		        markScheduleDays();
+			}
+
+			@Override
+			public void onLeftButtonClick() {
+				currentMonthIndex--;
+		        updateCalendar();
+		        if(currentMonthIndex == 0)robotoCalendarView.markDayAsCurrentDay(currentCalendar.getTime());
+		        markScheduleDays();
+			}
+			
+			private void updateCalendar() {
+		        currentCalendar = Calendar.getInstance(Locale.getDefault());
+		        currentCalendar.add(Calendar.MONTH, currentMonthIndex);
+		        robotoCalendarView.initializeCalendar(currentCalendar);
+		    }
+        });
+	}
+	
+	/*
+	 * Call this for update UI, it seems fire UI update too quick in short time,
+	 * If I just place [robotoCalendarView.markDayWithStyle(style[index], month.getTime());] in runOnUiThread()
+	 * the UI refresh fragmentation.
+	 * */
+	private void markScheduleDays() {
+		runOnUiThread(new Runnable(){
 			@Override
 			public void run() {
-/*				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-*/				File schedule=getLocalScheduleFile();
-				if(schedule==null){
-					downloadSchedule();
-				}
-				else{
-					reloadSchedule(schedule);
-				}
-			}}).start();
+				markScheduleDaysInCalendar();
+			}});
 	}
 	
-	@Override
-	protected void onStop() {
-		super.onStop();
-		GaLogger.activityStop(this);
-	}
-	
-	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		super.onActivityResult(requestCode, resultCode, intent);
-		if (resultCode == RESULT_CANCELED || selectedGlr==null || !isFileExist(selectedGlr)) 
-			finish();
-
-		if(intent == null){
-			GaLogger.sendException("SpeechMenuActivity return data to CalendarActivity Failure(Failure delivering result ResultInfo).", null, true);
-			return;
-		}
-		
-		setResult(Activity.RESULT_OK, getResultIntent(selectedGlr));
-		finish();
-	}
+	private void markScheduleDaysInCalendar() {
+		Log.d(getClass().getName(),"Into Mark schedule function");
+		final Calendar month = (Calendar) currentCalendar.clone();
+		int daysOfMonth=month.getActualMaximum(Calendar.DAY_OF_MONTH);
+		Log.d(getClass().getName(),"Get Month: "+month.get(Calendar.YEAR)+"/"+month.get(Calendar.MONTH)+", there are "+daysOfMonth);
+        	
+		//final int style[]={RobotoCalendarView.BLUE_CIRCLE, RobotoCalendarView.GREEN_CIRCLE, RobotoCalendarView.RED_CIRCLE};
+		final int style[]={RobotoCalendarView.BLUE_LINE, RobotoCalendarView.GREEN_LINE, RobotoCalendarView.RED_LINE};
+		int styleIndex=0;
+		GlRecord lastGlr=null;
+		for(int i=1;i<= daysOfMonth;i++){
+			month.set(Calendar.DAY_OF_MONTH, i);
+			String key=dateFormater.format(month.getTime());
+			Log.d(getClass().getName(),"Get Data with key: "+key);
+			GlRecord glr=glSchedule.get(key);
+			if(glr == null)continue;
+        		
+			if(lastGlr != null && glr != lastGlr)
+				if(++styleIndex == style.length)styleIndex = 0;
+        		
+			Log.d(getClass().getName(),"Mark "+month.get(Calendar.YEAR)+"/"+month.get(Calendar.MONTH)+"/"+i+" as style"+styleIndex);
+			final int index=styleIndex;
+			robotoCalendarView.markDayWithStyle(style[index], month.getTime());
+			lastGlr=glr;
+        	}
+    	}
 	
 	private boolean isFileExist(GlRecord glr){
 		int[] speechStart=GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
@@ -217,19 +308,14 @@ public class CalendarActivity extends SherlockFragmentActivity {
 		return (mediaStart.exists() && subtitleStart.exists() && mediaEnd.exists() && subtitleEnd.exists());
 	}
 		
-	private Intent getResultIntent(GlRecord glr){
-		Intent data=new Intent();
-    	data.putExtra("dateStart", glr.dateStart);
-    	data.putExtra("dateEnd", glr.dateEnd);
-    	data.putExtra("speechPositionStart", glr.speechPositionStart);
-    	data.putExtra("speechPositionEnd", glr.speechPositionEnd);
-    	data.putExtra("totalTime", glr.totalTime);
-    	data.putExtra("theoryLineStart", glr.theoryLineStart);
-    	data.putExtra("theoryLineEnd", glr.theoryLineEnd);
-    	data.putExtra("subtitleLineStart", glr.subtitleLineStart);
-    	data.putExtra("subtitleLineEnd", glr.subtitleLineEnd);
-    	data.putExtra("desc", glr.desc);
-    	return data;
+	private File getLocalScheduleFile() {
+		String scheFileName=getString(R.string.globalLamrimScheduleFile);
+		String format=getString(R.string.globalLamrimScheduleFileFormat);
+		File file=null;
+		file=new File(getFilesDir()+File.separator+scheFileName+"."+format);
+		Log.d(getClass().getName(),"Schedule file: "+file.getAbsolutePath());
+		if(file.exists())return file;
+		return null;
 	}
 	
 	private void reloadSchedule(File file) {
@@ -303,6 +389,7 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileDecodeErr));
 			return;
 		}
+		markScheduleDays();
 		Log.d(getClass().getName(),"Total records: "+glSchedule.size());
 	}
 	
@@ -330,7 +417,8 @@ public class CalendarActivity extends SherlockFragmentActivity {
 		Log.d(getClass().getName(),"Add record: key="+key+", data="+glr);
 	}
 
-	private void downloadSchedule() {
+	
+	private boolean downloadSchedule() {
 		GoogleRemoteSource grs=new GoogleRemoteSource(getApplicationContext());
 		String url=grs.getGlobalLamrimSchedule();
 		String scheFileName=getString(R.string.globalLamrimScheduleFile);
@@ -338,6 +426,7 @@ public class CalendarActivity extends SherlockFragmentActivity {
 		String format=getString(R.string.globalLamrimScheduleFileFormat);
 		File tmpFile=new File(getFilesDir()+File.separator+scheFileName+tmpFileSub);
 		File scheFile=new File(getFilesDir()+File.separator+scheFileName+"."+format);
+		
 		
 		showDownloadProgDialog();
 		
@@ -354,7 +443,7 @@ public class CalendarActivity extends SherlockFragmentActivity {
 				httpclient.getConnectionManager().shutdown();
 				Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 				downloadPDialog.dismiss();
-				return;
+				return false;
 	        }
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
@@ -362,10 +451,8 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
-			return;
+			return false;
 		}
-        
-		
 
 		Log.d(getClass().getName(),"Connect success, Downloading file.");
 		HttpEntity httpEntity=response.getEntity();
@@ -378,13 +465,13 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			e2.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
-			return;
+			return false;
 		} catch (IOException e2) {
 			httpclient.getConnectionManager().shutdown();
 			e2.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
-			return;
+			return false;
 		}
 
 		final long contentLength=httpEntity.getContentLength();
@@ -394,7 +481,7 @@ public class CalendarActivity extends SherlockFragmentActivity {
 		try {
 			Log.d(getClass().getName(),"Create download temp file: "+tmpFile);
 			fos=new FileOutputStream(tmpFile);
-		} catch (FileNotFoundException e) {e.printStackTrace();}
+		} catch (FileNotFoundException e) {e.printStackTrace();return false;}
 		
 		try {
 			byte[] buf=new byte[getResources().getInteger(R.integer.downloadBufferSize)];
@@ -409,14 +496,14 @@ public class CalendarActivity extends SherlockFragmentActivity {
 			fos.close();
 		} catch (IOException e) {
 			httpclient.getConnectionManager().shutdown();
-			try {   is.close();     } catch (IOException e2) {e2.printStackTrace();}
-			try {   fos.close();    } catch (IOException e2) {e2.printStackTrace();}
+			try {   is.close();     } catch (IOException e2) {e2.printStackTrace();return false;}
+			try {   fos.close();    } catch (IOException e2) {e2.printStackTrace();return false;}
 			tmpFile.delete();
 			e.printStackTrace();
 			Log.d(getClass().getName(),Thread.currentThread().getName()+": IOException happen while download media.");
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
-			return;
+			return true;
 		}
 		
 /*		if(counter!=contentLength){
@@ -433,6 +520,8 @@ public class CalendarActivity extends SherlockFragmentActivity {
         httpclient.getConnectionManager().shutdown();
         Log.d(getClass().getName(),Thread.currentThread().getName()+": Download finish.");
         downloadPDialog.dismiss();
+		dialogShowing=false;
+		return true;
 	}
 	
 	private void showDownloadProgDialog(){
@@ -442,25 +531,22 @@ public class CalendarActivity extends SherlockFragmentActivity {
 				downloadPDialog = ProgressDialog.show(CalendarActivity.this, getString(R.string.dlgTitleDownloading), String.format(getString(R.string.dlgDescDownloading),"", getString(R.string.title_activity_calendar)), true);
 		}});
 	}
-
-	private File getLocalScheduleFile() {
-		String scheFileName=getString(R.string.globalLamrimScheduleFile);
-		String format=getString(R.string.globalLamrimScheduleFileFormat);
-		File file=null;
-		file=new File(getFilesDir()+File.separator+scheFileName+"."+format);
-		Log.d(getClass().getName(),"Schedule file: "+file.getAbsolutePath());
-		if(file.exists())return file;
-		return null;
-	}
-
-/*	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.calendar, menu);
-		return true;
-	}
-*/
 	
+	private Intent getResultIntent(GlRecord glr){
+		Intent data=new Intent();
+    	data.putExtra("dateStart", glr.dateStart);
+    	data.putExtra("dateEnd", glr.dateEnd);
+    	data.putExtra("speechPositionStart", glr.speechPositionStart);
+    	data.putExtra("speechPositionEnd", glr.speechPositionEnd);
+    	data.putExtra("totalTime", glr.totalTime);
+    	data.putExtra("theoryLineStart", glr.theoryLineStart);
+    	data.putExtra("theoryLineEnd", glr.theoryLineEnd);
+    	data.putExtra("subtitleLineStart", glr.subtitleLineStart);
+    	data.putExtra("subtitleLineEnd", glr.subtitleLineEnd);
+    	data.putExtra("desc", glr.desc);
+    	return data;
+	}
+
 	private HttpClient getNewHttpClient() {
         try {
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());

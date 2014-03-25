@@ -115,6 +115,17 @@ public class FileSysManager {
             		if(subDir.isFile())subDir.delete();
             		if(!subDir.exists())subDir.mkdirs();
             	}
+            	
+            	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
+            	File oldDirRoot=new File(srcRoot[EXTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
+            	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
+            	oldDirRoot=new File(oldDirRoot.getAbsolutePath()+File.separator+"LamrimReader");
+            	for(String s:dirs){
+            		File oldSubDir=new File(oldDirRoot+File.separator+s);
+            		File subDir=new File(srcRoot[EXTERNAL]+File.separator+s);
+            		subDir.delete();
+            		oldSubDir.renameTo(subDir);
+            	}
         	}
         	
         	// Make file structure of internal storage
@@ -131,6 +142,17 @@ public class FileSysManager {
         		File subDir=new File(srcRoot[INTERNAL]+File.separator+s);
         		if(subDir.isFile())subDir.delete();
         		if(!subDir.exists())subDir.mkdirs();
+        	}
+        	
+        	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
+        	File oldDirRoot=new File(srcRoot[INTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
+        	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
+        	oldDirRoot=new File(oldDirRoot.getAbsolutePath()+File.separator+"LamrimReader");
+        	for(String s:dirs){
+        		File oldSubDir=new File(oldDirRoot+File.separator+s);
+        		File subDir=new File(srcRoot[INTERNAL]+File.separator+s);
+        		subDir.delete();
+        		oldSubDir.renameTo(subDir);
         	}
         }
         
