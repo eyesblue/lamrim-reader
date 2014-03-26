@@ -529,18 +529,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 									str = str.replaceAll(":", "：");
 									readingModeAllSubtitle += str;
 								}
-							} else
+							}
+							else {
 								setSubtitleViewText(getString(R.string.dlgHintMpControllerNoSubtitle));
-
-							
+							}
 
 							ActionBar actionBar=getSupportActionBar();
-							
-							
-//							-View nextBtn=mpController.getControllerView().findViewById(R.id.next);
-//							View prevBtn=mpController.getControllerView().findViewById(R.id.prev);
-//							prevBtn.setVisibility(View.VISIBLE);
-//							nextBtn.setVisibility(View.VISIBLE);-
 							if(GLamrimSectIndex!=-1){
 								Log.d(logTag, "GlobalLamrim mode: play index "+GLamrimSect[GLamrimSectIndex][0]+", Sec: "+GLamrimSect[GLamrimSectIndex][1]+":"+GLamrimSect[GLamrimSectIndex][2]);
 								if(actionBar != null)actionBar.setTitle(getString(R.string.globalLamrimShortName)+": "+GLamrimSelectedDay);
@@ -548,30 +542,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								int regionStart=GLamrimSect[GLamrimSectIndex][1];
 								int regionEnd=GLamrimSect[GLamrimSectIndex][2];
 								if(regionEnd==-1)regionEnd=mpController.getDuration()-1000;
-//								mpController.setPlayRegion(GLamrimSect[GLamrimSectIndex][1], regionEnd);
 								mpController.seekTo(GLamrimSect[GLamrimSectIndex][1]);
-//								mpController.setPrevNextListeners(glModePrevNextListener.getNextListener(), glModePrevNextListener.getPrevListener());
 								if(GLamrimSect[1][0]==-1){
 									setMediaControllerView(regionStart, regionEnd, false, false, null, false, false, null);
-									//mpController.setPrevButtonIconEnable(false);
-									//mpController.setNextButtonIconEnable(false);
-									//prevBtn.setVisibility(View.GONE);
-									//nextBtn.setVisibility(View.GONE);
 								}
 								else if(GLamrimSectIndex == 0){
 									setMediaControllerView(regionStart, regionEnd, false, false, glModePrevNextListener.getPrevListener(), true, true, glModePrevNextListener.getNextListener());
-//									mpController.setPrevButtonIconEnable(false);
-//									mpController.setNextButtonIconEnable(true);
-//									prevBtn.setVisibility(View.GONE);
-//									highlightView(nextBtn);
 								}else{
 									setMediaControllerView(regionStart, regionEnd, true, true, glModePrevNextListener.getPrevListener(), false, false, glModePrevNextListener.getNextListener());
-//									mpController.setPrevButtonIconEnable(true);
-//									mpController.setNextButtonIconEnable(false);
-//									nextBtn.setVisibility(View.GONE);
-//									highlightView(prevBtn);
 								}
-								
 								mpController.start();
 								mpController.showControllerView(LamrimReaderActivity.this);
 							}
@@ -579,9 +558,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								Log.d(logTag, "Region Mode: This play event is region play, set play region.");
 								if(actionBar != null)actionBar.setTitle(getString(R.string.menuStrPlayRegionRecShortName)+": "+RegionRecord.records.get(regionPlayIndex).title);
 								setMediaControllerView(RegionRecord.records.get(regionPlayIndex).startTimeMs,RegionRecord.records.get(regionPlayIndex).endTimeMs, true, true, normalModePrevNextListener.getPrevListener(), true, true, normalModePrevNextListener.getNextListener());
-//								mpController.setPlayRegion(RegionRecord.records.get(regionPlayIndex).startTimeMs,RegionRecord.records.get(regionPlayIndex).endTimeMs);
 								mpController.seekTo(RegionRecord.records.get(regionPlayIndex).startTimeMs);
-//								mpController.setPrevNextListeners(normalModePrevNextListener.getNextListener(), normalModePrevNextListener.getPrevListener());
 								mpController.start();
 								regionPlayIndex = -1;
 							} else {
@@ -591,10 +568,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								int seekPosition = runtime.getInt("playPosition", 0);
 								Log.d(logTag, "Seek to last play positon " + seekPosition);
 								mpController.seekTo(seekPosition);
-								//mpController.setPrevNextListeners(normalModePrevNextListener.getNextListener(), normalModePrevNextListener.getPrevListener());
 								mpController.showControllerView(LamrimReaderActivity.this);
-								
-								
 							}
 							mpController.setControllerViewClickable(true);
 						}

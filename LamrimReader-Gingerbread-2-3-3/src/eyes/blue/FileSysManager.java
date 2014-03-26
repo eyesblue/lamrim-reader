@@ -229,6 +229,13 @@ public class FileSysManager {
         	return null;
         }
         
+        public static File[] getMediaFileList(int locate){
+        	String dir=context.getString(R.string.audioDirName);
+
+        	File srcDir=new File(srcRoot[locate]+File.separator+dir);
+        	return srcDir.listFiles();
+        }
+        
         public static void deleteAllSpeechFiles(int locate){
         	Log.d("FileSysManager","Delete all speech file in "+locateDesc[locate]);
         	String dir=context.getString(R.string.audioDirName);
@@ -266,112 +273,25 @@ public class FileSysManager {
                 	for(int j=0;j<dirs.length;j++){
                 		String s=dirs[j];
                 		File srcDir=new File(srcRoot[from]+File.separator+s);
-                		String distDir=srcRoot[to]+File.separator+s;
-                		final File[] files=srcDir.listFiles();
-                		File srcFile = null;
-                		final int progress=j;
+                		String destDirStr=srcRoot[to]+File.separator+s;
                 		
-                		Log.d(getClass().getName(),"There are "+files.length+" files wait for move.");
-                		context.runOnUiThread(new Runnable(){
-                			@Override
-                			public void run(){
-                				pd.setMax(files.length);
-                        		pd.setSecondaryProgress((int) (((double)progress/dirs.length)*files.length));
-                			}
-                		});
-                		
-                		for(int i=0;i<files.length;i++){
-                			srcFile=files[i];
-                			File distFile=new File(distDir+File.separator+srcFile.getName());
-                			if(distFile.exists()){
-                				if(srcFile.length()==distFile.length()){
-                					srcFile.delete();
-                					pd.setProgress(i+1);
-                					if(this.isCancelled())return null;
-                					continue;
-                				}
-                			}
-
-                			/* Copy To */
-                			File distTemp=new File(distFile.getAbsolutePath()+context.getString(R.string.downloadTmpPostfix));
-                			FileInputStream fis = null;
-                			FileOutputStream fos = null;
-                			Log.d(getClass().getName(),"Copy "+srcFile.getAbsolutePath()+" to "+distFile.getAbsolutePath());
-        					try {
-        						fis = new FileInputStream(srcFile);
-        						fos =new FileOutputStream(distTemp);
-        					} catch (FileNotFoundException e) {
-        						listener.copyFail(srcFile,distFile);
-        						e.printStackTrace();
-        						return null;
-        					}
-                			
-                			byte[] buf=new byte[context.getResources().getInteger(R.integer.downloadBufferSize)];
-                			int readLen=0;
-                			long totalLen=0;
-                			
-                			try {
-                				while((readLen=fis.read(buf))!=-1){
-                					fos.write(buf, 0, readLen);
-                					totalLen+=readLen;
-                				
-                					if(this.isCancelled()){
-                						fis.close();
-                						fos.close();
-                						distTemp.delete();
-                						return null;
-                					}
-                				}
-                				
-                				fis.close();
-                    			fos.flush();
-                    			fos.close();
-                    			
-                    			Log.d(getClass().getName(),"Total read: "+totalLen+", File length: "+distTemp.length());
-                				if(distTemp.length()==totalLen){
-                					distFile.delete();
-                    				distTemp.renameTo(distFile);
-                    				Log.d(getClass().getName(),"Rename: "+distTemp.getAbsolutePath()+" to "+distFile.length());
-                    				
-                    				
-                    				boolean isSuccess=srcFile.delete();
-                    				Log.d(getClass().getName(),"Delete: "+srcFile.getAbsolutePath()+isSuccess);
-                    			}
-                				else{
-                					Log.d(getClass().getName(),"Copy fail: from: "+srcFile.getAbsolutePath()+", to: "+distFile.getAbsolutePath()+", temp file: "+distTemp.getAbsolutePath());
-                					distTemp.delete();
-                					listener.copyFail(srcFile,distFile);
-                				}
-                				
-                				pd.setProgress(i+1);
-                    			
-                			} catch (IOException e) {
-                				listener.copyFail(srcFile,distFile);
-        						e.printStackTrace();
-        						return null;
-        					}
-                		}
+                		File destDir = new File(destDirStr);
+                		if(!moveContentsOfDir(srcDir, destDir, pd))
+                			if(listener!=null)listener.copyFail(srcDir,destDir);
                 	}
-                	context.runOnUiThread(new Runnable(){
-            			@Override
-            			public void run(){
-            				listener.copyFinish();
-            				pd.dismiss();
-            			}
-            		});
+                	if(listener!=null)listener.copyFinish();
+                	pd.dismiss();
 					return null;
 				}
 				
 				@Override
         		protected void onCancelled(){
-					listener.userCancel();
+					if(listener!=null)listener.userCancel();
         		}
 			};
         	
 			executer.execute(from,to);
-			
-			
-    		
+
     		pd.setButton(DialogInterface.BUTTON_NEGATIVE, context.getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
     		    @Override
     		    public void onClick(DialogInterface dialog, int which) {
@@ -381,6 +301,79 @@ public class FileSysManager {
     		});
     		pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
     		pd.show();
+        }
+        
+        public static boolean moveAllMediaFileToUserSpecifyDir(File destDir, ProgressDialog pd){
+        	File intDir=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName));
+        	File extDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
+        	if(!moveContentsOfDir(intDir,destDir,pd))return false;
+        	if(!moveContentsOfDir(extDir,destDir,pd))return false;
+        	return true;
+        }
+        
+        private static boolean moveContentsOfDir(File srcDir, File destDir, final ProgressDialog pd){
+        	final File[] files=srcDir.listFiles();
+        	Log.d(logTag,"There are "+files.length+" files wait for move.");
+    		context.runOnUiThread(new Runnable(){
+    			@Override
+    			public void run(){
+    				if(pd!=null)pd.setMax(files.length);
+//            		pd.setSecondaryProgress((int) (((double)progress/dirs.length)*files.length));
+    			}
+    		});
+        	// Check is the destination has the same file, delete source one.
+    		for(File src: files){
+    			File dist=new File(destDir.getAbsolutePath()+File.separator+src.getName());
+    			if(dist.exists()){
+    				if(src.length()==dist.length()){
+    					src.delete();
+    					if(pd!=null)pd.setProgress(pd.getProgress()+1);
+    					continue;
+    				}
+    			}
+
+    			/* Copy To */
+    			if(!moveFile(src, dist))
+    				return false;
+ 
+    			pd.setProgress(pd.getProgress()+1);
+    		}
+    		return true;
+        }
+        
+        private static boolean moveFile(File from, File to){
+        	File distTemp=new File(to.getAbsolutePath()+context.getString(R.string.downloadTmpPostfix));
+			FileInputStream fis = null;
+			FileOutputStream fos = null;
+			Log.d(logTag,"Copy "+from.getAbsolutePath()+" to "+to.getAbsolutePath());
+			try {
+				fis = new FileInputStream(from);
+				fos =new FileOutputStream(distTemp);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				return false;
+			}
+			
+			byte[] buf=new byte[context.getResources().getInteger(R.integer.downloadBufferSize)];
+			int readLen=0;
+			
+			try {
+				while((readLen=fis.read(buf))!=-1)
+					fos.write(buf, 0, readLen);
+				
+				fis.close();
+    			fos.flush();
+    			fos.close();
+    			
+				to.delete();
+    			distTemp.renameTo(to);
+    			from.delete();
+			} catch (IOException e) {
+				distTemp.delete();
+				e.printStackTrace();
+				return false;
+			}
+			return true;
         }
         
         public static void maintainStorages(){

@@ -141,7 +141,7 @@
     <string name="dlgDelWarnMsg">%1$s即將被刪除，您確定要刪除%1$s嗎？</string>
     <string name="dlgTitleMaintaining">維護檔案</string>
     <string name="dlgMsgMaintaining">維護檔案中，請稍候...</string>
-    <string name="title_activity_storage_manage">StorageManageActivity</string>
+    <string name="title_activity_storage_manage">儲存管理</string>
     <string name="action_settings">Settings</string>
 
     <!-- For file selector -->
@@ -164,6 +164,4 @@
     <string name="changelog_title">What\'s New</string>
     <string name="changelog_ok_button">確定</string>
     <string name="changelog_show_full">更多...</string>
-    <string name="hello_world">Hello world!</string>
-
 </resources>

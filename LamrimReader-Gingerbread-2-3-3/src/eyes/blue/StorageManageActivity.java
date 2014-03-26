@@ -35,7 +35,7 @@ public class StorageManageActivity extends Activity {
 	Button btnMoveAllToExt, btnMoveAllToInt, btnDelExtFiles, btnDelIntFiles, btnOk;
 	ImageButton btnChoicePath;
 	RadioGroup radioMgnType =null;
-	EditText fieldPathInput = null;
+	EditText filePathInput = null;
 	boolean isUseThirdDir=false;
 	
 	private PowerManager.WakeLock wakeLock = null;
@@ -49,7 +49,7 @@ public class StorageManageActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.storage_manage);
-		
+		Log.d(getClass().getName(),"Into onCreate");
 		this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
@@ -74,7 +74,7 @@ public class StorageManageActivity extends Activity {
 		btnChoicePath = (ImageButton) findViewById(R.id.btnChoicePath);
 		btnOk = (Button) findViewById(R.id.btnOk);
 		radioMgnType = (RadioGroup) findViewById(R.id.radioMgnType);
-		fieldPathInput = (EditText) findViewById(R.id.fieldPathInput);
+		filePathInput = (EditText) findViewById(R.id.fieldPathInput);
 
 		// The ImageButton can't disable from xml.
 		btnChoicePath.setClickable(false);
@@ -83,7 +83,7 @@ public class StorageManageActivity extends Activity {
 		isUseThirdDir=runtime.getBoolean(getString(R.string.isUseThirdDir),false);
 		if(isUseThirdDir){
 			radioMgnType.check(R.id.radioUserMgnStorage);
-			fieldPathInput.setEnabled(true);
+			filePathInput.setEnabled(true);
 			btnChoicePath.setClickable(true);
 			btnChoicePath.setEnabled(true);
 			labelChoicePath.setEnabled(true);
@@ -91,7 +91,7 @@ public class StorageManageActivity extends Activity {
 		
 		String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
 		if(thirdDir==null || thirdDir.length()==0)thirdDir=FileSysManager.getSysDefMediaDir();
-		fieldPathInput.setText(thirdDir,null);
+		filePathInput.setText(thirdDir,null);
 		
 		btnMoveAllToExt.setOnClickListener(new View.OnClickListener (){
 			@Override
@@ -130,8 +130,7 @@ public class StorageManageActivity extends Activity {
 								runOnUiThread(new Runnable(){
 									@Override
 									public void run() {
-										toast.setText("Move fail while copy "+from.getAbsolutePath()+" to "+to.getAbsolutePath());
-										toast.show();
+										Util.showNarmalToastMsg(StorageManageActivity.this, "搬移檔案時發生錯誤: 來源 "+from.getAbsolutePath()+", 目的地:  "+to.getAbsolutePath());
 								}});
 								
 							}
@@ -229,8 +228,8 @@ public class StorageManageActivity extends Activity {
 					return;
 				}
 				
-				if(fieldPathInput.getText().toString().length()==0){
-					fieldPathInput.setText(FileSysManager.getSysDefMediaDir());
+				if(filePathInput.getText().toString().length()==0){
+					filePathInput.setText(FileSysManager.getSysDefMediaDir());
 					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 					builder.setTitle("目錄錯誤");
 					builder.setMessage("路徑不可為空！請重新選擇。");
@@ -243,7 +242,7 @@ public class StorageManageActivity extends Activity {
 					return;
 				}
 					// Check is the path is FILE
-				File f=new File(fieldPathInput.getText().toString());
+				File f=new File(filePathInput.getText().toString());
 				if(f.isFile()){
 					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 					builder.setTitle("目錄錯誤");
@@ -291,8 +290,9 @@ public class StorageManageActivity extends Activity {
 						return;
 					}
 				}
+				
 				editor.putBoolean(getString(R.string.isUseThirdDir), true);
-				editor.putString(getString(R.string.userSpecifySpeechDir), fieldPathInput.getText().toString());
+				editor.putString(getString(R.string.userSpecifySpeechDir), filePathInput.getText().toString());
 				editor.commit();
 
 				finish();
@@ -305,20 +305,21 @@ public class StorageManageActivity extends Activity {
 				{
 				case R.id.radioAutoMgnStorage:
 					isUseThirdDir=false;
-					fieldPathInput.setEnabled(false);
+					filePathInput.setEnabled(false);
 					btnChoicePath.setEnabled(false);
 					btnChoicePath.setClickable(false);
 					labelChoicePath.setEnabled(false);
 					break;
 				case R.id.radioUserMgnStorage:
 					isUseThirdDir=true;
-					fieldPathInput.setEnabled(true);
+					filePathInput.setEnabled(true);
 					btnChoicePath.setEnabled(true);
 					btnChoicePath.setClickable(true);
 					labelChoicePath.setEnabled(true);
 					break;
 				}
 			}});
+		Log.d(getClass().getName(),"Leave onCreate");
 	}
 	
 	@Override
@@ -366,7 +367,7 @@ public class StorageManageActivity extends Activity {
 						if(extUsed>0)btnDelExtFiles.setEnabled(true);
 						else btnDelExtFiles.setEnabled(false);
 						
-						if(userSpecDir!=null)fieldPathInput.setText(userSpecDir);
+						if(userSpecDir!=null)filePathInput.setText(userSpecDir);
 				}});
 				
 			}}).start();
@@ -421,25 +422,76 @@ public class StorageManageActivity extends Activity {
 	}
 	
 	
-	public synchronized void onActivityResult(final int requestCode,
-            int resultCode, final Intent data) {
+	public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+		if (resultCode != Activity.RESULT_OK) return;
+		if (requestCode != 0) return;
+		final String filePath = data.getStringExtra(FileDialogActivity.RESULT_PATH);
 
-            if (resultCode == Activity.RESULT_OK) {
+		// Avoid EditText bug,  the EditText will not change to the new value without the thread.
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(500);
+					Log.d(getClass().getName(),"Set path the EditText: "+filePath);
+					runOnUiThread(new Runnable(){
+						@Override
+						public void run() {
+							filePathInput.setText(filePath);
+						}});
+					
+				} catch (InterruptedException e) {e.printStackTrace();}
 
-                    if (requestCode == 0) {
-                            System.out.println("Saving...");
-                    } else if (requestCode == 1) {
-                            System.out.println("Loading...");
-                    }
-                    
-                    String filePath = data.getStringExtra(FileDialogActivity.RESULT_PATH);
-                    fieldPathInput.setText(filePath);
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                    System.out.println("file not selected");
-            }
-
+/*				
+				String oldPath=runtime.getString(getString(R.string.userSpecifySpeechDir),FileSysManager.getSysDefMediaDir());
+				// Path not change.
+				if(filePath.equals(oldPath))return;
+				File[] intFiles=FileSysManager.getMediaFileList(FileSysManager.INTERNAL);
+				File[] extFiles=FileSysManager.getMediaFileList(FileSysManager.EXTERNAL);
+				if((intFiles.length+extFiles.length) == 0) return;
+				
+				
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						showAskMoveToSpecifyDialog(filePath);
+					}});
+*/			}}).start();
+		
     }
 	
+	private void showAskMoveToSpecifyDialog(final String path) {
+		AlertDialog.Builder builder=getConfirmDialog();
+		builder.setTitle("移動檔案");
+		builder.setMessage("您要將所有的音檔移動到您所指定的位置嗎？");
+		builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				final ProgressDialog pd= new ProgressDialog(StorageManageActivity.this);
+				pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        	pd.setCancelable(false);
+	        	pd.setTitle("檔案搬移");
+	        	pd.setMessage("搬移中，請稍候...");
+				Thread t=new Thread(new Runnable(){
+					@Override
+					public void run() {
+						File destFile=new File(path);
+						if(!FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd) || !FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd))
+							Util.showNarmalToastMsg(StorageManageActivity.this, "檔案搬移失敗，請確認目的地空間是否足夠。");
+						pd.dismiss();
+						refreshUsage();
+					}});
+				t.start();
+				pd.show();
+			}});
+		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener(){
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}});
+		builder.show();
+	}
+
 	private AlertDialog.Builder getConfirmDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {

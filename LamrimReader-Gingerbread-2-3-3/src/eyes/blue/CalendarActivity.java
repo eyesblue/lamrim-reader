@@ -49,6 +49,10 @@ import org.apache.http.protocol.HTTP;
 
 //import net.simonvt.calendarview.CalendarView;
 
+
+
+
+
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -96,7 +100,6 @@ public class CalendarActivity extends SherlockActivity {
 		setContentView(R.layout.activity_calendar);
 		getSupportActionBar();
 		
-		///initialCalendarView();
 		initialCalendarView();
 	}
 
@@ -112,9 +115,9 @@ public class CalendarActivity extends SherlockActivity {
 			public void run() {
 				File schedule=getLocalScheduleFile();
 				if(schedule!=null){
-					reloadSchedule(schedule);
-					if(glRangeEnd.getTime()>System.currentTimeMillis())
-						return;
+					if(reloadSchedule(schedule))
+						if(glRangeEnd.getTime()>System.currentTimeMillis())
+							return;
 				}
 
 				dialogShowing=true;
@@ -322,7 +325,7 @@ public class CalendarActivity extends SherlockActivity {
 		return null;
 	}
 	
-	private void reloadSchedule(File file) {
+	private boolean reloadSchedule(File file) {
 		CsvReader csvr=null;
 		
 		// Load the date range of file.
@@ -331,18 +334,21 @@ public class CalendarActivity extends SherlockActivity {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileNotFound));
-			return;
+			GaLogger.sendException("File: "+file.getAbsolutePath(), e,true);
+			return false;
 		}
 		
 		try {
 			if(!csvr.readRecord()){
 				Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileReadErr));
-				return;
+				GaLogger.sendException("Error happen while csv reader read record csvr.readRecord()", new Exception("Error happen while read record of csv reader."), true);
+				return false;
 			}
 			int count=csvr.getColumnCount();
 			if(count<2){
 				Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileRangeFmtErr));
-				return;
+				GaLogger.sendException("Error: the date start and date end colume of global lamrim schedule file is not 2 colume", new Exception("Global Lamrim schedule file format error."), true);
+				return false;
 			}
 			DateFormat df = DateFormat.getDateInstance();
 			try {
@@ -359,13 +365,14 @@ public class CalendarActivity extends SherlockActivity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileDateFmtErr));
-				return;
+				GaLogger.sendException("Error happen while parse data region of Global Lamrim schedule file: data1="+csvr.get(0)+", data2="+csvr.get(1), e, true);
+				return false;
 			}
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileReadErr));
-			return;
+			GaLogger.sendException("IOException happen while read date region of global lamrim schedule file.", e, true);
+			return false;
 		}
 		
 		Log.d(getClass().getName(),"GlobalLamrim range start: "+glRangeStart);
@@ -386,18 +393,20 @@ public class CalendarActivity extends SherlockActivity {
 				glr.subtitleLineStart=csvr.get(7);
 				glr.subtitleLineEnd=csvr.get(8);
 				glr.desc=csvr.get(9);
-				addGlRecord(glr);
+				if(!addGlRecord(glr))return false;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileDecodeErr));
-			return;
+			GaLogger.sendException("IOException happen while read data of global lamrim schedule file.", e, true);
+			return false;
 		}
 		markScheduleDays();
 		Log.d(getClass().getName(),"Total records: "+glSchedule.size());
+		return true;
 	}
 	
-	private void addGlRecord(GlRecord glr){
+	private boolean addGlRecord(GlRecord glr){
 		DateFormat df = DateFormat.getDateInstance();
 		Date startDate=null, endDate=null;
 		String key=null;
@@ -410,7 +419,8 @@ public class CalendarActivity extends SherlockActivity {
 		} catch (ParseException e) {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.localGlobalLamrimScheduleFileReadErr)+"\""+glr+"\"");
-			return;
+			GaLogger.sendException("Date format parse error: startDate="+startDate+", endDate="+endDate, e, true);
+			return false;
 		}
 		
 		for(int i=0;i<length;i++){
@@ -419,6 +429,7 @@ public class CalendarActivity extends SherlockActivity {
 			glSchedule.put(key, glr);
 		}
 		Log.d(getClass().getName(),"Add record: key="+key+", data="+glr);
+		return true;
 	}
 
 	
@@ -507,7 +518,7 @@ public class CalendarActivity extends SherlockActivity {
 			Log.d(getClass().getName(),Thread.currentThread().getName()+": IOException happen while download media.");
 			Util.showNarmalToastMsg(CalendarActivity.this, getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
-			return true;
+			return false;
 		}
 		
 /*		if(counter!=contentLength){
