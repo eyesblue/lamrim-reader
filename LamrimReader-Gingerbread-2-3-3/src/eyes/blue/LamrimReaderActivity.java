@@ -486,16 +486,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 									case READING_MODE:
 										SpannableString str = new SpannableString(readingModeAllSubtitle);
 										try {
-											str.setSpan(new ForegroundColorSpan(
-													getResources().getColor(R.color.subtitleRedingModeHilightColor)),
-													readingModeSEindex[index][0],readingModeSEindex[index][1],
-													Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+											str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)),
+													readingModeSEindex[index][0],readingModeSEindex[index][1],Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 											subtitleView.setText(str);
 										} catch (Exception e) {
 											e.printStackTrace();
-											GaLogger.sendException("mediaIndex="+ mediaIndex
-															+ ", subtitleIndex="+ index
-															+ ", totalLen="	+ str.length(), e, true);
+											GaLogger.sendException("mediaIndex="+ mediaIndex + ", subtitleIndex="+ index + ", totalLen=" + str.length(), e, true);
 										}
 										break;
 									};
@@ -1276,7 +1272,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					setSubtitleViewMode(SUBTITLE_MODE);
 					setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
 					mpController.setDataSource(getApplicationContext(),	mediaIndex);
-					//mpController.prepareMedia();
 				} catch (IllegalArgumentException e) {
 					setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
 					GaLogger.sendEvent("error", "player_error",	"IllegalArgumentException", null);

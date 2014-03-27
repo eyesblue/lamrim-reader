@@ -16,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -109,6 +108,7 @@ public class CalendarActivity extends SherlockActivity {
 	protected void onStart() {
 		super.onStart();
 		GaLogger.activityStart(this);
+		GaLogger.sendEvent("activity", "CalendarActivity", "into_onStart", null);
 		
 		new Thread(new Runnable(){
 			@Override
@@ -350,10 +350,14 @@ public class CalendarActivity extends SherlockActivity {
 				GaLogger.sendException("Error: the date start and date end colume of global lamrim schedule file is not 2 colume", new Exception("Global Lamrim schedule file format error."), true);
 				return false;
 			}
-			DateFormat df = DateFormat.getDateInstance();
+			//DateFormat df = DateFormat.getDateInstance();
+			//DateFormat df = new SimpleDateFormat("EE-MM-dd-yyyy");
+			
 			try {
-				Date arg1=df.parse(csvr.get(0));
-				Date arg2=df.parse(csvr.get(1));
+				Date arg1=dateFormater.parse(csvr.get(0));
+				Date arg2=dateFormater.parse(csvr.get(1));
+				//Date arg1=df.parse(csvr.get(0));
+				//Date arg2=df.parse(csvr.get(1));
 				if(arg1.getTime()<arg2.getTime()){
 					glRangeStart=arg1;
 					glRangeEnd=arg2;
@@ -407,14 +411,14 @@ public class CalendarActivity extends SherlockActivity {
 	}
 	
 	private boolean addGlRecord(GlRecord glr){
-		DateFormat df = DateFormat.getDateInstance();
+		//DateFormat df = DateFormat.getDateInstance();
 		Date startDate=null, endDate=null;
 		String key=null;
 		int length=0;
 
 		try {
-			startDate = df.parse(glr.dateStart);
-			endDate = df.parse(glr.dateEnd);
+			startDate = dateFormater.parse(glr.dateStart);
+			endDate = dateFormater.parse(glr.dateEnd);
 			length=(int) ((endDate.getTime()-startDate.getTime())/86400000)+1;
 		} catch (ParseException e) {
 			e.printStackTrace();

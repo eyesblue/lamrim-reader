@@ -22,7 +22,18 @@
   
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
-  	
+$133
+  % Version 1.2.3
+  _ 2014-03-27
+	* 修正全廣更新後日期解讀錯誤問題。
+	* 減少音檔載入時間。
+	
+$ 132
+  % Version 1.2.2
+  _ 2014-03-27
+	* 修正因全廣進度下載不完全而造成無法再進入全廣功能的錯誤。
+	* 修正儲存管理介面中的路徑輸入框不會更新路徑問題。
+	
 $ 131
   % Version 1.2.1
   _ 2014-03-25

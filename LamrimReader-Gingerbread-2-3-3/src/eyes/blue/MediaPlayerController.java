@@ -369,23 +369,19 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
 	public void reset(){
-		if(subtitleTimer!=null)subtitleTimer.cancel(true);
-		regionStartMs = -1;
-		regionEndMs = -1;
-		subtitleTimer=null;
-		playingIndex=0;
-		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
-		if(sb!=null){
-			sb.setProgress(0);
-			updateSeekBar();
+		if(subtitleTimer!=null){
+			subtitleTimer.cancel(false);
+			subtitleTimer=null;
 		}
-		
 		
 		synchronized(mediaPlayerKey){
 			Log.d("","============ Reset MediaPlayer ===============");
 			try{
-				if(mpState!=MP_IDLE)mediaPlayer.reset();
+				mediaPlayer.reset();
 				mpState=MP_IDLE;
+				regionStartMs = -1;
+				regionEndMs = -1;
+				playingIndex=0;
 			}catch(Exception e){
 				e.printStackTrace();
 				changedListener.onPlayerError();
@@ -393,15 +389,11 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}
 		}
 
-		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);
-		ImageButton ffwd=(ImageButton)mediaController.findViewById(R.id.ffwd);
-		ImageButton ibp= (ImageButton)mediaController.findViewById(R.id.prev);
-		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
-		
-		if(rew!=null)rew.setImageResource(R.drawable.ic_media_previous);
-		if(ffwd!=null)ffwd.setImageResource(R.drawable.ic_media_next);
-		if(ibp!=null)ibp.setImageResource(R.drawable.ic_media_rew_d);
-		if(ibn!=null)ibn.setImageResource(R.drawable.ic_media_ff_d);
+		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
+		if(sb!=null){
+			sb.setProgress(0);
+			updateSeekBar();
+		}
 
 		// Can't update seekbar on this stage, because there is no information of duration, seekbar can't be create. put in onPrepared.
 		//updateSeekBar();
@@ -448,73 +440,36 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			Log.d(getClass().getName(),"setDataSource: The speech file not exist, skip!!!");
 			return;
 		}
-		
-		if(subtitleTimer!=null){
-			subtitleTimer.cancel(false);
-			subtitleTimer=null;
-		}
-		
-///		synchronized(playingIndexKey){playingIndexKey=-1;}
-		
-		
-		ImageButton rew=(ImageButton)mediaController.findViewById(R.id.rew);
-		ImageButton ffwd=(ImageButton)mediaController.findViewById(R.id.ffwd);
+
 		if( subtitleFile==null || !subtitleFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
 			subtitle=null;
-			if(rew!=null)rew.setImageResource(R.drawable.ic_media_previous_d);
-			if(ffwd!=null)ffwd.setImageResource(R.drawable.ic_media_next_d);
 		}
 		else{
-			if(rew!=null)rew.setImageResource(R.drawable.ic_media_previous);
-			if(ffwd!=null)ffwd.setImageResource(R.drawable.ic_media_next);
 			Log.d(getClass().getName(),"The subtitle file exist, prepare the subtitle elements.");
 			subtitle = loadSubtitle(subtitleFile);
 			if(subtitle.length==0)subtitle=null;
 		}
 		
 		Log.d(getClass().getName(),"MediaPlayer: Set data source to index: "+index);
+		Uri speechFileUri=Uri.fromFile(speechFile);
 		synchronized(mediaPlayerKey){
 			try{
 				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
-				if(mpState!=MP_IDLE)mediaPlayer.reset();
-				mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
-			//	mediaPlayer.setDataSource(fis.getFD());
+				mediaPlayer.setDataSource(context, speechFileUri);
 				mpState=MP_INITED;
 				mediaPlayer.prepare();
 			}catch(Exception e){
 				changedListener.onPlayerError();
 				e.printStackTrace();
-				GaLogger.sendException("mpState="+mpState, e, true);
+				GaLogger.sendException("mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFileUri, e, true);
+				return;
 			}
 		}
+
 	}
 	
-	/*
-	 * Set prepare the media of MediaPlayer, call the MediaPlayerControllerListener.onMediaPrepared when ready. remember the subtitle prepare at setDataSource stage.
-	 * */
-/*	public void prepareMedia() throws IllegalStateException, IOException{-
-		
-		Log.d(logTag,"*** Call prepareMedia {"+Thread.currentThread().getName()+"}");
-		synchronized(mediaPlayerKey){
-			try{
-				if(mediaPlayer==null){
-					Log.d(logTag,"The mediaPlayer is null, do nothing, return");
-					return;
-				}
-				mediaPlayer.prepare();
-			}catch(Exception e){
-				changedListener.onPlayerError();
-				e.printStackTrace();
-				Log.d(getClass().getName(),"Prepare error, mpState="+mpState);
-				GaLogger.sendException("mpState="+mpState, e, true);
-			}
-		}
-	}
-	*/
-	
-	
-	
+
 	/*
 	 * Return the stage of MediaPlayer to avoid error.
 	 * */
