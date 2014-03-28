@@ -217,17 +217,14 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(mediaPlayerKey){
 			Log.d(logTag,Thread.currentThread().getName()+" Perform mediaPlayer.seekTo(pos) to "+pos);
 			mediaPlayer.seekTo(pos);
-
 		}
 		
 		synchronized(playingIndexKey){
 			playingIndex=index;
+			changedListener.onSeek(playingIndex, subtitle[playingIndex]);
+			changedListener.onSubtitleChanged(playingIndex, subtitle[playingIndex]);
 			Log.d(logTag,"real set position to "+subtitle[playingIndex].startTimeMs);
 		}			
-		changedListener.onSeek(playingIndex, subtitle[playingIndex]);
-		changedListener.onSubtitleChanged(playingIndex, subtitle[playingIndex]);
-
-		
 	}
 	
 	
@@ -304,6 +301,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public int getDuration() {
 		synchronized(mediaPlayerKey){
 			try{
+				// avoid initial problem.
+				if(mediaPlayer == null)return 0;
 				return mediaPlayer.getDuration();
 			}catch(Exception e){
 				changedListener.onPlayerError();
@@ -381,14 +380,17 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				mpState=MP_IDLE;
 				regionStartMs = -1;
 				regionEndMs = -1;
-				playingIndex=0;
+				
 			}catch(Exception e){
 				e.printStackTrace();
 				changedListener.onPlayerError();
 				GaLogger.sendException("mpState="+mpState, e, true);
 			}
 		}
-
+		synchronized(playingIndexKey){
+			playingIndex=0;
+		}
+		
 		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
 		if(sb!=null){
 			sb.setProgress(0);
@@ -498,7 +500,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			return;
 		}
 		
-		if(mpState<MP_PREPARED){
+		if(mediaPlayer == null || mpState<MP_PREPARED){
 			Log.d(logTag,"The media player preparing skip show controller.");
 			return;
 		}
@@ -1118,7 +1120,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			int d = 0;
 			if (mid == 0) {
 //				System.out.println("Shift to the index 0, Find out is -1(no subtitle start yet) or 0 or 1");
-				if( key < a[0].startTimeMs ) return -1;
+				if( key < a[0].startTimeMs ) return 0;
 				if( a[1].startTimeMs <=  key) return 1;
 				return 0;
 			}

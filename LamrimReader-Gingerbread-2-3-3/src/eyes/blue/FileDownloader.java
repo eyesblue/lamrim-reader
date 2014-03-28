@@ -77,8 +77,9 @@ public class FileDownloader {
         DownloadListener listener=null;
         SharedPreferences runtime = null;
         static ArrayList<RemoteSource> remoteResources=new ArrayList<RemoteSource>();
-        Downloader downloader=null;
-        ProgressDialog dlPrgsDialog = null, mkDlTaskDialog;
+        Downloader downloader = null;
+        ProgressDialog dlPrgsDialog;
+        ProgressDialog mkDlTaskDialog;
         Object dlProgsKey=new Object(), mkDlTaskKey = new Object();
         AsyncTask<Void, Void, Void> checkTask;
         AlertDialog netAccessWarnDialog = null;
@@ -100,6 +101,9 @@ public class FileDownloader {
                         remoteResources.add(grs);
                         Log.d(getClass().getName(),"Add remote resource site: " +grs.getName()+", there are "+remoteResources.size()+" site in list.");
                 }
+                
+                dlPrgsDialog = getDlprgsDialog();
+                mkDlTaskDialog= new ProgressDialog(activity);
         }
        
         public FileDownloader(Activity activity,DownloadListener listener){
@@ -121,11 +125,11 @@ public class FileDownloader {
                 synchronized(mkDlTaskKey){
                         if(mkDlTaskDialog!=null){
                                 mkDlTaskDialog.dismiss();
-                                mkDlTaskDialog=null;
+//                                mkDlTaskDialog=null;
                         }
                 }
                        
-                mkDlTaskDialog= new ProgressDialog(activity);
+                
                
                 //mkDlTaskProgDialog;
                 //AlertDialog netAccessDialog = null;
@@ -149,7 +153,7 @@ public class FileDownloader {
                                                 if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.setProgress(i+1);
                                                 if(this.isCancelled()){
                                                         mkDlTaskDialog.dismiss();
-                                                        mkDlTaskDialog=null;
+//                                                        mkDlTaskDialog=null;
                                                         return null;
                                                 }
                                         }
@@ -159,7 +163,7 @@ public class FileDownloader {
                                         synchronized(mkDlTaskKey){
                                                 if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing()){
                                                         mkDlTaskDialog.dismiss();
-                                                        mkDlTaskDialog=null;
+//                                                        mkDlTaskDialog=null;
                                                 }
                                         }
                                         if(wakeLock.isHeld())wakeLock.release();
@@ -172,7 +176,7 @@ public class FileDownloader {
                                 //if(mkDlTaskDialog.isShowing())
                                 synchronized(mkDlTaskKey){
                                         mkDlTaskDialog.dismiss();
-                                        mkDlTaskDialog=null;
+//                                        mkDlTaskDialog=null;
                                 }
                                 Log.d(getClass().getName(),"Call checkNetAccessPermission()");
                                 checkNetAccessPermission();
@@ -199,7 +203,7 @@ public class FileDownloader {
                                                 if(mkDlTaskDialog==null)return;
                                                 mkDlTaskDialog.dismiss();
                                                 listener.userCancel();
-                                                mkDlTaskDialog=null;
+//                                                mkDlTaskDialog=null;
                                         }
                                 }
                         });
@@ -245,12 +249,11 @@ public class FileDownloader {
         }
        
         private void startDownloadThread(final int... index){
-
-        	downloader=new Downloader();
+        	downloader = new Downloader();
         	activity.runOnUiThread(new Runnable() {
         		public void run() {
         			dismissDlProgress();
-        			dlPrgsDialog = getDlprgsDialog();
+        			
         			dlPrgsDialog.setCanceledOnTouchOutside(false);
         			dlPrgsDialog.setTitle("下載檔案");
         			dlPrgsDialog.setMessage("下載中，請稍候 ...");
@@ -335,13 +338,25 @@ public class FileDownloader {
        
         public class Downloader extends AsyncTask<JSONObject, Integer, Boolean> {
                 JSONObject executing=null;
+                boolean cancelled = false;
 
+                public void cancelTask(){
+                    if(wakeLock.isHeld())wakeLock.release();
+                    Log.d(getClass().getName(),"onCancelled: User cancel the download procedule, set flag to cancelled");
+                    cancelled = true;
+                    listener.userCancel();
+                }
+                // From API call
                 @Override
                 protected void onCancelled(){
-                        if(wakeLock.isHeld())wakeLock.release();
-                        listener.userCancel();
+                	cancelTask();
                 }
-               
+                // From API call               
+                @Override
+                protected void onCancelled(Boolean result) {
+                	cancelTask();
+                }
+                
                 @Override
                 protected Boolean doInBackground(JSONObject... urls) {
                         // json content: mediaIndex,type,outputPath,url
@@ -361,18 +376,21 @@ public class FileDownloader {
                                
                                
 
-                                if(this.isCancelled()){Log.d(getClass().getName(),"User canceled, download procedure skip!");return false;}
+                                if(cancelled){Log.d(getClass().getName(),"User canceled, download procedure skip!");return false;}
                                
 //                              double d=(double)(i)/urls.length*dlPrgsDialog.getMax();
 //                              dlPrgsDialog.setSecondaryProgress((int) d);
                                
-                                // We allow download fail of subtitle, but not speech.
+                                // We not allow download fail either speech nor subtitle, but not speech.
                                 executing=j;
-                                if(!download(url, outputPath,mediaIndex,type) && type==activity.getResources().getInteger(R.integer.MEDIA_TYPE)){
-                                        if(this.isCancelled())return false;
+                                if(!download(url, outputPath,mediaIndex,type)){
+                                        if(cancelled){
+                                        	Log.d(getClass().getName(),"User canceled, return false");
+                                        	return false;
+                                        }
                                         setProgressMsg(activity.getString(R.string.dlgTitleDownloadFail),activity.getString(R.string.dlgDescDownloadFail));
+                                        Log.d(getClass().getName(),"User canceled, call prepareFail");
                                         listener.prepareFail(mediaIndex,type);
-//                                      return false;
                                 }
                                 listener.prepareFinish(mediaIndex,type);
                         }
@@ -402,7 +420,7 @@ public class FileDownloader {
                         HttpGet httpget = new HttpGet(url);
                         HttpResponse response=null;
                         int respCode=-1;
-                        if(this.isCancelled()){Log.d(getClass().getName(),"User canceled, download procedure skip!");return false;}
+                        if(cancelled){Log.d(getClass().getName(),"User canceled, download procedure skip!");return false;}
                        
                         setProgressMsg(activity.getString(R.string.dlgTitleConnecting),String.format(activity.getString(R.string.dlgDescConnecting), SpeechData.getNameId(mediaIndex),(type == activity.getResources().getInteger(R.integer.MEDIA_TYPE))?"音檔":"字幕"));
                        
@@ -426,7 +444,7 @@ public class FileDownloader {
                         return false;
                 }
                
-                if(this.isCancelled()){
+                if(cancelled){
                         httpclient.getConnectionManager().shutdown();
                         Log.d(getClass().getName(),"User canceled, download procedure skip!");
                         return false;
@@ -455,7 +473,7 @@ public class FileDownloader {
                                 return false;
                         }
                        
-                        if(this.isCancelled()){
+                        if(cancelled){
                                 Log.d(getClass().getName(),"User canceled, download procedure skip!");
                                 try {   is.close();     } catch (IOException e) {e.printStackTrace();}
                                 httpclient.getConnectionManager().shutdown();
@@ -479,7 +497,7 @@ public class FileDownloader {
                                 return false;
                         }
 
-                if(this.isCancelled()){
+                if(cancelled){
                         httpclient.getConnectionManager().shutdown();
                         try {   is.close();     } catch (IOException e) {e.printStackTrace();}
                         try {   fos.close();    } catch (IOException e) {e.printStackTrace();}
@@ -502,7 +520,7 @@ public class FileDownloader {
                                 checksum.update(buf,0,readLen);
                                 setDlProgress(counter);
 
-                                if(this.isCancelled()){
+                                if(cancelled){
                                         httpclient.getConnectionManager().shutdown();
                                         try {   is.close();     } catch (IOException e) {e.printStackTrace();}
                                 try {   fos.close();    } catch (IOException e) {e.printStackTrace();}
@@ -524,7 +542,7 @@ public class FileDownloader {
                         return false;
                 }
 
-                if(counter!=contentLength || this.isCancelled()){
+                if(counter!=contentLength || cancelled){
                         httpclient.getConnectionManager().shutdown();
                         tmpFile.delete();
                         return false;
@@ -583,7 +601,7 @@ public class FileDownloader {
         }
        
        
-        private ProgressDialog getDlprgsDialog(final int... index){
+        private ProgressDialog getDlprgsDialog(){
                 ProgressDialog pd= new ProgressDialog(activity);
                 pd.setCancelable(false);
                 pd.setButton(DialogInterface.BUTTON_NEGATIVE, activity.getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
@@ -594,6 +612,7 @@ public class FileDownloader {
                                 activity.runOnUiThread(new Runnable() {
                                         public void run() {
                                                 downloader.cancel(true);
+                                                downloader.cancelTask();
                                                 if(wakeLock.isHeld())wakeLock.release();
                                         }
                                 });
@@ -686,7 +705,7 @@ public class FileDownloader {
                                                 // Here ever happen dismiss after dismissed.
                                                 try{
                                                         dlPrgsDialog.dismiss();
-                                                        dlPrgsDialog=null;
+//                                                        dlPrgsDialog=null;
                                                 }catch(Exception e){
                                                         e.printStackTrace();
                                                         GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);

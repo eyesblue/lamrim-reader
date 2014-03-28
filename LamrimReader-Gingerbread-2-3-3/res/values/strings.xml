@@ -14,7 +14,7 @@
     <!-- Default Value -->
     <integer name="textMaxSize">64</integer>
     <integer name="textMinSize">8</integer>
-    <integer name="defFontSize">18</integer>
+    <integer name="defFontSize">24</integer>
     <integer name="theorySmallTextSizePercent">90</integer>
 
     <color name="theoryNumTextColor">#0000CC</color>

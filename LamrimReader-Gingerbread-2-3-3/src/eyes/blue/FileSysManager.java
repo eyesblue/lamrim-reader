@@ -499,9 +499,9 @@ public class FileSysManager {
         
         public static boolean isFromUserSpecifyDir(File speechFile){
         	boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
-        	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]))return true;
-        	if(extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return true;
-        	return false;
+        	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]))return false;
+        	if(extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return false;
+        	return true;
         }
         
         public static boolean isExtMemWritable(){

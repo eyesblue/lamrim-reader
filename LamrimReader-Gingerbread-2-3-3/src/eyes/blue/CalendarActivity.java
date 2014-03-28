@@ -100,6 +100,9 @@ public class CalendarActivity extends SherlockActivity {
 		getSupportActionBar();
 		
 		initialCalendarView();
+		downloadPDialog=new ProgressDialog(CalendarActivity.this);
+		downloadPDialog.setTitle(getString(R.string.dlgTitleDownloading));
+		downloadPDialog.setMessage( String.format(getString(R.string.dlgDescDownloading),"", getString(R.string.title_activity_calendar)));
 	}
 
 	
@@ -446,8 +449,7 @@ public class CalendarActivity extends SherlockActivity {
 		File tmpFile=new File(getFilesDir()+File.separator+scheFileName+tmpFileSub);
 		File scheFile=new File(getFilesDir()+File.separator+scheFileName+"."+format);
 		
-		
-		showDownloadProgDialog();
+		runOnUiThread(new Runnable(){@Override	public void run(){	downloadPDialog.show();	}});
 		
 		Log.d(getClass().getName(),"Download "+url);
 		HttpClient httpclient = getNewHttpClient();
@@ -543,14 +545,14 @@ public class CalendarActivity extends SherlockActivity {
 		return true;
 	}
 	
-	private void showDownloadProgDialog(){
+/*	private void showDownloadProgDialog(){
 		runOnUiThread(new Runnable(){
 			@Override
 			public void run() {
 				downloadPDialog = ProgressDialog.show(CalendarActivity.this, getString(R.string.dlgTitleDownloading), String.format(getString(R.string.dlgDescDownloading),"", getString(R.string.title_activity_calendar)), true);
 		}});
 	}
-	
+*/	
 	private Intent getResultIntent(GlRecord glr){
 		Intent data=new Intent();
 		data.putExtra("selectedDay", selectedDay);

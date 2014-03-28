@@ -446,6 +446,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 										// Spannable WordtoSpan = (Spannable)
 										// subtitleView.getText();
 										try {
+											// *************** Bug here **************
+											// Here will happen error while readingModeSEindex array under construct, but access fire by user at above line.
 											str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)),
 													readingModeSEindex[index][0],
 													readingModeSEindex[index][1],
@@ -486,6 +488,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 									case READING_MODE:
 										SpannableString str = new SpannableString(readingModeAllSubtitle);
 										try {
+											// *************** Bug here **************
+											// Here will happen error while readingModeSEindex array under construct, but access fire by user at above line.
 											str.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.subtitleRedingModeHilightColor)),
 													readingModeSEindex[index][0],readingModeSEindex[index][1],Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 											subtitleView.setText(str);
@@ -651,22 +655,20 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						// If it stay in subtitle mode, do nothing.
 						if (subtitleViewRenderMode == SUBTITLE_MODE)
 							return false;
-						if (mpController.getMediaPlayerState() == MediaPlayerController.MP_PLAYING
-								&& mpController.getSubtitle() != null) {
-							int index = mpController
-									.getSubtitleIndex(mpController
-											.getCurrentPosition());
+						if (mpController.getMediaPlayerState() == MediaPlayerController.MP_PLAYING && mpController.getSubtitle() != null) {
+							int index = mpController.getSubtitleIndex(mpController.getCurrentPosition());
 							if (index == -1)
 								return true;
 							// subtitleView.bringPointIntoView(readingModeSEindex[index][0]);
 							try {
+								// *************** Bug here **************
+								// Here will happen error while readingModeSEindex array under construct, but access fire by user at above line.
 								int line = subtitleView.getLayout().getLineForOffset(readingModeSEindex[index][0]);
 								subtitleView.scrollTo(subtitleView.getScrollX(), subtitleView.getLineBounds(line, null)	- subtitleView.getLineHeight());
 							} catch (Exception et) {
 								et.printStackTrace();
 								GaLogger.sendException("readingModeSEindex under contruct and read.", et, true);
 							}
-
 						}
 						return true;
 					}

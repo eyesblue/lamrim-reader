@@ -22,6 +22,15 @@
   
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
+
+$134
+  % Version 1.2.4
+  _ 2014-03-28
+	* 修正全廣進度下載頁面顯示下載對話框時程式關閉問題。
+	* 修正[選擇音檔]頁面顯示下載對話框時程式關閉問題。
+	* 修正[使用者指定位置]與[內、外部儲存空間]判別問題。
+	* 修正無法取消下載的錯誤。
+
 $133
   % Version 1.2.3
   _ 2014-03-27
