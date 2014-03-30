@@ -68,7 +68,7 @@ public class FileDialogActivity extends ListActivity {
 	 */
 	public static final String SELECTION_MODE = "SELECTION_MODE";
 
-	
+	public static final String TITLE = "TITLE";
 	public static final int MODE_CREATE = 0;
 
 	public static final int MODE_OPEN = 1;
@@ -142,6 +142,9 @@ public class FileDialogActivity extends ListActivity {
 			}
 		});
 
+		String title=getIntent().getStringExtra(TITLE);
+		if(title != null)setTitle(title);
+			
 		selectionMode = getIntent().getIntExtra(SELECTION_MODE, MODE_CREATE);
 
 		formatFilter = getIntent().getStringArrayExtra(FORMAT_FILTER);

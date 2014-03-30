@@ -20,7 +20,8 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import afzkl.development.colorpickerview.dialog.ColorPickerDialog;
+import afzkl.development.colorpickerview.view.ColorPickerView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -140,6 +141,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final static int SPEECH_MENU_RESULT = 0;
 	final static int THEORY_MENU_RESULT = 1;
 	final static int GLOBAL_LAMRIM_RESULT = 2;
+	final static int SELECT_FG_PIC_RESULT = 3;
 	final static int SUBTITLE_MODE = 1;
 	final static int READING_MODE = 2;
 
@@ -149,11 +151,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	private PowerManager powerManager = null;
 	private PowerManager.WakeLock wakeLock = null;
 	MyListView bookView = null;
+	ImageView renderView = null;
 	TextView subtitleView = null;
 	SharedPreferences runtime = null;
 
-	MenuItem rootMenuItem, speechMenu, globalLamrim, setTextSize,
-			playRegionRec, prjWeb, exitApp;
+	MenuItem rootMenuItem, speechMenu, globalLamrim, playRegionRec,swRenderMode, prjWeb, exitApp;
 
 	FileSysManager fileSysManager = null;
 	// FileDownloader fileDownloader = null;
@@ -197,6 +199,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	PrevNextListener prevNextListener = null;
 	GLamrimModePrevNextListener glModePrevNextListener = new GLamrimModePrevNextListener();
 	NormalModePrevNextListener normalModePrevNextListener = new NormalModePrevNextListener();
+	
+	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
+
 //	boolean repeatPlay=false;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -204,8 +209,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		// try{
 		super.onCreate(savedInstanceState);
 ///		requestWindowFeature(Window.FEATURE_NO_TITLE);
+//		requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_ACTION_BAR_OVERLAY);
 		setContentView(R.layout.main);
-
+		
 		getSupportActionBar();
 		
 		// setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -338,10 +344,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					new Handler().postDelayed(new Runnable() {
 						@Override
 						public void run() {
-							bookView.setSelectionFromTop(
-									bookView.getFirstVisiblePosition(), 0);
-						}
-					}, 200);
+							bookView.setSelectionFromTop( bookView.getFirstVisiblePosition(), 0);}}, 200);
 					return false;
 				}
 				num = Integer.parseInt(jumpPage.getText().toString());
@@ -384,12 +387,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					}
 
 					@Override
-					public void onProgressChanged(SeekBar arg0, int arg1,
-							boolean arg2) {
-						audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-								arg1, 0);
-						GaLogger.sendEvent("ui_action", "SeekBar_scored",
-								"volume_control_arg1", null);
+					public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
+						audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,	arg1, 0);
+						GaLogger.sendEvent("ui_action", "SeekBar_scored", "volume_control_arg1", null);
 					}
 				});
 		textSize=(ImageButton) actionBarControlPanel.findViewById(R.id.textSize);
@@ -406,13 +406,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			regionFakeList.add(fakeSample);
 
 		regionRecordAdapter = new RegionRecordAdapter(this, regionFakeList,
-				android.R.layout.simple_list_item_2, new String[] { "title",
-						"desc" }, new int[] { android.R.id.text1,
-						android.R.id.text2 });
+				android.R.layout.simple_list_item_2, new String[] { "title","desc" },
+				new int[] { android.R.id.text1, android.R.id.text2 });
 
 		if (mpController != null)
-			Log.d(logTag,
-					"The media player controller is not null in onCreate!!!!!");
+			Log.d(logTag, "The media player controller is not null in onCreate!!!!!");
 		if (mpController == null)
 			// mpController = new
 			// MediaPlayerController(LamrimReaderActivity.this,
@@ -481,8 +479,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 									switch (subtitleViewRenderMode) {
 									case SUBTITLE_MODE:
 										Util.showSubtitleToast(LamrimReaderActivity.this,
-												subtitle.text+ " - ("
-														+ Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false)
+												subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false)
 														+ " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
 										break;
 									case READING_MODE:
@@ -586,17 +583,25 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						@Override
 						public void onStartPlay() {
 							Log.d(getClass().getName(),"Hide Title bar.");
-//							hideTitle();
+							hideTitle();
 						}
 						@Override
 						public void onPause() {
 							Log.d(getClass().getName(),"Show Title bar.");
-///							showTitle();
+							showTitle();
+							
+							//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+							//getSupportActionBar().show();
+							
+							if (wakeLock.isHeld())
+								wakeLock.release();
 						}
 						@Override
 						public void onComplatePlay() {
 							Log.d(getClass().getName(),"Show Title bar.");
-///							showTitle();
+							showTitle();
+							if (wakeLock.isHeld())
+								wakeLock.release();
 						}
 					});
 
@@ -620,7 +625,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
 		subtitleView.setTypeface(educFont);
-		subtitleView.setBackgroundColor(getResources().getColor(R.color.subtitleBGcolor));
+		subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
 
 		// subtitleView = new TextView(LamrimReaderActivity.this);
 		/*
@@ -733,8 +738,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						float size = subtitleView.getTextSize()
 								* detector.getScaleFactor();
 						// Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
-						subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-								size);
+						subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
 						// Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
 						if (subtitleViewRenderMode == SUBTITLE_MODE)
 							subtitleView.setHeight(subtitleView.getLineHeight());
@@ -779,7 +783,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		// FileDownloader(LamrimReaderActivity.this,downloadListener);
 
 		bookView = (MyListView) findViewById(R.id.bookPageGrid);
-		bookView.setFadeColor(getResources().getColor(R.color.subtitleBGcolor));
+		bookView.setFadeColor(getResources().getColor(R.color.defSubtitleBGcolor));
 		int defTheoryTextSize = getResources()
 				.getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(
@@ -845,9 +849,46 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			}
 		});
 
+		renderView = (ImageView) findViewById(R.id.renderView);
+		File renderImage=null;
+		String imgPath=runtime.getString(getString(R.string.renderImgFgPathKey), null);
+		if(imgPath!=null)
+			renderImage=new File(imgPath);
+		
+		if(renderImage != null && renderImage.exists())
+			renderView.setImageURI(Uri.fromFile(renderImage));
+		else renderView.setImageResource(R.drawable.master);
+		
+        renderView.setScaleType(scaleType[runtime.getInt(getString(R.string.renderImgScaleKey), 0)]);
+        int color=runtime.getInt(getString(R.string.renderImgBgColorKey),0);
+        renderView.setBackgroundColor(color);
+        renderView.setOnLongClickListener(new View.OnLongClickListener(){
+			@Override
+			public boolean onLongClick(View v) {
+				Log.d(getClass().getName(),"Into onLongClickListener of render image.");
+				showRenderModeFirstLevelMenu();
+				return true;
+			}});
+        renderView.setOnClickListener(new View.OnClickListener(){
+
+			@Override
+			public void onClick(View v) {
+				Log.d(getClass().getName(),"Into onLongClickListener of render image.");
+				if(mpController!=null)mpController.hideMediaPlayerController();
+			}});
+ /*       renderView.setOnTouchListener(new View.OnTouchListener(){
+            boolean cmdStart=false, hasFired=false;
+            float xStart=-1, yStart=-1;
+           
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                    Log.d(getClass().getName(),"Into bookView.OnTouchListener");
+                    return true;
+            }});
+        */
 		// bookView.setScrollingCacheEnabled( false );
 		rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
-		rootLayout.setLongClickable(false);
+//		rootLayout.setLongClickable(false);
 
 		fileSysManager = new FileSysManager(this);
 		FileSysManager.checkFileStructure();
@@ -867,29 +908,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 * fm.beginTransaction().add(mTaskFragment, "PlayerTask").commit(); }
 		 * Log.d(funcLeave, "******* onCreate *******");
 		 */
-	}
-
-	private void setTheoryArea(final int pageIndex, final int pageShift) {
-		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
-		final int subtitleTextSize = runtime.getInt(
-				getString(R.string.subtitleFontSizeKey), defTitleTextSize);
-		int defTheoryTextSize = getResources()
-				.getInteger(R.integer.defFontSize);
-		final int theoryTextSize = runtime.getInt(
-				getString(R.string.bookFontSizeKey), defTheoryTextSize);
-
-		Log.d(logTag, "Update theory font size: " + theoryTextSize
-				+ ", subtitle font size: " + subtitleTextSize);
-
-		runOnUiThread(new Runnable() {
-			public void run() {
-				bookView.setTextSize(theoryTextSize);
-				bookView.setSelectionFromTop(pageIndex, pageShift);
-				bookView.refresh();
-				subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, subtitleTextSize);
-				jumpPage.setText(Integer.toString(pageIndex));
-			}
-		});
 	}
 
 	@Override
@@ -913,7 +931,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		int isInit = runtime.getInt("mediaIndex", -1);
 		if (isInit == -1) {
 			Log.d(logTag, "This is first time launch LamrimReader, initial default settings.");
-			subtitleView.setTextSize(getResources().getInteger(R.integer.defFontSize));
+//			subtitleView.setTextSize(getResources().getInteger(R.integer.defFontSize));
 			// int currentIndex=mpController.getCurrentPosition();
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("mediaIndex", isInit);
@@ -924,6 +942,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		}
 
+		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
+		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
+		subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, subtitleTextSize);
 		// int bookPage = runtime.getInt("bookPage", 0);
 		// jumpPage.setText(bookPage);
 
@@ -1063,10 +1084,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		speechMenu.setIcon(R.drawable.speech);
 		globalLamrim = rootMenu.add(getString(R.string.globalLamrim));
 		globalLamrim.setIcon(R.drawable.global_lamrim);
-//		setTextSize = rootMenu.add(getString(R.string.menuStrTextSize));
-//		setTextSize.setIcon(R.drawable.font_size);
 		playRegionRec = rootMenu.add(getString(R.string.menuStrPlayRegionRec));
 		playRegionRec.setIcon(R.drawable.region);
+//		swRenderMode = rootMenu.add(getString(R.string.menuStrRenderMode));
+//		swRenderMode.setIcon(R.drawable.render_mode);
 		prjWeb = rootMenu.add(getString(R.string.menuStrOpenProjectWeb));
 		prjWeb.setIcon(R.drawable.project_web);
 		exitApp = rootMenu.add(getString(R.string.exitApp));
@@ -1084,18 +1105,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.d(funcInto,
-				"****OptionsItemselected, select item=" + item.getItemId()
-						+ ", String=" + item.getTitle() + ", Order="
-						+ item.getOrder() + " ****");
+		Log.d(funcInto, "****OptionsItemselected, select item=" + item.getItemId()
+						+ ", String=" + item.getTitle() + ", Order=" + item.getOrder() + " ****");
 		String gid = (String) item.getTitle();
 		GaLogger.sendEvent("ui_action", "menu_event",
 				((gid.length() == 0) ? "root_menu" : gid) + "_pressed", null);
 
 		if (item.equals(rootMenuItem)) {
-			Log.d(logTag,
-					"Create menu: can save region? "
-							+ mpController.isRegionPlay());
+			Log.d(logTag, "Create menu: can save region? " + mpController.isRegionPlay());
 			if (RegionRecord.records.size() > 0) {
 				playRegionRec.setEnabled(true);
 				playRegionRec.setIcon(R.drawable.region);
@@ -1106,26 +1123,17 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		}
 
 		if (item.getTitle().equals(getString(R.string.menuStrSelectSpeech))) {
-			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
-			if (wakeLock.isHeld())wakeLock.release();
-			startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
+			startSpeechMenuActivity();
 		} else if (item.getTitle().equals(getString(R.string.globalLamrim))) {
-			final Intent calendarMenu = new Intent(LamrimReaderActivity.this,	CalendarActivity.class);
-			if (wakeLock.isHeld())wakeLock.release();
-			startActivityForResult(calendarMenu, GLOBAL_LAMRIM_RESULT);
-//		}else if (item.getTitle().equals(getString(R.string.menuStrTextSize))) {
-//			showSetTextSizeDialog();
-		} else if (item.getTitle().equals(
-				getString(R.string.menuStrSavePlayRegion))) {
+			startGlobalLamrimCalendarActivity();
+		}else if (item.getTitle().equals(getString(R.string.menuStrRenderMode))) {
+			switchMainView();
+		} else if (item.getTitle().equals(getString(R.string.menuStrSavePlayRegion))) {
 			showSaveRegionDialog();
-		} else if (item.getTitle().equals(
-				getString(R.string.menuStrPlayRegionRec))) {
+		} else if (item.getTitle().equals(getString(R.string.menuStrPlayRegionRec))) {
 			showRecordListPopupMenu();
-		} else if (item.getTitle().equals(
-				getString(R.string.menuStrOpenProjectWeb))) {
-			Uri uri = Uri.parse(getString(R.string.projectWebUrl));
-			Intent it = new Intent(Intent.ACTION_VIEW, uri);
-			startActivity(it);
+		} else if (item.getTitle().equals(getString(R.string.menuStrOpenProjectWeb))) {
+			startProjectWebUrl();
 		} else if (item.getTitle().equals(getString(R.string.exitApp))) {
 			onBackPressed();
 			Log.d(funcLeave, "**** onBackPressed ****");
@@ -1145,24 +1153,41 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		Log.d(funcLeave, "**** Into Options selected, select item=" + item.getItemId()+ " ****");
 		return true;
 	}
+	
+	private void startSpeechMenuActivity(){
+		final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
+		if (wakeLock.isHeld())wakeLock.release();
+		startActivityForResult(speechMenu, SPEECH_MENU_RESULT);
+	}
+	
+	private void startGlobalLamrimCalendarActivity(){
+		if (wakeLock.isHeld())wakeLock.release();
+		final Intent calendarMenu = new Intent(LamrimReaderActivity.this,	CalendarActivity.class);
+		startActivityForResult(calendarMenu, GLOBAL_LAMRIM_RESULT);
+	}
+	
+	private void startProjectWebUrl(){
+		if (wakeLock.isHeld())wakeLock.release();
+		Uri uri = Uri.parse(getString(R.string.projectWebUrl));
+		Intent it = new Intent(Intent.ACTION_VIEW, uri);
+		startActivity(it);
+	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 		Log.d(funcInto, "**** Into onActivityResult: Get result from: "	+ requestCode + " ****");
 
+		if (resultCode == RESULT_CANCELED) {
+			Log.d(logTag, "User skip, do nothing.");
+			return;
+		}
+		
 		SharedPreferences.Editor editor = runtime.edit();
 		switch (requestCode) {
 		case SPEECH_MENU_RESULT:
-			if (resultCode == RESULT_CANCELED) {
-				Log.d(logTag, "User skip, do nothing.");
-				return;
-			}
-			
-			if(intent == null){
-				GaLogger.sendException("SpeechMenuActivity return data to LamrimRaderActivity Failure(Failure delivering result ResultInfo).", null, true);
-				return;
-			}
-			
+
+			if(intent == null)return;
+
 			final int selected = intent.getIntExtra("index", -1);
 			Log.d(logTag, "OnResult: the user select index=" + selected);
 			if(selected == -1)return;
@@ -1188,12 +1213,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			// do start downloader in OnResume.
 			break;
 		case GLOBAL_LAMRIM_RESULT:
-			if (resultCode == RESULT_CANCELED)return;
-			
-			if(intent == null){
-				GaLogger.sendException("CalendarActivity return data to LamrimRaderActivity Failure(Failure delivering result ResultInfo).", null, true);
-				return;
-			}
+			if(intent == null)return;
 			
 			if(glRecord==null)glRecord=new GlRecord();
 			glRecord.dateStart=intent.getStringExtra("dateStart");
@@ -1254,6 +1274,21 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			
 			mpController.reset();
 			break;
+			
+		case SELECT_FG_PIC_RESULT:
+			if(intent == null)return;
+			final String filePath = intent.getStringExtra(FileDialogActivity.RESULT_PATH);
+			File file=new File(filePath);
+			
+			if(!file.exists()){
+				Util.showNarmalToastMsg(LamrimReaderActivity.this, "您所選擇的檔案不存在或無法讀取。");
+				return;
+			}
+			
+			renderView.setImageURI(Uri.fromFile(file));
+			editor.putString("renderImgFgPathKey", filePath);
+			editor.commit();
+			break;
 		}
 
 		Log.d(funcLeave, "Leave onActivityResult");
@@ -1298,6 +1333,18 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		runner.execute();
 
 		return true;
+	}
+	
+	private void setMediaControllerView(int regStartMs, int regEndMs, boolean prevBtnEnable,boolean prevBtnVisiable, OnClickListener prev, boolean nextBtnEnable, boolean nextBtnVisiable,OnClickListener next){
+		mpController.setPrevNextListeners(next, prev);
+		mpController.setPrevButtonIconEnable(prevBtnEnable);
+		mpController.setNextButtonIconEnable(nextBtnEnable);
+		mpController.setPlayRegionStartMs(regStartMs);
+		mpController.setPlayRegionEndMs(regEndMs);
+		View nextBtn=mpController.getControllerView().findViewById(R.id.next);
+		View prevBtn=mpController.getControllerView().findViewById(R.id.prev);
+		if(prevBtnVisiable)prevBtn.setVisibility(View.VISIBLE);	else prevBtn.setVisibility(View.GONE);
+		if(nextBtnVisiable)nextBtn.setVisibility(View.VISIBLE); else nextBtn.setVisibility(View.GONE);
 	}
 
 	private void setSubtitleViewMode(final int mode) {
@@ -1359,8 +1406,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		OnSeekBarChangeListener sbListener = new OnSeekBarChangeListener() {
 			@Override
-			public void onProgressChanged(final SeekBar seekBar,
-					final int progress, boolean fromUser) {
+			public void onProgressChanged(final SeekBar seekBar, final int progress, boolean fromUser) {
 				if (!fromUser)
 					return;
 				final int minSize = getResources().getInteger(R.integer.textMinSize);
@@ -1414,27 +1460,24 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		WindowManager.LayoutParams lp = setTextSizeDialog.getWindow().getAttributes();
 		lp.alpha = 0.7f;
 		setTextSizeDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-					@Override
-					public void onDismiss(DialogInterface dialog) {
-						SharedPreferences.Editor editor = runtime.edit();
-						Log.d(logTag, "Write theory size: "
-										+ (int) theorySb.getProgress()
-										+ ", subtitle size: "
-										+ subtitleSb.getProgress()
-										+ " to runtime.");
-						editor.putInt(getString(R.string.bookFontSizeKey), theorySb.getProgress()
-										+ getResources().getInteger(R.integer.textMinSize));
-						editor.putInt(getString(R.string.subtitleFontSizeKey), subtitleSb.getProgress()
-										+ getResources().getInteger(R.integer.textMinSize));
-						editor.commit();
+			@Override
+			public void onDismiss(DialogInterface dialog) {
+				SharedPreferences.Editor editor = runtime.edit();
+				Log.d(logTag, "Write theory size: "	+ (int) theorySb.getProgress()
+								+ ", subtitle size: " + subtitleSb.getProgress() + " to runtime.");
+				editor.putInt(getString(R.string.bookFontSizeKey), theorySb.getProgress()
+								+ getResources().getInteger(R.integer.textMinSize));
+				editor.putInt(getString(R.string.subtitleFontSizeKey), subtitleSb.getProgress()
+								+ getResources().getInteger(R.integer.textMinSize));
+				editor.commit();
 
-						Log.d(logTag,"Check size after write to db: theory size: "
-										+ runtime.getInt(getString(R.string.bookFontSizeKey), 0) + ", subtitle size: "
-										+ runtime.getInt(getString(R.string.subtitleFontSizeKey), 0));
-						// updateTextSize();
-						dialog.dismiss();
-					}
-				});
+				Log.d(logTag,"Check size after write to db: theory size: "
+								+ runtime.getInt(getString(R.string.bookFontSizeKey), 0) + ", subtitle size: "
+								+ runtime.getInt(getString(R.string.subtitleFontSizeKey), 0));
+				// updateTextSize();
+				dialog.dismiss();
+			}
+		});
 		setTextSizeDialog.setCanceledOnTouchOutside(true);
 		setTextSizeDialog.show();
 	}
@@ -1476,8 +1519,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		Window window = getWindow();
 		window.getDecorView().getWindowVisibleDisplayFrame(rectgle);
 		int StatusBarHeight = rectgle.top;
-		int contentViewTop = window.findViewById(Window.ID_ANDROID_CONTENT)
-				.getTop();
+		int contentViewTop = window.findViewById(Window.ID_ANDROID_CONTENT).getTop();
 		int titleBarHeight = contentViewTop - StatusBarHeight;
 		int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
 		int subtitleViewHeight = ((TextView) findViewById(R.id.subtitleView)).getHeight();
@@ -1579,10 +1621,391 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		// popupWindow.showAsDropDown(findViewById(R.id.subtitleView));
 	}
 
+	
+	private void showRenderModeFirstLevelMenu(){
+		String[] menuStr = {"離開公播模式","一般選單","設定選單"};
+		AlertDialog.Builder builderSingle = new AlertDialog.Builder(LamrimReaderActivity.this);
+		builderSingle.setIcon(R.drawable.ic_launcher);
+		builderSingle.setTitle("功能選單").setItems(menuStr, new DialogInterface.OnClickListener(){
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                        if(which == 0)switchMainView();
+                        else if(which == 1)showRenderModeNormalMenu();
+                        else shwoRenderModeOptMenu();
+                }});
+		/*builderSingle.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		*/
+		builderSingle.show();
+	}
+	
+	private void showRenderModeNormalMenu(){
+		String[] menuStr={getString(R.string.menuStrSelectSpeech), getString(R.string.globalLamrim),getString(R.string.menuStrPlayRegionRec),"離開公播模式", getString(R.string.menuStrOpenProjectWeb), getString(R.string.exitApp)};
+		
+		AlertDialog.Builder builderSingle = new AlertDialog.Builder(LamrimReaderActivity.this);
+		builderSingle.setIcon(R.drawable.ic_launcher);
+		builderSingle.setTitle("一般選單").setItems(menuStr, new DialogInterface.OnClickListener(){
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if(which == 0)startSpeechMenuActivity();
+				else if(which == 1)startGlobalLamrimCalendarActivity();
+				else if(which == 2){
+					if (RegionRecord.records.size() == 0) {
+						Util.showNarmalToastMsg(LamrimReaderActivity.this, "沒有區段記錄，請先記錄區段。");
+						return;
+					}
+					showRecordListPopupMenu();
+				}
+				else if(which == 3)switchMainView();
+				else if(which == 4)startProjectWebUrl();
+				else if(which == 5)onBackPressed();
+				else Log.d(getClass().getName(),"There is a non exist menu option been selected.");
+			}});
+		/*builderSingle.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		*/
+		builderSingle.show();
+	}
+	
+	private void shwoRenderModeOptMenu(){
+		String[] menuStr={"顯示/隱藏模式切換鍵","選擇圖片", "圖片擴展方式", "圖片背景顏色", "字幕顏色", "字幕背景顏色", "字幕背景透明度","回到原始設定"};
+		AlertDialog.Builder builderSingle = new AlertDialog.Builder(LamrimReaderActivity.this);
+		builderSingle.setIcon(R.drawable.ic_launcher);
+		builderSingle.setTitle("功能選單").setItems(menuStr, new DialogInterface.OnClickListener(){
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if(which == 0)showHideSubtitleSwBtn();
+				else if(which == 1)selectRenderImage();
+				else if(which == 2)showScaleTypeDialog();
+				else if(which == 3)showRenderImageBgColorDlg();
+				else if(which == 4)showSubFgColorDlg();
+				else if(which == 5)showSubBgColorDlg();
+				else if(which == 6)showSubBgAlphaDlg();
+				else if(which == 7)setRenderModeOptsToDefault();
+			}});
+/*		builderSingle.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});*/
+		builderSingle.show();
+	}
+	
+	private void setRenderModeOptsToDefault(){
+		renderView.setImageResource(R.drawable.master);
+		renderView.setScaleType(scaleType[0]);
+		renderView.setBackgroundColor(0);
+		subtitleView.setTextColor(getResources().getColor(R.color.defSubtitleFGcolor));
+		subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
+		modeSwBtn.setVisibility(View.VISIBLE);
+		
+		SharedPreferences.Editor editor = runtime.edit();
+		editor.remove(getString(R.string.isShowModeSwBtnKey));
+		editor.remove(getString(R.string.renderImgFgPathKey));
+		editor.remove(getString(R.string.renderImgScaleKey));
+		editor.remove(getString(R.string.renderImgBgColorKey));
+		editor.remove(getString(R.string.subtitleFgColorKey));
+		editor.remove(getString(R.string.subtitleBgColorKey));
+		editor.remove(getString(R.string.subtitleAlphaKey));
+		editor.commit();
+	}
+	
+	final String scaleStr[]={"等比擴展填滿置中", "等比擴展全圖顯示置中", "不按比例完全擴展", "等比縮放置上", "等比縮放置中", "等比縮放置底", "不縮放置中",  "向量"};
+    private void showScaleTypeDialog(){
+            AlertDialog.Builder builderSingle = new AlertDialog.Builder(LamrimReaderActivity.this);
+        builderSingle.setIcon(R.drawable.ic_launcher);
+        builderSingle.setTitle("選擇擴展方式")
+        .setItems(scaleStr, new DialogInterface.OnClickListener(){
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                            // TODO Auto-generated method stub
+                            renderView.setScaleType(scaleType[which]);
+                            SharedPreferences.Editor editor = runtime.edit();
+                            Log.d(logTag,"Set image scale type: "+scaleStr[which]);
+                            editor.putInt(getString(R.string.renderImgScaleKey), which);
+                            editor.commit();
+                    }});
+/*        builderSingle.setNegativeButton("cancel",
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+*/       
+        builderSingle.show();
+    }
+
+	private void switchMainView(){
+		if(renderView.getVisibility()==View.VISIBLE){
+			renderView.setVisibility(View.GONE);
+			bookView.setVisibility(View.VISIBLE);
+			subtitleView.setTextColor(getResources().getColor(R.color.defSubtitleFGcolor));
+			subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
+			modeSwBtn.setVisibility(View.VISIBLE);
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			getSupportActionBar().show();
+			
+	    }
+		else{
+			showRenderModeWarring();
+			renderView.setVisibility(View.VISIBLE);
+			bookView.setVisibility(View.GONE);
+			int alpha=runtime.getInt(getString(R.string.subtitleAlphaKey), 255) << 24 & 0xFF000000;
+			int color=runtime.getInt(getString(R.string.subtitleBgColorKey), getResources().getColor(R.color.defSubtitleBGcolor)) & 0x00FFFFFF;
+			Log.d(getClass().getName(),"Load alpha of subitlte: "+alpha);
+			int bgColor = alpha | color;
+			subtitleView.setTextColor(runtime.getInt(getString(R.string.subtitleFgColorKey), getResources().getColor(R.color.defSubtitleFGcolor)));
+			subtitleView.setBackgroundColor(bgColor);
+			boolean isShowModeSwBtn=runtime.getBoolean(getString(R.string.isShowModeSwBtnKey), true);
+			if(isShowModeSwBtn)modeSwBtn.setVisibility(View.VISIBLE);
+			else modeSwBtn.setVisibility(View.GONE);
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+			getSupportActionBar().hide();
+		}
+	}
+
+	// ================ For option menu =====================
+	
+	private void showRenderModeWarring(){
+		AlertDialog.Builder builderSingle =new AlertDialog.Builder(this).setTitle("警告").setIcon(android.R.drawable.ic_dialog_alert)
+				.setMessage("此模式畫面上沒有選單按鍵！\n必須透過\"按住圖片\"才能叫出選單。\n重開廣論App後會回到正常模式。");
+		builderSingle.setPositiveButton("我發誓我有讀懂!", null);
+		builderSingle.setCancelable(false);
+		builderSingle.show();
+	}
+	
+	private void showHideSubtitleSwBtn(){
+		SharedPreferences.Editor editor = runtime.edit();
+		if(modeSwBtn.getVisibility() == View.VISIBLE){
+			modeSwBtn.setVisibility(View.GONE);
+            editor.putBoolean(getString(R.string.isShowModeSwBtnKey), false);
+            editor.commit();
+		}
+		else {
+			modeSwBtn.setVisibility(View.VISIBLE);
+			editor.putBoolean(getString(R.string.isShowModeSwBtnKey), true);
+			editor.commit();
+		}
+	}
+		private void selectRenderImage(){
+		Intent fgIntent = new Intent(getBaseContext(), FileDialogActivity.class);
+		fgIntent.putExtra(FileDialogActivity.TITLE, "請選擇圖片檔案");
+		fgIntent.putExtra(FileDialogActivity.START_PATH, "/sdcard");
+		//can user select directories or not
+		fgIntent.putExtra(FileDialogActivity.CAN_SELECT_DIR, false);
+		fgIntent.putExtra(FileDialogActivity.SELECTION_MODE, FileDialogActivity.MODE_OPEN);
+		
+		//alternatively you can set file filter
+		fgIntent.putExtra(FileDialogActivity.FORMAT_FILTER, new String[] { "jpg", "gif", "png", "bmp", "webp" });
+		startActivityForResult(fgIntent, SELECT_FG_PIC_RESULT);
+    }
+
+	private void showRenderImageBgColorDlg(){
+		int defColor=runtime.getInt(getString(R.string.renderImgBgColorKey), R.color.defSubtitleBGcolor);
+/*		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LamrimReaderActivity.this, defColor, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+			@Override
+			public void onOk(AmbilWarnaDialog dialog, int color) {
+				bookView.setBackgroundColor(color);
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putInt(getString(R.string.renderImgBgColorKey), color);
+				editor.commit();
+			}
+
+			@Override
+			public void onCancel(AmbilWarnaDialog dialog) {}
+		});
+           
+		dialog.show();
+*/		
+		final ColorPickerDialog colorDialog=new ColorPickerDialog(LamrimReaderActivity.this, defColor,new ColorPickerView.OnColorChangedListener() {
+			@Override
+			public void onColorChanged(int color) {
+				renderView.setBackgroundColor(color | 0xFF000000);
+				SharedPreferences.Editor editor = runtime.edit();
+                editor.putInt(getString(R.string.renderImgBgColorKey), color);
+                editor.commit();
+			}
+		});
+		 colorDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					int color=((ColorDrawable)renderView.getBackground()).getColor() | 0xFF000000;
+					SharedPreferences.Editor editor = runtime.edit();
+	                editor.putInt(getString(R.string.renderImgBgColorKey), color);
+	                editor.commit();
+				}});
+        
+		/*        colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				
+			}
+		});
+		
+		colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {}
+		});
+		*/
+		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
+        lp.alpha=0.8f;
+        colorDialog.getWindow().setAttributes(lp);
+        colorDialog.show();
+    }
+	
+	private void showSubFgColorDlg(){
+            int defFgColor=runtime.getInt(getString(R.string.subtitleFgColorKey), R.color.defSubtitleFGcolor);
+            
+            final ColorPickerDialog colorDialog=new ColorPickerDialog(LamrimReaderActivity.this, defFgColor,new ColorPickerView.OnColorChangedListener() {
+				@Override
+				public void onColorChanged(int color) {
+					subtitleView.setTextColor(color|0xFF000000);
+				}
+			});
+            
+            colorDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					int color=subtitleView.getCurrentTextColor();
+					SharedPreferences.Editor editor = runtime.edit();
+                    editor.putInt(getString(R.string.subtitleFgColorKey), color);
+                    editor.commit();
+				}});
+            /*colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {
+    				
+    			}
+    		});
+    		
+    		colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {}
+    		});*/
+    		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
+            lp.alpha=0.8f;
+            colorDialog.getWindow().setAttributes(lp);
+            colorDialog.show();
+    }
+	
+	private void showSubBgColorDlg(){
+            int defBgColor=runtime.getInt(getString(R.string.subtitleBgColorKey), R.color.defSubtitleBGcolor);
+            
+            final ColorPickerDialog colorDialog=new ColorPickerDialog(LamrimReaderActivity.this, defBgColor,new ColorPickerView.OnColorChangedListener() {
+				@Override
+				public void onColorChanged(int color) {
+					int alpha=((ColorDrawable)subtitleView.getBackground()).getColor() >> 24 & 0xFF;
+					Log.d(getClass().getName(),"Get alpha: "+alpha);
+					int c=Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color));
+					subtitleView.setBackgroundColor(c);
+				}
+			});
+            colorDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					int color=((ColorDrawable)subtitleView.getBackground()).getColor();
+					SharedPreferences.Editor editor = runtime.edit();
+                    editor.putInt(getString(R.string.subtitleBgColorKey), color);
+                    editor.commit();
+				}});
+            
+/*            colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {
+    				subtitleView.setBackgroundColor(colorDialog.getColor());
+                    
+    			}
+    		});
+*/    		
+    		/*colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {}
+    		});*/
+    		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
+            lp.alpha=0.8f;
+            colorDialog.getWindow().setAttributes(lp);
+            colorDialog.show();
+    }
+	
+	private void showSubBgAlphaDlg(){
+		final SeekBar seekBar=new SeekBar(this);
+		seekBar.setMax(255);
+		int alpha=runtime.getInt(getString(R.string.subtitleAlphaKey),255);
+		seekBar.setProgress(alpha);
+		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener (){
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				int color=((ColorDrawable)subtitleView.getBackground()).getColor();
+				subtitleView.setBackgroundColor(Color.argb(progress, Color.red(color), Color.green(color), Color.blue(color)));
+			}
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {}
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {}});
+		
+//		final EditText input=new EditText(this);
+		
+//		input.setText(Integer.toString(alpha));
+//		input.setSingleLine();
+//		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+		AlertDialog.Builder builderSingle =new AlertDialog.Builder(this).setTitle("請輸選擇透明度").setIcon(android.R.drawable.ic_dialog_info).setView(seekBar);
+		builderSingle.setOnCancelListener(new DialogInterface.OnCancelListener(){
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				int alpha=((ColorDrawable)subtitleView.getBackground()).getColor() >> 24 & 0xFF;
+				Log.d(getClass().getName(),"Save alpha of subitlte to "+alpha);
+				SharedPreferences.Editor editor = runtime.edit();
+                editor.putInt(getString(R.string.subtitleAlphaKey), alpha);
+                editor.commit();
+			}});
+		builderSingle.show();
+		
+		
+		/*.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						try{
+							//int alpha=Integer.parseInt(input.getText().toString());
+							int alphaValue=seekBar.getProgress();
+							subtitleView.getBackground().setAlpha(alphaValue);
+
+							
+						}catch(Exception e){}
+					}})
+					.setNegativeButton("取消", null).show();*/
+    }
+	
 	private void hideTitle(){
+		if(!getSupportActionBar().isShowing())return;
+		double inch=Util.getDisplaySizeInInch(LamrimReaderActivity.this);
+		Log.d(getClass().getName(),"The screen is "+inch+" inch.");
+		// Do not hide title bar over 6 inch screen.
+		if(inch > 6)return;
+		 
 		runOnUiThread(new Runnable(){
 			@Override
 			public void run() {
+				Log.d(getClass().getName(),"Hide action bar");
 //				getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
 			    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 			    getSupportActionBar().hide();
@@ -1590,9 +2013,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	}
 
 	private void showTitle(){
+		Log.d(getClass().getName(),"is action bar showing = "+getSupportActionBar().isShowing());
+		Log.d(getClass().getName(),"renderView visiable = "+((renderView.getVisibility()==View.VISIBLE)?"true":"false"));
+		if(getSupportActionBar().isShowing() || renderView.getVisibility()==View.VISIBLE)return;
 		runOnUiThread(new Runnable(){
 			@Override
 			public void run() {
+				Log.d(getClass().getName(),"========================= Show action bar =======================");
 //				getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
 				getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 				getSupportActionBar().show();
@@ -1612,14 +2039,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		}
 
 		@Override
-		public View getView(final int position, View convertView,
-				ViewGroup parent) {
+		public View getView(final int position, View convertView, ViewGroup parent) {
 			View row = convertView;
 			if (row == null) {
 				Log.d(getClass().getName(), "row=null, construct it.");
 				LayoutInflater inflater = getLayoutInflater();
-				row = inflater.inflate(R.layout.popup_record_list_row, parent,
-						false);
+				row = inflater.inflate(R.layout.popup_record_list_row, parent, false);
 			}
 
 			RegionRecord record = RegionRecord.getRegionRecord(LamrimReaderActivity.this, position);
@@ -1679,18 +2104,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			return row;
 		}
 	};
-	
-	private void setMediaControllerView(int regStartMs, int regEndMs, boolean prevBtnEnable,boolean prevBtnVisiable, OnClickListener prev, boolean nextBtnEnable, boolean nextBtnVisiable,OnClickListener next){
-		mpController.setPrevNextListeners(next, prev);
-		mpController.setPrevButtonIconEnable(prevBtnEnable);
-		mpController.setNextButtonIconEnable(nextBtnEnable);
-		mpController.setPlayRegionStartMs(regStartMs);
-		mpController.setPlayRegionEndMs(regEndMs);
-		View nextBtn=mpController.getControllerView().findViewById(R.id.next);
-		View prevBtn=mpController.getControllerView().findViewById(R.id.prev);
-		if(prevBtnVisiable)prevBtn.setVisibility(View.VISIBLE);	else prevBtn.setVisibility(View.GONE);
-		if(nextBtnVisiable)nextBtn.setVisibility(View.VISIBLE); else nextBtn.setVisibility(View.GONE);
-	}
 	
 	public interface PrevNextListener{
 		public OnClickListener getNextListener();
@@ -1775,5 +2188,4 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			return nextListener;
 		}
 	}
-
 }

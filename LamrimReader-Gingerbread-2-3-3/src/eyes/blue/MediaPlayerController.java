@@ -187,13 +187,13 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer.
 	 * */
 	public synchronized void seekTo(int pos) {
-		Log.d(logTag,Thread.currentThread().getName()+" SeekTo function: seek to position: "+pos+", duration="+mediaPlayer.getDuration());
+//		Log.d(logTag,Thread.currentThread().getName()+" SeekTo function: seek to position: "+pos+", duration="+mediaPlayer.getDuration());
 		if(mediaPlayer==null)return;
 		if(mpState<MP_PREPARED)return;
 		
 		if(subtitle==null){
 			synchronized(mediaPlayerKey){
-				Log.d(logTag,"real set position to "+pos);
+//				Log.d(logTag,"real set position to "+pos);
 				mediaPlayer.seekTo(pos);
 			}
 			return;
@@ -215,7 +215,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 
 		synchronized(mediaPlayerKey){
-			Log.d(logTag,Thread.currentThread().getName()+" Perform mediaPlayer.seekTo(pos) to "+pos);
+//			Log.d(logTag,Thread.currentThread().getName()+" Perform mediaPlayer.seekTo(pos) to "+pos);
 			mediaPlayer.seekTo(pos);
 		}
 		
@@ -223,7 +223,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			playingIndex=index;
 			changedListener.onSeek(playingIndex, subtitle[playingIndex]);
 			changedListener.onSubtitleChanged(playingIndex, subtitle[playingIndex]);
-			Log.d(logTag,"real set position to "+subtitle[playingIndex].startTimeMs);
+//			Log.d(logTag,"real set position to "+subtitle[playingIndex].startTimeMs);
 		}			
 	}
 	

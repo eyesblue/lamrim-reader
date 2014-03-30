@@ -205,6 +205,7 @@ public class StorageManageActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(getBaseContext(), FileDialogActivity.class);
+				intent.putExtra(FileDialogActivity.TITLE, "請選擇存放目錄");
                 intent.putExtra(FileDialogActivity.START_PATH, "/sdcard");
                 
                 //can user select directories or not
@@ -423,8 +424,8 @@ public class StorageManageActivity extends Activity {
 	
 	
 	public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-		if (resultCode != Activity.RESULT_OK) return;
-		if (requestCode != 0) return;
+		if (resultCode != Activity.RESULT_OK || requestCode != 0 || data == null) return;
+
 		final String filePath = data.getStringExtra(FileDialogActivity.RESULT_PATH);
 
 		// Avoid EditText bug,  the EditText will not change to the new value without the thread.

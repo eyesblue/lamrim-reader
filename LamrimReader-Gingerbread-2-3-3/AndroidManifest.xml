@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="eyes.blue"
-    android:versionCode="134"
-    android:versionName="1.2.4" >
+    android:versionCode="135"
+    android:versionName="1.2.5" >
 
     <uses-sdk android:minSdkVersion="8" />
 
@@ -60,6 +60,7 @@
 
         <activity
             android:name="eyes.blue.CalendarActivity"
+            android:theme="@style/Theme.Sherlock"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_calendar"
             android:screenOrientation="landscape" >

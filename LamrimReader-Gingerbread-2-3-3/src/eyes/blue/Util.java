@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -155,6 +156,15 @@ public class Util {
 	
 //	System.out.println("getMSToHMS: input="+ms+"ms, ht="+ht+", mt="+mt+", sec="+second+", HMS="+hs+":"+ms+":"+ss+"."+sub);
 		return mst+minuteSign+ss+((hasDecimal)?"."+sub:"")+secSign;
+	}
+	
+	public static double getDisplaySizeInInch(Activity activity){
+		DisplayMetrics dm = new DisplayMetrics();
+		activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+		double x = Math.pow(dm.widthPixels/dm.xdpi,2);
+		double y = Math.pow(dm.heightPixels/dm.ydpi,2);
+		double screenInches = Math.sqrt(x+y);
+		return screenInches;
 	}
 	
 	public static boolean unZip( String zipname , String extractTo)

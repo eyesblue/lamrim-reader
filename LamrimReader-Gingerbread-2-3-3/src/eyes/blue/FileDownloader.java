@@ -416,7 +416,8 @@ public class FileDownloader {
                 Checksum checksum = new CRC32();
                 FileOutputStream fos=null;
                
-                HttpClient httpclient = getNewHttpClient();
+                //HttpClient httpclient = getNewHttpClient();
+                HttpClient httpclient = new DefaultHttpClient();
                         HttpGet httpget = new HttpGet(url);
                         HttpResponse response=null;
                         int respCode=-1;
@@ -508,7 +509,6 @@ public class FileDownloader {
                
                 setProgressMsg(activity.getString(R.string.dlgTitleDownloading),String.format(activity.getString(R.string.dlgDescDownloading), SpeechData.getNameId(mediaIndex),(type == activity.getResources().getInteger(R.integer.MEDIA_TYPE))?"音檔":"字幕"));
                 setDlProgressMax((int) contentLength);
-                       
                
                 try {
                         byte[] buf=new byte[bufLen];
@@ -574,7 +574,7 @@ public class FileDownloader {
                 return true;
                 }
                
-                public HttpClient getNewHttpClient() {
+/*                public HttpClient getNewHttpClient() {
                     try {
                         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
                         trustStore.load(null, null);
@@ -597,7 +597,7 @@ public class FileDownloader {
                         return new DefaultHttpClient();
                     }
                 }
-
+*/
         }
        
        
@@ -716,7 +716,7 @@ public class FileDownloader {
                         }});
         }
        
-       
+/*
         public class MySSLSocketFactory extends SSLSocketFactory {
             SSLContext sslContext = SSLContext.getInstance("TLS");
 
@@ -748,4 +748,5 @@ public class FileDownloader {
                 return sslContext.getSocketFactory().createSocket();
             }
         }
+        */
 }

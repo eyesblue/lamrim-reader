@@ -10,7 +10,7 @@ import android.content.Context;
 
 public class GoogleRemoteSource implements RemoteSource{
 	Context context=null;
-	final static String baseURL="http://sites.google.com/a/eyes-blue.com/lamrimreader/appresources/";
+	final static String baseURL="http://lamrimreader.eyes-blue.com/appresources/";
 //	final static String mediaSubName="MP3";
 //	final static String subtitleSubName="SRT";
 //	final static String theorySubName="TXT";
