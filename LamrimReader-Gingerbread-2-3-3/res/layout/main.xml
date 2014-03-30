@@ -25,6 +25,17 @@
         </eyes.blue.modified.MyListView>
     </eyes.blue.modified.MyHorizontalScrollView>
 
+    <ImageView
+        android:id="@+id/renderView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:enabled="true"
+        android:longClickable="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/master"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/subtitleView"
         android:layout_width="fill_parent"

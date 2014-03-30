@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="markRed">#F9B3B6</color>
+    <color name="markGreen">#B3F9BD</color>
+    <color name="markBlue">#B3B3F9</color>
+</resources>

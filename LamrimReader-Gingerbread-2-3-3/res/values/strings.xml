@@ -12,9 +12,9 @@
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
 
     <!-- Default Value -->
-    <integer name="textMaxSize">64</integer>
-    <integer name="textMinSize">8</integer>
-    <integer name="defFontSize">24</integer>
+    <integer name="textMaxSize">80</integer>
+    <integer name="textMinSize">16</integer>
+    <integer name="defFontSize">32</integer>
     <integer name="theorySmallTextSizePercent">90</integer>
 
     <color name="theoryNumTextColor">#0000CC</color>
@@ -56,6 +56,17 @@
     <string name="localGlobalLamrimScheduleFileDateFmtErr">全廣進度日期格式錯誤，請重新下載！</string>
     <string name="localGlobalLamrimScheduleFileDataErr">全廣進度記錄錯誤: </string>
     <string name="localGlobalLamrimScheduleFileDecodeErr">全廣進度讀取時發生封裝錯誤，請重新下載！ </string>
+    
+
+    <!-- For render image -->
+    <string name="renderImgFgPathKey">renderImage</string>
+    <string name="renderImgBgColorKey">renderImgBgColor</string>
+    <string name="renderImgScaleKey">renderImgScaleType</string>
+    <string name="isShowModeSwBtnKey">isShowModeSwBtn</string>
+    <string name="subtitleFgColorKey">subtitleFgColor</string>
+    <string name="subtitleBgColorKey">subtitleBgColor</string>
+    <string name="subtitleAlphaKey">subtitleAlpha</string>
+    <color name="defSubtitleFGcolor">#FFFFFF</color>
 
     <!-- For Option Panel -->
     <string name="bookFontSize">論文</string>
@@ -72,6 +83,7 @@
     <string name="menuStrTextSize">設定字體</string>
     <string name="menuStrSavePlayRegion">儲存區段</string>
     <string name="menuStrPlayRegionRec">區段播放</string>
+    <string name="menuStrRenderMode">公播模式</string>
     <string name="menuStrPlayRegionRecShortName">區段</string>
     <string name="menuStrOpenProjectWeb">計劃網頁</string>
     <string name="projectWebUrl">http://lamrimreader.eyes-blue.com/</string>
@@ -96,7 +108,7 @@
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
 
-    <color name="subtitleBGcolor">#0F395E</color>
+    <color name="defSubtitleBGcolor">#0F395E</color>
     <color name="subtitleRedingModeHilightColor">#FFF82A</color>
     <color name="subtitleScrollPressColor">#E17D37</color>
 
@@ -148,7 +160,7 @@
     <string name="location">位置</string>
     <string name="cant_read_folder">無法讀取目錄</string>
     <string name="nnew">新增</string>
-    <string name="select">選擇此處</string>
+    <string name="select">確定</string>
     <string name="file_name">檔名:</string>
     <string name="cancel">取消</string>
     <string name="create">儲存</string>

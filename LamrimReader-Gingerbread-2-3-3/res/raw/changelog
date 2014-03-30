@@ -23,6 +23,14 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$135
+  % Version 1.2.5
+  _ 2014-03-31
+	* 改變下載網址，內陸地區的學員可以直接使用廣論App下載音檔了。
+	* 6吋以下的裝置播放時自動隱藏標題列。
+	* 修正結束播放時不會進入休眠模式的問題。
+	* 修正回到廣論App時載回正確的字型大小。
+	
 $134
   % Version 1.2.4
   _ 2014-03-28
