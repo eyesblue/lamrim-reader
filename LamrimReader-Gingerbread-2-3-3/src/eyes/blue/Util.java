@@ -292,7 +292,7 @@ public class Util {
 										+ lineCounter);
 				}
 			}
-
+			br.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

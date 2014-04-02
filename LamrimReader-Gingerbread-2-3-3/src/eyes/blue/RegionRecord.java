@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -28,20 +30,24 @@ public class RegionRecord {
 	public int contentSerial = -1;
 	public String title=null, createTime=null, info = null;
 	public int mediaIndex=-1;
+	public int theoryPageNum, theoryStartLine, theoryEndLine;
 	public int startTimeMs=-1;
 	public int endTimeMs=-1;
 	static ArrayList<RegionRecord> records = null;
 	
 	public static void init(Activity activity){records=getAllRecord(activity);}
-	public static RegionRecord addRegionRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, String info){
-		SimpleDateFormat sdf=new SimpleDateFormat();
+	public static RegionRecord addRegionRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, int theoryPageNum, int theoryStartLine, int theoryEndLine, String info){
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		
 		RegionRecord rr=new RegionRecord();
     	rr.version=1;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
     	rr.mediaIndex=mediaIndex;
-    	rr.createTime=sdf.getDateTimeInstance().toString();
+    	rr.theoryPageNum=theoryPageNum;
+    	rr.theoryStartLine=theoryStartLine;
+    	rr.theoryEndLine=theoryEndLine;
+    	rr.createTime=sdf.format(Calendar.getInstance());
     	rr.startTimeMs=startTimeMs;
     	rr.endTimeMs=endTimeMs;
     	rr.info=info;
@@ -61,14 +67,17 @@ public class RegionRecord {
 		syncToFile(activity);
 	}
 	
-	public static void updateRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, int recordIndex){
-		SimpleDateFormat sdf=new SimpleDateFormat();
+	public static void updateRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, int theoryPageNum, int theoryStartLine, int theoryEndLine, int recordIndex){
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		RegionRecord rr=records.get(recordIndex);
     	rr.version=1;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
     	rr.mediaIndex=mediaIndex;
-    	rr.createTime=sdf.getDateTimeInstance().toString();
+    	rr.theoryPageNum=theoryPageNum;
+    	rr.theoryStartLine=theoryStartLine;
+    	rr.theoryEndLine=theoryEndLine;
+    	rr.createTime=sdf.format(Calendar.getInstance());
     	rr.startTimeMs=startTimeMs;
     	rr.endTimeMs=endTimeMs;
     	

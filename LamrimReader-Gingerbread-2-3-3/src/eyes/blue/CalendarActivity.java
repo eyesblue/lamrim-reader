@@ -185,18 +185,10 @@ public class CalendarActivity extends SherlockActivity {
 	protected void onActivityResult(int requestCode, int resultCode,
 			Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
-		if (resultCode == RESULT_CANCELED || selectedGlr == null
-				|| !isFileExist(selectedGlr))
+		if (resultCode == RESULT_CANCELED || selectedGlr == null || !isFileExist(selectedGlr))
 			finish();
 
-		if (intent == null) {
-			GaLogger.sendException(
-					"",
-					new Exception(
-							"SpeechMenuActivity return data to CalendarActivity Failure(Failure delivering result ResultInfo)."),
-					true);
-			return;
-		}
+		if (intent == null)return;
 
 		setResult(Activity.RESULT_OK, getResultIntent(selectedGlr));
 		finish();
@@ -253,26 +245,18 @@ public class CalendarActivity extends SherlockActivity {
 									public void onClick(DialogInterface dialog,
 											int id) {
 										if (isFileExist(glr)) {
-											setResult(Activity.RESULT_OK,
-													getResultIntent(glr));
+											setResult(Activity.RESULT_OK, getResultIntent(glr));
 											dialog.dismiss();
 											dialogShowing = false;
 											finish();
 										} else {
-											final Intent speechMenu = new Intent(
-													CalendarActivity.this,
-													SpeechMenuActivity.class);
-											int[] speechStart = GlRecord
-													.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
-											int[] speechEnd = GlRecord
-													.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
+											final Intent speechMenu = new Intent(CalendarActivity.this, SpeechMenuActivity.class);
+											int[] speechStart = GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
+											int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
 											dialog.dismiss();
 											dialogShowing = false;
-											speechMenu.putExtra("index",
-													speechStart[0] + ","
-															+ speechEnd[0]);
-											startActivityForResult(speechMenu,
-													0);
+											speechMenu.putExtra("index", speechStart[0] + "," + speechEnd[0]);
+											startActivityForResult(speechMenu, 0);
 										}
 									}
 								});
@@ -373,10 +357,13 @@ public class CalendarActivity extends SherlockActivity {
 		int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
 
 		File mediaStart = FileSysManager.getLocalMediaFile(speechStart[0]);
-		File subtitleStart = FileSysManager
-				.getLocalSubtitleFile(speechStart[0]);
+		File subtitleStart = FileSysManager.getLocalSubtitleFile(speechStart[0]);
 		File mediaEnd = FileSysManager.getLocalMediaFile(speechEnd[0]);
 		File subtitleEnd = FileSysManager.getLocalSubtitleFile(speechEnd[0]);
+		
+		if(mediaStart == null || subtitleStart == null || mediaEnd == null || subtitleEnd == null)
+			return false;
+		
 		return (mediaStart.exists() && subtitleStart.exists()
 				&& mediaEnd.exists() && subtitleEnd.exists());
 	}

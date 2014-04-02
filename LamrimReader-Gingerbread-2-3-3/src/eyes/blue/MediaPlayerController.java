@@ -391,12 +391,12 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			playingIndex=0;
 		}
 		
-		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
+/*		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
 		if(sb!=null){
 			sb.setProgress(0);
 			updateSeekBar();
 		}
-
+*/
 		// Can't update seekbar on this stage, because there is no information of duration, seekbar can't be create. put in onPrepared.
 		//updateSeekBar();
 		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
@@ -449,7 +449,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		else{
 			Log.d(getClass().getName(),"The subtitle file exist, prepare the subtitle elements.");
-			subtitle = loadSubtitle(subtitleFile);
+			subtitle = Util.loadSubtitle(subtitleFile);
 			if(subtitle.length==0)subtitle=null;
 		}
 		
@@ -592,10 +592,12 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		return output_bitmap;
 	}
 
-//	Bitmap seekBarFgBmap = null, seekBarBgBmap = null;
+	/*
+	 * The function can't been call while mpState < MP_PREPARED, because the MediaPlayer.getDuration() will throw IllegalStateException.
+	 * */
+	
 	boolean firstTimeCallUpdateSeekBar = true;
 	private void updateSeekBar(){
-		
 		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
 		LayerDrawable layer = (LayerDrawable) sb.getProgressDrawable();
 		Drawable drawableFg = (Drawable)layer.findDrawableByLayerId(android.R.id.progress);
@@ -1020,7 +1022,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public SubtitleElement[] getSubtitle(){
 		return subtitle;
 	}
-		private static SubtitleElement[] loadSubtitle(File file) {
+/*		private static SubtitleElement[] loadSubtitle(File file) {
 		ArrayList<SubtitleElement> subtitleList = new ArrayList<SubtitleElement>();
 		try {
 			System.out.println("Open " + file.getAbsolutePath()
@@ -1098,7 +1100,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 						System.err.println("Load Subtitle: Warring: Get a Subtitle with no content at line " + lineCounter);
 				}
 			}
-
+			br.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -1106,7 +1108,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		return (SubtitleElement[]) subtitleList.toArray(new SubtitleElement[0]);
 	}
-	
+	*/
 	/*
 	 * While start playing, there may not have subtitle yet, it will return -1, except array index n.
 	 * */

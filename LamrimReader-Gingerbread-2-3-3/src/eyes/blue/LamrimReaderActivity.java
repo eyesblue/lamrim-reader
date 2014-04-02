@@ -50,7 +50,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.support.v4.app.FragmentManager;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
@@ -63,7 +62,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.SubMenu;
 
@@ -124,7 +123,6 @@ import eyes.blue.modified.MyListView;
 import eyes.blue.modified.MyHorizontalScrollView;
 import eyes.blue.modified.OnDoubleTapEventListener;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
-
 /**
  * 更新: $$Date: 2013-12-29 12:01:44 +0800 (Sun, 29 Dec 2013) $$ 作者: $$Author:
  * kingofeyesblue@gmail.com $$ 版本: $$Revision: 111 $$ ID ：$$Id:
@@ -210,6 +208,23 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		super.onCreate(savedInstanceState);
 ///		requestWindowFeature(Window.FEATURE_NO_TITLE);
 //		requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_ACTION_BAR_OVERLAY);
+		Log.d(getClass().getName(),"Check intent.");
+		Intent intent=this.getIntent();
+		String action=intent.getAction();
+		Log.d(getClass().getName(),"Action: "+action+", Categories: "+intent.getCategories()+", Scheme: "+intent.getScheme()+", Mime type: "+intent.getType()+", Data: "+intent.getData());
+/*		Uri intentPathUri=intent.getData();
+		Log.d(getClass().getName(),"Intent data: "+intentPathUri);
+		if(intentPathUri == null)finish();
+		String intentFileName=intentPathUri.getLastPathSegment();
+		if(!intentFileName.endsWith(".lrs")){
+			Log.d(getClass().getName(),"The file is not my type.");
+			finish();
+		}
+		
+		
+		
+		
+		
 		setContentView(R.layout.main);
 		
 		getSupportActionBar();
@@ -1086,8 +1101,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		globalLamrim.setIcon(R.drawable.global_lamrim);
 		playRegionRec = rootMenu.add(getString(R.string.menuStrPlayRegionRec));
 		playRegionRec.setIcon(R.drawable.region);
-//		swRenderMode = rootMenu.add(getString(R.string.menuStrRenderMode));
-//		swRenderMode.setIcon(R.drawable.render_mode);
+		swRenderMode = rootMenu.add(getString(R.string.menuStrRenderMode));
+		swRenderMode.setIcon(R.drawable.render_mode);
 		prjWeb = rootMenu.add(getString(R.string.menuStrOpenProjectWeb));
 		prjWeb.setIcon(R.drawable.project_web);
 		exitApp = rootMenu.add(getString(R.string.exitApp));

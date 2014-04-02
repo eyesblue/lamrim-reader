@@ -3,7 +3,8 @@
 
     <!-- Runtime options -->
     <string name="runtimeStateFile">runtime</string>
-	<string name="filePathRoot">lamrimreader</string>
+    <string name="filePathRoot">lamrimreader</string>
+
     <integer name="isInit">0</integer>
 
     <string name="isAllowNetAccess">false</string>
@@ -42,9 +43,9 @@
     <string name="regionRecordColumeName">records</string>
     <string name="globalLamrimScheduleFile">GlobalLamrimSchedule</string>
     <string name="globalLamrimScheduleFileFormat">CSV</string>
+
     <color name="theoryHighColor">#CFFFCD</color>
-    
-    
+
     <!-- For Global Lamrim -->
     <string name="globalLamrim">全球廣論</string>
     <string name="globalLamrimShortName">全廣</string>
@@ -56,7 +57,6 @@
     <string name="localGlobalLamrimScheduleFileDateFmtErr">全廣進度日期格式錯誤，請重新下載！</string>
     <string name="localGlobalLamrimScheduleFileDataErr">全廣進度記錄錯誤: </string>
     <string name="localGlobalLamrimScheduleFileDecodeErr">全廣進度讀取時發生封裝錯誤，請重新下載！ </string>
-    
 
     <!-- For render image -->
     <string name="renderImgFgPathKey">renderImage</string>
@@ -66,6 +66,7 @@
     <string name="subtitleFgColorKey">subtitleFgColor</string>
     <string name="subtitleBgColorKey">subtitleBgColor</string>
     <string name="subtitleAlphaKey">subtitleAlpha</string>
+
     <color name="defSubtitleFGcolor">#FFFFFF</color>
 
     <!-- For Option Panel -->
@@ -155,6 +156,7 @@
     <string name="dlgMsgMaintaining">維護檔案中，請稍候...</string>
     <string name="title_activity_storage_manage">儲存管理</string>
     <string name="action_settings">Settings</string>
+    <string name="dlgNumberFormatError">數字欄位錯誤，請檢查輸入內容。</string>
 
     <!-- For file selector -->
     <string name="location">位置</string>
@@ -176,4 +178,7 @@
     <string name="changelog_title">What\'s New</string>
     <string name="changelog_ok_button">確定</string>
     <string name="changelog_show_full">更多...</string>
+    <string name="title_activity_intent">IntentActivity</string>
+    <string name="hello_world">Hello world!</string>
+
 </resources>

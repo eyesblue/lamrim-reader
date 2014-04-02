@@ -48,6 +48,9 @@ public class BaseDialogs {
 		LayoutInflater factory = (LayoutInflater)activity.getSystemService(activity.LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.save_region_dialog, null);
 	    final EditText regionTitle=(EditText) v.findViewById(R.id.regionTitle);
+	    final EditText regionTheoryPageNum=(EditText) v.findViewById(R.id.theoryPageNum);
+	    final EditText regionTheoryStartLine=(EditText) v.findViewById(R.id.startLine);
+	    final EditText regionTheoryStartEnd=(EditText) v.findViewById(R.id.endLine);
 	    final TextView startTime=(TextView) v.findViewById(R.id.startTime);
 	    final TextView endTime=(TextView) v.findViewById(R.id.endTime);
 	    final String startHMS=Util.getMsToHMS(startTimeMs);
@@ -63,10 +66,11 @@ public class BaseDialogs {
 			}});
 	    
 	    final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-	    builder.setTitle("請輸入此記錄名稱");
+	    builder.setTitle("儲存區段");
 	    builder.setPositiveButton(activity.getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
+				// Check name can't be empty.
 				String title=regionTitle.getText().toString().trim();
 				if(title.length()==0){
 					activity.runOnUiThread(new Runnable(){
@@ -77,10 +81,21 @@ public class BaseDialogs {
 					return;
 				}
 
+				// Check Theory page, start line and end line.
+				int theoryPageNum, inStartLine, inEndLine;
+				try{
+					theoryPageNum=Integer.parseInt(regionTheoryPageNum.getText().toString().trim());
+					inStartLine=Integer.parseInt(regionTheoryStartLine.getText().toString().trim());
+					inEndLine=Integer.parseInt(regionTheoryStartEnd.getText().toString().trim());
+				}catch(NumberFormatException nfe){
+					Util.showNarmalToastMsg(activity, activity.getString(R.string.dlgNumberFormatError));
+					return;
+				}
+				
 				if(recIndex==-1)
-					RegionRecord.addRegionRecord(activity, 0, regionTitle.getText().toString(), mediaIndex, startTimeMs, endTimeMs, info);
+					RegionRecord.addRegionRecord(activity, 0, regionTitle.getText().toString(), mediaIndex, startTimeMs, endTimeMs, theoryPageNum, inStartLine, inEndLine, info);
 				else
-					RegionRecord.updateRecord(activity, 0, regionTitle.getText().toString(), mediaIndex, startTimeMs, endTimeMs, recIndex);
+					RegionRecord.updateRecord(activity, 0, regionTitle.getText().toString(), mediaIndex, startTimeMs, endTimeMs, theoryPageNum, inStartLine, inEndLine, recIndex);
 
 				if(positiveListener!=null)positiveListener.run();
 				dialog.dismiss();
