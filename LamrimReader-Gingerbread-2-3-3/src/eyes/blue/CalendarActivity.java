@@ -182,8 +182,7 @@ public class CalendarActivity extends SherlockActivity {
 		return true;
 	}
 
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent intent) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 		if (resultCode == RESULT_CANCELED || selectedGlr == null || !isFileExist(selectedGlr))
 			finish();
@@ -236,14 +235,12 @@ public class CalendarActivity extends SherlockActivity {
 								+ glr.subtitleLineEnd + "\n";
 						msg += "內容: " + glr.desc;
 
-						AlertDialog.Builder builder = new AlertDialog.Builder(
-								CalendarActivity.this);
+						AlertDialog.Builder builder = new AlertDialog.Builder(CalendarActivity.this);
 						builder.setTitle(key);
 						builder.setMessage(msg);
 						builder.setPositiveButton(getString(R.string.dlgOk),
 								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int id) {
+									public void onClick(DialogInterface dialog,	int id) {
 										if (isFileExist(glr)) {
 											setResult(Activity.RESULT_OK, getResultIntent(glr));
 											dialog.dismiss();
@@ -269,6 +266,11 @@ public class CalendarActivity extends SherlockActivity {
 										dialogShowing = false;
 									}
 								});
+						builder.setOnCancelListener(new DialogInterface.OnCancelListener(){
+							@Override
+							public void onCancel(DialogInterface dialog) {
+								dialogShowing = false;
+							}});
 						builder.create().show();
 					}
 

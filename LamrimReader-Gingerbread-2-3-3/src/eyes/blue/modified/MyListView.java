@@ -220,7 +220,6 @@ public class MyListView extends ListView {
 		for(int i=0;i<pageCount;i++){
 			System.out.println("["+highlineLine[i][0]+"] ["+highlineLine[i][1]+"] ["+highlineLine[i][2]+"]");
 		}
-		
 		refresh();
 	}
 	public void clearHighlightLine(){

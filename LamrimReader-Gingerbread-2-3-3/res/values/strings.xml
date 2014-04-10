@@ -104,7 +104,6 @@
     <string name="errIOEwhileSetPlayerSrc">開啟語音檔時發生輸出入錯誤!</string>
     <string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhilePrepPlayer">準備語音檔時發生輸出入錯誤!</string>
-    <string name="dlgResNeedDownloadFirst">您所選擇的紀錄需要先下載資源  %1$s ，請於下載完成後再點選此記錄播放。</string>
     <string name="inputTitleHint">請輸入標題！</string>
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
@@ -156,7 +155,14 @@
     <string name="dlgMsgMaintaining">維護檔案中，請稍候...</string>
     <string name="title_activity_storage_manage">儲存管理</string>
     <string name="action_settings">Settings</string>
+    <string name="dlgInputError">輸入錯誤</string>
+    <string name="dlgInputNotFill">資料輸入不完全。</string>
     <string name="dlgNumberFormatError">數字欄位錯誤，請檢查輸入內容。</string>
+    <string name="dlgEndPageGreaterThenStart">結束頁小於起始頁。</string>
+    <string name="dlgEndLineGreaterThenStart">結束行數小於起始行數。</string>
+    <string name="dlgLineNumOverPageCount">輸入的行數超過該頁的行數。</string>
+    <string name="dlgPageNumOverPageCount">輸入的頁數超過廣論總頁數。</string>
+    <string name="dlgRecordTheoryIndex">廣論 %1$s 頁  %2$s 行 ~ %3$s 頁 %4$s 行</string>
 
     <!-- For file selector -->
     <string name="location">位置</string>
@@ -180,5 +186,9 @@
     <string name="changelog_show_full">更多...</string>
     <string name="title_activity_intent">IntentActivity</string>
     <string name="hello_world">Hello world!</string>
+    <string name="digOptSetRegionStart">設為區段開始位置</string>
+    <string name="dlgOptSetRegionEnd">設為區段結束位置</string>
+    
+    <string name="lamrimCmdUri">http://lamrimreader-cmd.eyes-blue.com/</string>
 
 </resources>

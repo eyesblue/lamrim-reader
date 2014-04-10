@@ -21,33 +21,30 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class RegionRecord {
-/* 更新: $Date: 2013-09-27 19:05:54 +0800 (Fri, 27 Sep 2013) $
-* 作者: $Author: kingofeyesblue@gmail.com $
-* 版本: $Revision: 75 $
-* ID  ：$Id: RegionRecord.java 75 2013-09-27 11:05:54Z kingofeyesblue@gmail.com $
-*/
+
 	public int version = -1;
 	public int contentSerial = -1;
 	public String title=null, createTime=null, info = null;
-	public int mediaIndex=-1;
-	public int theoryPageNum, theoryStartLine, theoryEndLine;
-	public int startTimeMs=-1;
-	public int endTimeMs=-1;
+	public int mediaStart=-1, mediaEnd = -1;
+	public int theoryPageStart, theoryStartLine,theoryPageEnd, theoryEndLine;
+	public int startTimeMs=-1, endTimeMs=-1;
 	static ArrayList<RegionRecord> records = null;
 	
 	public static void init(Activity activity){records=getAllRecord(activity);}
-	public static RegionRecord addRegionRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, int theoryPageNum, int theoryStartLine, int theoryEndLine, String info){
+	public static RegionRecord addRegionRecord(Activity activity, int contentSerial, String title, int mediaStart, int startTimeMs, int mediaEnd, int endTimeMs, int theoryPageStart, int theoryStartLine, int theoryPageEnd, int theoryEndLine, String info){
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		
 		RegionRecord rr=new RegionRecord();
     	rr.version=1;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
-    	rr.mediaIndex=mediaIndex;
-    	rr.theoryPageNum=theoryPageNum;
+    	rr.mediaStart=mediaStart;
+    	rr.mediaEnd=mediaEnd;
+    	rr.theoryPageStart=theoryPageStart;
     	rr.theoryStartLine=theoryStartLine;
+    	rr.theoryPageEnd=theoryPageEnd;
     	rr.theoryEndLine=theoryEndLine;
-    	rr.createTime=sdf.format(Calendar.getInstance());
+    	rr.createTime=sdf.format(Calendar.getInstance().getTime());
     	rr.startTimeMs=startTimeMs;
     	rr.endTimeMs=endTimeMs;
     	rr.info=info;
@@ -67,17 +64,19 @@ public class RegionRecord {
 		syncToFile(activity);
 	}
 	
-	public static void updateRecord(Activity activity, int contentSerial,String title,int mediaIndex,int startTimeMs,int endTimeMs, int theoryPageNum, int theoryStartLine, int theoryEndLine, int recordIndex){
+	public static void updateRecord(Activity activity, int contentSerial,String title,int mediaStart, int startTimeMs,int mediaEnd, int endTimeMs, int theoryPageStart, int theoryStartLine, int theoryPageEnd, int theoryEndLine, int recordIndex){
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		RegionRecord rr=records.get(recordIndex);
     	rr.version=1;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
-    	rr.mediaIndex=mediaIndex;
-    	rr.theoryPageNum=theoryPageNum;
+    	rr.mediaStart=mediaStart;
+    	rr.mediaEnd=mediaEnd;
+    	rr.theoryPageStart=theoryPageStart;
     	rr.theoryStartLine=theoryStartLine;
+    	rr.theoryPageEnd=theoryPageEnd;
     	rr.theoryEndLine=theoryEndLine;
-    	rr.createTime=sdf.format(Calendar.getInstance());
+    	rr.createTime=sdf.format(Calendar.getInstance().getTime());
     	rr.startTimeMs=startTimeMs;
     	rr.endTimeMs=endTimeMs;
     	
@@ -145,7 +144,12 @@ public class RegionRecord {
 			ro.contentSerial=jObject.getInt("contentSerial");
 			ro.title=jObject.getString("title");
 			ro.createTime=jObject.getString("createTime");
-			ro.mediaIndex=jObject.getInt("mediaIndex");
+			ro.mediaStart=jObject.getInt("mediaStart");
+			ro.mediaEnd=jObject.getInt("mediaEnd");
+			ro.theoryPageStart=jObject.getInt("theoryPageStart");
+			ro.theoryStartLine=jObject.getInt("theoryLineStart");
+			ro.theoryPageEnd=jObject.getInt("theoryPageEnd");
+			ro.theoryEndLine=jObject.getInt("theoryLineEnd");
 			ro.startTimeMs=jObject.getInt("startTime");
 			ro.endTimeMs=jObject.getInt("endTime");
 			ro.info=jObject.getString("info");
@@ -162,7 +166,12 @@ public class RegionRecord {
 		jObj.put("contentSerial", record.contentSerial);
 		jObj.put("title", record.title);
 		jObj.put("createTime", record.createTime);
-		jObj.put("mediaIndex", record.mediaIndex);
+		jObj.put("mediaStart", record.mediaStart);
+		jObj.put("mediaEnd", record.mediaEnd);
+		jObj.put("theoryPageStart",record.theoryPageStart);
+		jObj.put("theoryLineStart",record.theoryStartLine);
+		jObj.put("theoryPageEnd",record.theoryPageEnd);
+		jObj.put("theoryLineEnd",record.theoryEndLine);
 		jObj.put("startTime", record.startTimeMs);
 		jObj.put("endTime", record.endTimeMs);
 		jObj.put("info", record.info);

@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical" >
-
-    <ScrollView
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/scrollView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
             <LinearLayout
@@ -23,19 +17,20 @@
                     android:id="@+id/TextView02"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="記錄名稱*"
+                    android:text="記錄名稱"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <EditText
                     android:id="@+id/regionTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:focusable="true"
+        			android:focusableInTouchMode="true"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:singleLine="true" >
+                    android:maxEms="16"
+                    android:maxLength="16"
+                    android:singleLine="true" />
 
-                    <requestFocus />
-                </EditText>
             </LinearLayout>
 
             <LinearLayout
@@ -43,30 +38,29 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView1"
+                    android:id="@+id/TextView04"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="廣論頁數"
+                    android:text="廣論起始位置: 頁數"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <EditText
-                    android:id="@+id/theoryPageNum"
+                    android:id="@+id/startPage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:inputType="number" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
+                    android:ellipsize="start"
+                    android:gravity="center"
+                    android:inputType="numberDecimal"
+                    android:maxEms="3"
+                    android:maxLength="3"
+                    android:singleLine="true" />
 
                 <TextView
-                    android:id="@+id/textView2"
+                    android:id="@+id/TextView03"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="起始行數"
+                    android:text="行數"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <EditText
@@ -74,14 +68,41 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:inputType="number" />
+                    android:gravity="center"
+                    android:inputType="numberDecimal"
+                    android:maxEms="3"
+                    android:maxLength="3"
+                    android:singleLine="true" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/theoryIndex"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="廣論結束位置: 頁數"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <EditText
+                    android:id="@+id/endPage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:inputType="numberDecimal"
+                    android:maxEms="3"
+                    android:maxLength="3"
+                    android:singleLine="true" />
 
                 <TextView
                     android:id="@+id/TextView01"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="結束行數"
+                    android:text="行數"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <EditText
@@ -89,13 +110,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:inputType="number" />
-            </LinearLayout>
+                    android:gravity="center"
+                    android:inputType="numberDecimal"
+                    android:maxEms="3"
+                    android:maxLength="3"
+                    android:singleLine="true" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
             </LinearLayout>
 
             <LinearLayout
@@ -138,7 +158,4 @@
                     android:textAppearance="?android:attr/textAppearanceMedium" />
             </LinearLayout>
         </LinearLayout>
-
     </ScrollView>
-
-</LinearLayout>

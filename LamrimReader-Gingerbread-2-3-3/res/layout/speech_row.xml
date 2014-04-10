@@ -57,9 +57,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Small Text"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#0F395E"
-            android:textSize="16sp" />
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#0F395E" />
 
     </TableRow>
 

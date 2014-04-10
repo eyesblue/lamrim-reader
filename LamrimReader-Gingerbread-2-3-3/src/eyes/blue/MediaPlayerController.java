@@ -159,6 +159,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setEnabled(true);
 		// Use for static broadcast receiver - RemoteControlReceiver
 		mpController=this;
+		
 	}
 
 /*	public void setAnchorView(View view){
@@ -200,17 +201,17 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		// Check is the seek position over the start or end region.
-		int index=subtitleBSearch(subtitle, pos);
+		int index=Util.subtitleBSearch(subtitle, pos);
 		if(index<0)index=0;
 
 		if(regionStartMs!=-1 && subtitle[index].startTimeMs<regionStartMs){
 			pos=regionStartMs;
-			index=subtitleBSearch(subtitle, regionStartMs);
+			index=Util.subtitleBSearch(subtitle, regionStartMs);
 			if(index==-1)index=regionStartMs;
 		}
 		else if(regionEndMs !=-1 && subtitle[index].endTimeMs>regionEndMs){
 			pos=regionEndMs;
-			index=subtitleBSearch(subtitle, regionEndMs);
+			index=Util.subtitleBSearch(subtitle, regionEndMs);
 			if(index==-1)index=regionEndMs;
 		}
 
@@ -352,10 +353,12 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		Log.d(getClass().getName(),"toggleFullScreen been called.");
 	}
 	
-	@Override
-	public void	onSaveClick(){
-		if(isRegionPlay())
-			changedListener.onSaveRegion();
+	public void	setOnRegionClick(View.OnClickListener listener){
+		mediaController.setOnRegionListener(listener);
+	}
+	
+	public void setOnShareClickListener(View.OnClickListener listener){
+		mediaController.setOnShareListener(listener);
 	}
 // =================================================================
 	
@@ -495,13 +498,13 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			Log.d(logTag,"The activity not prepare yet, skip show media controller.");
 			return;
 		}
-		if (mediaController != null && mediaController.isShowing()) {
-			Log.d(logTag,"The controller has showing, skip show media controller.");
+		if (mediaController == null) {
+			Log.d(logTag,"The media player is null, skip show controller.");
 			return;
 		}
 		
-		if(mediaPlayer == null || mpState<MP_PREPARED){
-			Log.d(logTag,"The media player preparing skip show controller.");
+		if(mpState<MP_PREPARED){
+			Log.d(logTag,"The media player loading source skip show controller.");
 			return;
 		}
 		
@@ -516,16 +519,29 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 //				mediaController.setAnchorView(anchorView);
+//				updateSeekBar();
 				mediaController.show();
+				if(regionStartMs!=-1 && regionEndMs!=-1)updateSeekBar();
 			}
 		});
 	}
 	
 	public void hideMediaPlayerController(){
-		if(mediaController.isShowing())
+//		if(mediaController.isShowing())
 			mediaController.hide();
+			
 	}
 	
+	public void refreshSeekBar(){
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				Log.d(getClass().getName(),"==========================Refeesh control panel.======================");
+				mediaController.show(500);
+				updateSeekBar();
+//				mediaController.hide();
+			}
+		});
+	}
 	// ================================ Functions for region play ================================
 	
 	public void rewToLastSubtitle(){
@@ -595,7 +611,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	/*
 	 * The function can't been call while mpState < MP_PREPARED, because the MediaPlayer.getDuration() will throw IllegalStateException.
 	 * */
-	
 	boolean firstTimeCallUpdateSeekBar = true;
 	private void updateSeekBar(){
 		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
@@ -609,7 +624,15 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		Rect bgBound=drawableBg.copyBounds();
 		
 		// The view never draw, skip draw.
-		if(fgBound.height()==0)return ;
+		if(fgBound.height()==0){
+			Log.d(logTag,"The seekbar not layouted, skip");
+			return ;
+		}
+		
+		if(mpState<MP_PREPARED){
+			Log.d(logTag,"updateSeekBar: The player not set data yet, skip.");
+			return;
+		}
 		
 		Log.d(logTag,"forgound: bound.right="+fgBound.right+", bound.left="+fgBound.left+", bound.top="+fgBound.top+", bound.botton="+fgBound.bottom+", IntrinsicWidth="+drawableFg.getIntrinsicWidth()+",IntrinsicHeight= "+drawableFg.getIntrinsicHeight()+", rect.height="+fgBound.height()+", rect.width="+fgBound.width());
 		Log.d(logTag,"backgound: bound.right="+bgBound.right+", drawableFg.getIntrinsicWidth="+drawableBg.getIntrinsicWidth());
@@ -636,6 +659,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		Log.d(logTag,"Debug: drawableFg: "+drawableFg+", copyBounds(): "+ drawableFg.copyBounds()+", getIntrinsicWidth: "+drawableFg.getIntrinsicWidth());
+		
+		//int seekBarStartPosition=Math.round ((regionStartMs==-1)?fgBound.left:(float)regionStartMs/mediaPlayer.getDuration()*fgBound.width());
 		int seekBarStartPosition=Math.round ((regionStartMs==-1)?fgBound.left:(float)regionStartMs/mediaPlayer.getDuration()*fgBound.width());
 		// Add one pixel avoid while enableEnd = enableStart, there will throw exception while copy pixel.
 		int seekBarEndPosition=Math.round (((regionEndMs==-1)?bgBound.right:(float)regionEndMs/mediaPlayer.getDuration()*bgBound.width())+1);
@@ -698,21 +723,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 	}
 	
-	public void setControllerViewClickable(boolean b){
-		mediaController.setClickable(b);
-	}
-	
-	public void setPrevButtonIconEnable(boolean b) {
-		mediaController.setPreviousButtonEnable(b);
-		updateSeekBar();
-	}
-	public void setNextButtonIconEnable(boolean b) {
-		mediaController.setNextButtonEnable(b);
-		updateSeekBar();
-	}
-	
-	public void setPrevNextListeners(OnClickListener next,OnClickListener prev){
-		mediaController.setPrevNextListeners(next, prev);
+	public void setPrevNextListeners(OnClickListener prev, OnClickListener next){
+		mediaController.setPrevNextListeners(prev, next);
 	}
 	
 	public void setPlayRegionStartMs(int startMs){
@@ -759,16 +771,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public void setPlayRegion(int startTimeMs,int endTimeMs){
 		setPlayRegionEndMs(endTimeMs);
 		setPlayRegionStartMs(startTimeMs);
-/*		regionStartMs=startTimeMs;
-		regionEndMs=endTimeMs;
-
-		ImageButton ibp= (ImageButton)mediaController.findViewById(R.id.prev);
-		ibp.setImageResource(R.drawable.ic_media_rew);
-		ImageButton ibn= (ImageButton)mediaController.findViewById(R.id.next);
-		ibn.setImageResource(R.drawable.ic_media_ff);
-		
 		updateSeekBar();
-*/		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
+		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
 	}
 	
 	public void desetPlayRegion(){
@@ -791,12 +795,12 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		return regionEndMs;
 	}
 	public SubtitleElement getSubtitle(int time){
-		int index=subtitleBSearch(subtitle, time);
+		int index=Util.subtitleBSearch(subtitle, time);
 		if(index<0)index=0;
 		return subtitle[index];
 	}
 	public int getSubtitleIndex(int time){
-		return subtitleBSearch(subtitle, time);
+		return Util.subtitleBSearch(subtitle, time);
 	}
 	
 	public ViewGroup getControllerView(){
@@ -804,7 +808,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	}
 	
 	private int timeMsToSubtitleIndex(int timeMs){
-		int subIndex = subtitleBSearch(subtitle, timeMs);
+		int subIndex = Util.subtitleBSearch(subtitle, timeMs);
 		if(subIndex<0)subIndex=0;
 		return subIndex;
 	}
@@ -984,7 +988,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 						}
 //						Log.d(logTag,"SubtitleTimer: the mpState is not MP_COMPLETE.");
 						int playPoint=mediaPlayer.getCurrentPosition();
-                        int playArrayIndex=subtitleBSearch(se, playPoint);
+                        int playArrayIndex=Util.subtitleBSearch(se, playPoint);
                        
                         //Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
                         // Play region function has set, and over the region, stop play.
@@ -1022,138 +1026,4 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public SubtitleElement[] getSubtitle(){
 		return subtitle;
 	}
-/*		private static SubtitleElement[] loadSubtitle(File file) {
-		ArrayList<SubtitleElement> subtitleList = new ArrayList<SubtitleElement>();
-		try {
-			System.out.println("Open " + file.getAbsolutePath()
-					+ " for read subtitle.");
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String stemp;
-			int lineCounter = 0;
-			int step = 0; // 0: Find the serial number, 1: Get the serial
-							// number, 2: Get the time description, 3: Get
-							// Subtitle
-			int serial = 0;
-			SubtitleElement se = null;
-
-			while ((stemp = br.readLine()) != null) {
-				lineCounter++;
-
-				// This may find the serial number
-				if (step == 0) {
-					if (stemp.matches("[0-9]+")) {
-						// System.out.println("Find a subtitle start: "+stemp);
-						se = new SubtitleElement();
-						serial = Integer.parseInt(stemp);
-						step = 1;
-					}
-				}
-
-				// This may find the time description
-				else if (step == 1) {
-					if (stemp.matches("[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} +-+> +[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}")) {
-						String[] region=stemp.split(" +-+> +");
-						region[0]=region[0].trim();
-						region[1]=region[1].trim();
-						// System.out.println("Get time string: "+stemp);
-						int timeMs;
-						
-						String ts = region[0].substring(0, 2);
-						// System.out.println("Hour: "+ts);
-						timeMs = Integer.parseInt(ts) * 3600000;
-						ts = region[0].substring(3, 5);
-						// System.out.println("Min: "+ts);
-						timeMs += Integer.parseInt(ts) * 60000;
-						ts = region[0].substring(6, 8);
-						// System.out.println("Sec: "+ts);
-						timeMs += Integer.parseInt(ts) * 1000;
-						ts = region[0].substring(9, 12);
-						// System.out.println("Sub: "+ts);
-						timeMs += Integer.parseInt(ts);
-						// System.out.println("Set time: "+startTimeMs);
-						se.startTimeMs = timeMs;
-						
-						ts = region[1].substring(0, 2);
-						// System.out.println("Hour: "+ts);
-						timeMs = Integer.parseInt(ts) * 3600000;
-						ts = region[1].substring(3, 5);
-						// System.out.println("Min: "+ts);
-						timeMs += Integer.parseInt(ts) * 60000;
-						ts = region[1].substring(6, 8);
-						// System.out.println("Sec: "+ts);
-						timeMs += Integer.parseInt(ts) * 1000;
-						ts = region[1].substring(9, 12);
-						// System.out.println("Sub: "+ts);
-						timeMs += Integer.parseInt(ts);
-						se.endTimeMs = timeMs;
-						step = 2;
-					} else {
-						// System.err.println("Find a bad format subtitle element at line "+lineCounter+": Serial: "+serial+", Time: "+stemp);
-						step = 0;
-					}
-				} else if (step == 2) {
-					se.text = stemp;
-					step = 0;
-					subtitleList.add(se);
-//					System.out.println("get Subtitle: " + stemp);
-					if (stemp.length() == 0)
-						System.err.println("Load Subtitle: Warring: Get a Subtitle with no content at line " + lineCounter);
-				}
-			}
-			br.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return (SubtitleElement[]) subtitleList.toArray(new SubtitleElement[0]);
-	}
-	*/
-	/*
-	 * While start playing, there may not have subtitle yet, it will return -1, except array index n.
-	 * */
-	private int subtitleBSearch(SubtitleElement[] a, int key) {
-		int mid = a.length / 2;
-		int low = 0;
-		int hi = a.length;
-		while (low <= hi) {
-			mid = (low + hi) >>> 1;
-			// final int d = Collections.compare(a[mid], key, c);
-			int d = 0;
-			if (mid == 0) {
-//				System.out.println("Shift to the index 0, Find out is -1(no subtitle start yet) or 0 or 1");
-				if( key < a[0].startTimeMs ) return 0;
-				if( a[1].startTimeMs <=  key) return 1;
-				return 0;
-			}
-			if (mid == a.length - 1) {
-//				System.out.println("Shift to the last element, check is the key < last element.");
-				if(key<a[a.length-1].startTimeMs)return a.length - 2;
-				return a.length - 1;
-			}
-			if (a[mid].startTimeMs > key && key <= a[mid + 1].startTimeMs) {
-				d = 1;
-//				System.out.println("MID=" + mid + ", Compare " + a[mid].startTimeMs + " > " + key + " > " + a[mid + 1].startTimeMs + ", set -1, shift to smaller");
-			} else if (a[mid].startTimeMs <= key && key < a[mid + 1].startTimeMs) {
-				d = 0;
-//				System.out.println("This should find it! MID=" + mid + ", "						+ a[mid].startTimeMs + " < " + key + " > "						+ a[mid + 1].startTimeMs + ", set 0, this should be.");
-			} else {
-				d = -1;
-//				System.out.println("MID=" + mid + ", Compare "						+ a[mid].startTimeMs + " < " + key + " < "						+ a[mid + 1].startTimeMs + ", set -1, shift to bigger");
-			}
-			if (d == 0)
-				return mid;
-			else if (d > 0)
-				hi = mid - 1;
-			else
-				// This gets the insertion point right on the last loop
-				low = ++mid;
-		}
-		String msg = "Binary search state error, shouldn't go to the unknow stage. this may cause by a not sorted subtitle: MID="
-				+ mid+ ", Compare "+ a[mid].startTimeMs	+ " <> "+ key+ " <> " + a[mid + 1].startTimeMs + " into unknow state.";
-		Log.e(getClass().getName(), msg, new Exception(msg));
-		return -1;
-	}
-	
-
 }

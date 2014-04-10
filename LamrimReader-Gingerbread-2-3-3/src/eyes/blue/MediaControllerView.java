@@ -151,7 +151,7 @@ public class MediaControllerView extends FrameLayout {
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
 //        frameParams.gravity=Gravity.BOTTOM;
-
+        
         removeAllViews();
         View v = makeControllerView();
         addView(v, frameParams);
@@ -203,15 +203,15 @@ public class MediaControllerView extends FrameLayout {
         // By default these are hidden. They will be enabled when setPrevNextListeners() is called
        
                 mNextButton = (ImageButton) v.findViewById(R.id.next);
-                setPreviousButtonEnable(isPrevBtnEnable);
-/*        if (mNextButton != null && !mFromXml && !mListenersSet) {
+/*                setPreviousButtonEnable(isPrevBtnEnable);
+        if (mNextButton != null && !mFromXml && !mListenersSet) {
             mNextButton.setVisibility(View.GONE);
         }
 */
        
                 mPrevButton = (ImageButton) v.findViewById(R.id.prev);
-                setNextButtonEnable(isNextBtnEnable);
-        /*      if(isPrevBtnEnable)btn.setImageResource(R.drawable.ic_media_rew);
+/*                setNextButtonEnable(isNextBtnEnable);
+              if(isPrevBtnEnable)btn.setImageResource(R.drawable.ic_media_rew);
         else btn.setImageResource(R.drawable.ic_media_rew_d);
        
         if (mPrevButton != null && !mFromXml && !mListenersSet) {
@@ -228,8 +228,6 @@ public class MediaControllerView extends FrameLayout {
         mCurrentTime = (TextView) v.findViewById(R.id.time_current);
         mFormatBuilder = new StringBuilder();
         mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
-
-        installPrevNextListeners();
     }
 
     /**
@@ -287,7 +285,7 @@ public class MediaControllerView extends FrameLayout {
                 	ViewGroup.LayoutParams.WRAP_CONTENT,
                 	Gravity.BOTTOM
             		);
-           
+            	
             	mAnchor.addView(this, tlp);
             	mShowing = true;
         	}
@@ -497,44 +495,22 @@ public class MediaControllerView extends FrameLayout {
         mPlayer.toggleFullScreen();
     }
 
-    public void setSaveButtonEnable(boolean b){
-        ImageButton btn=(ImageButton) mRoot.findViewById(R.id.saveIcon);
-        if(b){
-                btn.setImageResource(R.drawable.save);
-                btn.setOnClickListener(onSaveListener);
-        }
-        else{
-                btn.setImageResource(R.drawable.save_d);
-                btn.setOnClickListener(null);
-        }
+    
+    public void setOnShareListener(View.OnClickListener listener){
+    	ImageButton shareButton=(ImageButton)findViewById(R.id.shareBtn);
+        shareButton.setOnClickListener(listener);
     }
-   
-    public void setPreviousButtonEnable(boolean b){
-        isPrevBtnEnable=b;
-        ImageButton btn=(ImageButton) mRoot.findViewById(R.id.prev);
-        if(b)btn.setImageResource(R.drawable.ic_media_rew);
-        else btn.setImageResource(R.drawable.ic_media_rew_d);
-        checkSaveBtn();
+
+    public void setOnRegionListener(View.OnClickListener listener){
+    	ImageButton regionButton=(ImageButton)findViewById(R.id.regionBtn);
+        regionButton.setOnClickListener(listener);
     }
-   
-    public void setNextButtonEnable(boolean b){
-        isNextBtnEnable=b;
-        ImageButton btn=(ImageButton) mRoot.findViewById(R.id.next);
-        if(b)btn.setImageResource(R.drawable.ic_media_ff);
-        else btn.setImageResource(R.drawable.ic_media_ff_d);
-        checkSaveBtn();
+
+    public void setButtonVisiable(boolean lastPage, boolean nextPage){
+    	((ImageButton) findViewById(R.id.prev)).setVisibility((lastPage)?View.VISIBLE:View.GONE);
+    	((ImageButton) findViewById(R.id.next)).setVisibility((nextPage)?View.VISIBLE:View.GONE);
     }
-   
-    private void checkSaveBtn(){
-        setSaveButtonEnable(isPrevBtnEnable && isNextBtnEnable);
-    }
-   
-    View.OnClickListener onSaveListener =new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                        mPlayer.onSaveClick();
-                }};
-               
+    
     // There are two scenarios that can trigger the seekbar listener to trigger:
     //
     // The first is the user using the touchpad to adjust the posititon of the
@@ -682,12 +658,13 @@ public class MediaControllerView extends FrameLayout {
         }
     }
 
-    public void setPrevNextListeners(View.OnClickListener next, View.OnClickListener prev) {
+    public void setPrevNextListeners(View.OnClickListener prev, View.OnClickListener next) {
         mNextListener = next;
         mPrevListener = prev;
         mListenersSet = true;
 
         if (mRoot != null) {
+        	Log.d(getClass().getName(),"Call installPrevNextListeners()");
             installPrevNextListeners();
            
             if (mNextButton != null && !mFromXml) {
@@ -699,7 +676,6 @@ public class MediaControllerView extends FrameLayout {
         }
     }
 
-
     public void setClickable(boolean b){
     	Util.enableDisableViewGroup((ViewGroup)mRoot, b);
     }
@@ -710,7 +686,7 @@ public class MediaControllerView extends FrameLayout {
     
     public interface MediaPlayerControl {
         void    start();
-        void    pause();
+		void    pause();
         int     getDuration();
         int     getCurrentPosition();
         void    seekTo(int pos);
@@ -721,7 +697,6 @@ public class MediaControllerView extends FrameLayout {
         boolean canSeekForward();
         boolean isFullScreen();
         void    toggleFullScreen();
-        void    onSaveClick();
         void	rewToLastSubtitle();
         void	fwToNextSubtitle();
     }

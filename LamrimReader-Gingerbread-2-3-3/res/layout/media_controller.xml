@@ -3,6 +3,8 @@
     android:id="@+id/calendarRootView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_gravity="left"
+    android:layout_marginRight="10dp"
     android:background="#CC000000"
     android:orientation="vertical" >
 
@@ -10,39 +12,16 @@
         android:id="@+id/RelativeLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="right"
+        android:gravity="center"
         android:orientation="horizontal"
         android:paddingTop="4dp" >
 
         <ImageButton
             android:id="@+id/ffwd"
             style="@android:style/MediaButton.Ffwd"
-            android:layout_alignParentTop="true"
+            android:layout_alignTop="@+id/pause"
             android:layout_toRightOf="@+id/pause"
             android:src="@drawable/ic_media_next" />
-
-        <ImageButton
-            android:id="@+id/next"
-            style="@android:style/MediaButton.Next"
-            android:layout_alignParentTop="true"
-            android:layout_toRightOf="@+id/ffwd"
-            android:src="@drawable/ic_media_ff_d" />
-
-        <ImageButton
-            android:id="@+id/rew"
-            style="@android:style/MediaButton.Rew"
-            android:layout_alignParentTop="true"
-            android:layout_toLeftOf="@+id/pause"
-            android:src="@drawable/ic_media_previous" />
-
-        <ImageButton
-            android:id="@+id/prev"
-            style="@android:style/MediaButton.Previous"
-            android:layout_width="71dp"
-            android:layout_height="52dp"
-            android:layout_alignParentTop="true"
-            android:layout_toLeftOf="@+id/rew"
-            android:src="@drawable/ic_media_rew_d" />
 
         <ImageButton
             android:id="@+id/pause"
@@ -52,16 +31,55 @@
             android:src="@drawable/ic_media_play" />
 
         <ImageButton
-            android:id="@+id/saveIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:id="@+id/rew"
+            style="@android:style/MediaButton.Rew"
+            android:layout_alignTop="@+id/pause"
+            android:layout_toLeftOf="@+id/pause"
+            android:src="@drawable/ic_media_previous" />
+
+        <ImageButton
+            android:id="@+id/next"
+            android:layout_width="71dp"
+            android:layout_height="52dp"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/ffwd"
+            android:background="#00000000"
+            android:padding="0dip"
+            android:src="@drawable/ic_media_ff" />
+
+        <ImageButton
+            android:id="@+id/prev"
+            android:layout_width="71dp"
+            android:layout_height="52dp"
+            android:layout_alignTop="@+id/rew"
+            android:layout_toLeftOf="@+id/rew"
+            android:background="#00000000"
+            android:padding="0dip"
+            android:src="@drawable/ic_media_rew" />
+
+        <ImageButton
+            android:id="@+id/shareBtn"
+            android:layout_width="71dp"
+            android:layout_height="52dp"
+            android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:layout_marginRight="14dp"
+            android:layout_marginLeft="10dp"
+            android:background="#00000000"
+            android:padding="0dip"
+            android:clickable="false"
+            android:enabled="false"
+            android:src="@drawable/share_icon" />
+
+        <ImageButton
+            android:id="@+id/regionBtn"
+            android:layout_width="71dp"
+            android:layout_height="52dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
             android:adjustViewBounds="true"
             android:background="#00000000"
             android:padding="0dip"
-            android:src="@drawable/save_d" />
+            android:src="@drawable/region" />
 
     </RelativeLayout>
 

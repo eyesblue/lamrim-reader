@@ -37,7 +37,7 @@
                 android:src="@drawable/maintain" />
 
             <TextView
-                android:id="@+id/textView2"
+                android:id="@+id/setRightBound"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="檔案維護"

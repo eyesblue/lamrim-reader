@@ -60,7 +60,7 @@ public class SpeechMenuActivity extends Activity {
 	FileDownloader downloader = null;
 	boolean fireLockKey = false;
 	final int PLAY=0,UPDATE=1,	DELETE=2, CANCEL=3;
-//	boolean fireLock=false;
+	boolean isCallFromDownloadCmd=false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -248,6 +248,7 @@ public class SpeechMenuActivity extends Activity {
 		
 		Bundle b=this.getIntent().getExtras();
 		if(b==null)return;
+		isCallFromDownloadCmd=true;
 		String downloadIndexs=b.getString("index");
 		String[] indexs=downloadIndexs.split(",");
 		int resource[]=new int[indexs.length];
@@ -408,6 +409,14 @@ public class SpeechMenuActivity extends Activity {
 			public void userCancel(){
 				Log.d(getClass().getName(),"User cancel the download!");
 				if(wakeLock.isHeld())wakeLock.release();
+
+				// If the activity is call for download source, return immediately. 
+				if(isCallFromDownloadCmd){
+					Log.d(getClass().getName(),"The download is start by download command, return caller activity now.");
+					isCallFromDownloadCmd=false;
+					setResult(RESULT_CANCELED);
+					finish();
+				}
 				return;
 			}
 		});	

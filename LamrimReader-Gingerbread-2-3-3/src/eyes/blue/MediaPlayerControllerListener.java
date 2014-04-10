@@ -17,7 +17,6 @@ public interface MediaPlayerControllerListener {
 	 * Call on media prepared.
 	 * */
 	public void onMediaPrepared();
-	public void onSaveRegion();
 	public void onStartPlay();
 	public void onPause();
 	public void onComplatePlay();

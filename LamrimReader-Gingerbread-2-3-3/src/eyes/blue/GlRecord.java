@@ -37,6 +37,13 @@ public class GlRecord {
 		return res;
 	}
 	
+	public static String getSpeechIndexToStr(int index){
+		int num=index/2;
+		int alpha=index%2;
+		String result=num+((alpha==0)?"A":"B");
+		return result;
+	}
+	
 	public static int[] getTheoryStrToInt(String str){
 		String[] split=str.split("-");
 		int page=-1, line=-1;
