@@ -2050,51 +2050,22 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 	private void showRenderImageBgColorDlg(){
 		int defColor=runtime.getInt(getString(R.string.renderImgBgColorKey), R.color.defSubtitleBGcolor);
-/*		AmbilWarnaDialog dialog = new AmbilWarnaDialog(LamrimReaderActivity.this, defColor, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-			@Override
-			public void onOk(AmbilWarnaDialog dialog, int color) {
-				bookView.setBackgroundColor(color);
-				SharedPreferences.Editor editor = runtime.edit();
-				editor.putInt(getString(R.string.renderImgBgColorKey), color);
-				editor.commit();
-			}
 
-			@Override
-			public void onCancel(AmbilWarnaDialog dialog) {}
-		});
-           
-		dialog.show();
-*/		
 		final ColorPickerDialog colorDialog=new ColorPickerDialog(LamrimReaderActivity.this, defColor,new ColorPickerView.OnColorChangedListener() {
 			@Override
 			public void onColorChanged(int color) {
 				renderView.setBackgroundColor(color | 0xFF000000);
-				SharedPreferences.Editor editor = runtime.edit();
-                editor.putInt(getString(R.string.renderImgBgColorKey), color);
-                editor.commit();
 			}
 		});
 		 colorDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
 				@Override
 				public void onCancel(DialogInterface dialog) {
-					int color=((ColorDrawable)renderView.getBackground()).getColor() | 0xFF000000;
+					int color=colorDialog.getColor() | 0xFF000000;
 					SharedPreferences.Editor editor = runtime.edit();
 	                editor.putInt(getString(R.string.renderImgBgColorKey), color);
 	                editor.commit();
 				}});
         
-		/*        colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				
-			}
-		});
-		
-		colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {}
-		});
-		*/
 		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
         lp.alpha=0.8f;
         colorDialog.getWindow().setAttributes(lp);
@@ -2119,17 +2090,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
                     editor.putInt(getString(R.string.subtitleFgColorKey), color);
                     editor.commit();
 				}});
-            /*colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
-    			@Override
-    			public void onClick(DialogInterface dialog, int which) {
-    				
-    			}
-    		});
-    		
-    		colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-    			@Override
-    			public void onClick(DialogInterface dialog, int which) {}
-    		});*/
+
     		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
             lp.alpha=0.8f;
             colorDialog.getWindow().setAttributes(lp);
@@ -2142,7 +2103,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
             final ColorPickerDialog colorDialog=new ColorPickerDialog(LamrimReaderActivity.this, defBgColor,new ColorPickerView.OnColorChangedListener() {
 				@Override
 				public void onColorChanged(int color) {
-					int alpha=((ColorDrawable)subtitleView.getBackground()).getColor() >> 24 & 0xFF;
+					int alpha=runtime.getInt(getString(R.string.subtitleAlphaKey),255);
 					Log.d(getClass().getName(),"Get alpha: "+alpha);
 					int c=Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color));
 					subtitleView.setBackgroundColor(c);
@@ -2151,24 +2112,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
             colorDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
 				@Override
 				public void onCancel(DialogInterface dialog) {
-					int color=((ColorDrawable)subtitleView.getBackground()).getColor();
+					int color=colorDialog.getColor();
 					SharedPreferences.Editor editor = runtime.edit();
                     editor.putInt(getString(R.string.subtitleBgColorKey), color);
                     editor.commit();
 				}});
             
-/*            colorDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(android.R.string.ok), new DialogInterface.OnClickListener() {
-    			@Override
-    			public void onClick(DialogInterface dialog, int which) {
-    				subtitleView.setBackgroundColor(colorDialog.getColor());
-                    
-    			}
-    		});
-*/    		
-    		/*colorDialog.setButton(DialogInterface.BUTTON_NEGATIVE, getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-    			@Override
-    			public void onClick(DialogInterface dialog, int which) {}
-    		});*/
     		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
             lp.alpha=0.8f;
             colorDialog.getWindow().setAttributes(lp);
@@ -2183,24 +2132,19 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener (){
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				int color=((ColorDrawable)subtitleView.getBackground()).getColor();
+				int color=runtime.getInt(getString(R.string.subtitleBgColorKey),255);
 				subtitleView.setBackgroundColor(Color.argb(progress, Color.red(color), Color.green(color), Color.blue(color)));
 			}
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {}
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {}});
-		
-//		final EditText input=new EditText(this);
-		
-//		input.setText(Integer.toString(alpha));
-//		input.setSingleLine();
-//		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+
 		AlertDialog.Builder builderSingle =new AlertDialog.Builder(this).setTitle("請輸選擇透明度").setIcon(android.R.drawable.ic_dialog_info).setView(seekBar);
 		builderSingle.setOnCancelListener(new DialogInterface.OnCancelListener(){
 			@Override
 			public void onCancel(DialogInterface dialog) {
-				int alpha=((ColorDrawable)subtitleView.getBackground()).getColor() >> 24 & 0xFF;
+				int alpha=seekBar.getProgress();
 				Log.d(getClass().getName(),"Save alpha of subitlte to "+alpha);
 				SharedPreferences.Editor editor = runtime.edit();
                 editor.putInt(getString(R.string.subtitleAlphaKey), alpha);

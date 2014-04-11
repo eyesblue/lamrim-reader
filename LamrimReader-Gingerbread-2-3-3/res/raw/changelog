@@ -23,6 +23,18 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$139
+  % Version 1.3.1
+  _ 2014-04-11
+	* 新增區段分享/發佈功能，相容於現有的通訊軟體如Line, Hangout甚至於簡訊都能正常使用。
+	* 播放面板中增加上一卷/下一卷音檔切換功能。
+	* 區段標記支援跨音檔標記。
+	* 區段標記功能增加論文區域標記功能。
+	* 區段標記功能改為對話框方式呈現。
+	* 區段播放功能改為與全球廣論區段呈現方式相同。
+	* 版本次碼演進。
+	* 修正公撥模式在Android 2.2版上的強制關閉問題。
+
 $136
   % Version 1.2.5
   _ 2014-03-31
