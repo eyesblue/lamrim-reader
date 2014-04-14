@@ -45,7 +45,7 @@ public class BaseDialogs {
 	}
 	
 	//public static void showEditRegionDialog(final Activity activity,final int mediaIndex, final int startTimeMs, final int endTimeMs,final String titleStr,final SimpleAdapter adapter, final int recIndex){
-	public static void showEditRegionDialog(final Activity activity,final int mediaStart, final int startTimeMs,final int mediaEnd, final int endTimeMs,final String info, final int recIndex,  final Runnable positiveListener){
+	public static void showEditRegionDialog(final Activity activity,final int mediaStart, final int startTimeMs,final int mediaEnd, final int endTimeMs, final int theoryStartPage, final int theoryStartLine, final int theoryEndPage, final int theoryEndLine, final String info, final int recIndex,  final Runnable positiveListener){
 		LayoutInflater factory = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    final View v = factory.inflate(R.layout.save_region_dialog, null);
 	    final EditText regionTitle=(EditText) v.findViewById(R.id.regionTitle);
@@ -65,10 +65,22 @@ public class BaseDialogs {
 				if(recIndex!=-1){
 					RegionRecord record=RegionRecord.getRegionRecord(activity, recIndex);
 					regionTitle.setText(record.title);
-					regionTheoryPageStart.setText(""+(record.theoryPageStart+1));
-					regionTheoryPageEnd.setText(""+(record.theoryPageEnd+1));
-					regionTheoryStartLine.setText(""+(record.theoryStartLine+1));
-					regionTheoryEndLine.setText(""+(record.theoryEndLine+1));
+					
+					if(record.theoryPageStart!=-1 && record.theoryStartLine != -1 && record.theoryPageEnd != -1 && record.theoryEndLine != -1){
+						regionTheoryPageStart.setText(""+(record.theoryPageStart+1));
+						regionTheoryPageEnd.setText(""+(record.theoryPageEnd+1));
+						regionTheoryStartLine.setText(""+(record.theoryStartLine+1));
+						regionTheoryEndLine.setText(""+(record.theoryEndLine+1));
+					}
+				}
+				else {
+					Log.d(getClass().getName(),"theoryStartPage="+theoryStartPage+", theoryStartLine="+theoryStartLine+", theoryEndPage="+theoryEndPage+", theoryEndLine="+theoryEndLine);
+					if(theoryStartPage != -1 && theoryStartLine != -1 && theoryEndPage != -1 && theoryEndLine != -1){
+						regionTheoryPageStart.setText(""+(theoryStartPage+1));
+						regionTheoryPageEnd.setText(""+(theoryEndPage+1));
+						regionTheoryStartLine.setText(""+(theoryStartLine+1));
+						regionTheoryEndLine.setText(""+(theoryEndLine+1));
+					}
 				}
 				startTime.setText(startHMS);
 				endTime.setText(endHMS);
@@ -106,11 +118,13 @@ public class BaseDialogs {
 				if(theoryPageStart< 0 || theoryPageEnd< 0 || inStartLine<0 || inEndLine <0){
 					BaseDialogs.showErrorDialog(activity, activity.getString(R.string.dlgPageNumOverPageCount));
 					dialog.dismiss();
+					return;
 				}
 				
 				if(theoryPageStart>=TheoryData.content.length || theoryPageEnd >= TheoryData.content.length){
 					BaseDialogs.showErrorDialog(activity, activity.getString(R.string.dlgPageNumOverPageCount));
 					dialog.dismiss();
+					return;
 				}
 				
 				// Check if End page greater then Start page

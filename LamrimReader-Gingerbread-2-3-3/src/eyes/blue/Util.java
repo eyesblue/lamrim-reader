@@ -41,7 +41,7 @@ public class Util {
 	static ArrayList<HashMap<String,String>> regionFakeList = new ArrayList<HashMap<String,String>>();
 	static HashMap<String,String> fakeSample = new HashMap();
 
-	public static void showSaveRegionDialog(final Activity activity, int mediaStart,int mediaStartPosition, int mediaEnd, int mediaEndPosition,String info, Runnable callBack){
+/*	public static void showSaveRegionDialog(final Activity activity, int mediaStart,int mediaStartPosition, int mediaEnd, int mediaEndPosition,String info, Runnable callBack){
 		File subtitleFile=FileSysManager.getLocalSubtitleFile(mediaStart);
 		SubtitleElement[] se=loadSubtitle(subtitleFile);
 		
@@ -59,7 +59,7 @@ public class Util {
 	    int endTime=se[index].endTimeMs;
 
 	    Log.d("Util","Check size of region list before: "+RegionRecord.records.size());
-/*		Runnable callBack=new Runnable(){
+		Runnable callBack=new Runnable(){
 			@Override
 			public void run() {
 				activity.runOnUiThread(new Runnable(){
@@ -71,11 +71,11 @@ public class Util {
 					Log.d(logTag,"Check size of region list after: "+RegionRecord.records.size());
 				}});
 			}};
-*/		
+		
 			BaseDialogs.showEditRegionDialog(activity, mediaStart, startTime, mediaEnd, endTime, info, -1, callBack);
 			GaLogger.sendEvent("ui_action", "show_dialog", "save_region", null);
 	}
-	
+*/	
 	public static void showSubtitleToast(final Activity activity,final String s){
 		activity.runOnUiThread(new Runnable() {
 			public void run() {

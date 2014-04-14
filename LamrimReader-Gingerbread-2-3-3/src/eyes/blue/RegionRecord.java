@@ -35,7 +35,7 @@ public class RegionRecord {
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		
 		RegionRecord rr=new RegionRecord();
-    	rr.version=1;
+    	rr.version=2;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
     	rr.mediaStart=mediaStart;
@@ -67,7 +67,7 @@ public class RegionRecord {
 	public static void updateRecord(Activity activity, int contentSerial,String title,int mediaStart, int startTimeMs,int mediaEnd, int endTimeMs, int theoryPageStart, int theoryStartLine, int theoryPageEnd, int theoryEndLine, int recordIndex){
 		SimpleDateFormat sdf=new SimpleDateFormat("yyyy/MM/dd hh:mm:ss", Locale.getDefault());
 		RegionRecord rr=records.get(recordIndex);
-    	rr.version=1;
+    	rr.version=2;
     	rr.contentSerial=contentSerial;
     	rr.title=title;
     	rr.mediaStart=mediaStart;
@@ -117,7 +117,7 @@ public class RegionRecord {
 					str+=objToString(records.get(i))+"\n";
 
 				try {
-					osw=new OutputStreamWriter(activity.openFileOutput(activity.getString(R.string.regionRecordColumeName),activity.MODE_WORLD_WRITEABLE));
+					osw=new OutputStreamWriter(activity.openFileOutput(activity.getString(R.string.regionRecordColumeName),Context.MODE_WORLD_WRITEABLE));
 					osw.write(str);
 					osw.flush();
 					osw.close();

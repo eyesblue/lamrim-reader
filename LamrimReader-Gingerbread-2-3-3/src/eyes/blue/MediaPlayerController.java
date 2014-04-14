@@ -357,9 +357,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setOnRegionListener(listener);
 	}
 	
-	public void setOnShareClickListener(View.OnClickListener listener){
+/*	public void setOnShareClickListener(View.OnClickListener listener){
 		mediaController.setOnShareListener(listener);
 	}
+	*/
 // =================================================================
 	
 	// sometimes large memory objects may get lost.

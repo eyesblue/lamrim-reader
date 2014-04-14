@@ -3,8 +3,10 @@ package eyes.blue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -143,6 +145,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final static int SELECT_FG_PIC_RESULT = 4;
 	final static int SUBTITLE_MODE = 1;
 	final static int READING_MODE = 2;
+	
+	
 
 	int subtitleViewRenderMode = SUBTITLE_MODE;
 	static int mediaIndex = -1;
@@ -198,7 +202,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final int[] regionSet={-1,-1,-1,-1};
 	
 	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
-
+	
+	
 //	boolean repeatPlay=false;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -541,7 +546,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								regionPlayIndex = -1;*/
 							} else {
 								Log.d(logTag, "Normal mode: The play event is fire by user select a new speech.");
-//								setMediaControllerView(-1, -1, true, true, true, true, null,null);
+								
+								// The title of actionBar will miss while restart the App.
+								actionBarTitle=SpeechData.getNameId(mediaIndex);
+								if(actionBar != null)actionBar.setTitle(actionBarTitle);
+								
 								int seekPosition = runtime.getInt("playPosition", 0);
 								Log.d(logTag, "Seek to last play positon " + seekPosition);
 								mpController.setPrevNextListeners(normalModePrevNextListener.getPrevPageListener(), normalModePrevNextListener.getNextPageListener());
@@ -579,91 +588,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								wakeLock.release();
 						}
 					});
-		mpController.setOnShareClickListener(new View.OnClickListener(){
-			@Override
-		    public void onClick(View view) {
-				if(regionSet[0] == -1 || regionSet[1] == -1 || regionSet[2] == -1 || regionSet[3] == -1)return;
-				
-				swapRegionSet();
-				LayoutInflater factory = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			    final View v = factory.inflate(R.layout.save_region_dialog_for_share, null);
-			    
-			    final TextView startTime=(TextView) v.findViewById(R.id.startTime);
-			    final TextView endTime=(TextView) v.findViewById(R.id.endTime);
-			    final String startHMS=SpeechData.getSubtitleName(regionSet[0])+"  "+Util.getMsToHMS(regionSet[1], ":", "", true);
-				final String endHMS=SpeechData.getSubtitleName(regionSet[2])+"  "+Util.getMsToHMS(regionSet[3], ":", "", true);
-				
-				((EditText)v.findViewById(R.id.startPage)).setText(""+theoryHighlightRegion[0]);
-				((EditText)v.findViewById(R.id.endPage)).setText(""+theoryHighlightRegion[1]);
-				((EditText)v.findViewById(R.id.startLine)).setText(""+theoryHighlightRegion[2]);
-				((EditText)v.findViewById(R.id.endLine)).setText(""+theoryHighlightRegion[3]);
-				
-			    runOnUiThread(new Runnable(){
-					@Override
-					public void run() {
-						startTime.setText(startHMS);
-						endTime.setText(endHMS);
-				}});
-			    
-			    final AlertDialog.Builder builder = new AlertDialog.Builder(LamrimReaderActivity.this);
-			    builder.setView(v);
-			    builder.setTitle("分享區段");
-			    builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						String inPageStart=((TextView)v.findViewById(R.id.startPage)).getText().toString();
-						String inPageEnd=((TextView)v.findViewById(R.id.endPage)).getText().toString();
-						String inLineStart=((TextView)v.findViewById(R.id.startLine)).getText().toString();
-						String inLineEnd=((TextView)v.findViewById(R.id.endLine)).getText().toString();
-					    
-						// Check Theory page, start line and end line.
-						int theoryPageStart=-1, theoryPageEnd=-1, inStartLine=-1, inEndLine=-1;
-						try{
-							theoryPageStart=Integer.parseInt(inPageStart.trim())-1;
-							theoryPageEnd=Integer.parseInt(inPageEnd.trim())-1;
-							inStartLine=Integer.parseInt(inLineStart.trim())-1;
-							inEndLine=Integer.parseInt(inLineEnd.trim())-1;
-						}catch(NumberFormatException nfe){
-							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgNumberFormatError));
-							dialog.dismiss();
-						}
 
-						if(theoryPageStart< 0 || theoryPageEnd< 0 || inStartLine<0 || inEndLine <0){
-							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgPageNumOverPageCount));
-							dialog.dismiss();
-						}
-						
-						if(theoryPageStart>=TheoryData.content.length ||  theoryPageEnd >= TheoryData.content.length){
-							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgPageNumOverPageCount));
-							dialog.dismiss();
-						}
-						
-						// Check if the same page, but end line greater then start line
-						if(theoryPageEnd == theoryPageStart && inEndLine < inStartLine){
-							Log.d(getClass().getName(),"User input the same page, but line number end > start.");
-							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgEndLineGreaterThenStart));
-							dialog.dismiss();
-						}
-						
-						// Check if the line count over the count of page.
-						if(inStartLine<0 || inEndLine >= TheoryData.content[theoryPageEnd].length()){
-							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgLineNumOverPageCount));
-							dialog.dismiss();
-						}
-						dialog.dismiss();
-						Log.d(getClass().getName(),"Share region: speechStartIndex="+regionSet[0]+", speechTimeMs="+regionSet[1]+", speechEndIndex="+regionSet[2]+", speechTimeMs="+regionSet[3]+", TheoryStart="+theoryPageStart+":"+inStartLine+", theoryEnd="+theoryPageEnd+":"+inEndLine);
-						shareSegment(null, regionSet[0], regionSet[1], regionSet[2], regionSet[3], theoryPageStart, inStartLine, theoryPageEnd, inEndLine);
-					}});
-				
-			    builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener(){
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.cancel();
-					}});
-				builder.show();
-			}
-		});
-		
 		mpController.setOnRegionClick(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
@@ -968,16 +893,21 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		shareSegment(record.title, record.mediaStart, record.startTimeMs, record.mediaEnd, record.endTimeMs, record.theoryPageStart, record.theoryStartLine,record.theoryPageEnd,record.theoryEndLine);
 	}
 	private void shareSegment(String title, int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, int theoryPageStart, int theoryStartLine, int theoryPageEnd, int theoryEndLine){
-		String lamrimCmdUri=getString(R.string.lamrimCmdUri);
-		String mode="region";
+		String lamrimCmdUri=getString(R.string.lamrimCmdUri)+"play?";
+		String queryStr="mode=region";
 		String speechStart=GlRecord.getSpeechIndexToStr(speechStartIndex)+":"+Util.getMsToHMS(speechStartMs,":","",true);
 		String speechEnd=GlRecord.getSpeechIndexToStr(speechEndIndex)+":"+Util.getMsToHMS(speechEndMs,":","",true);
 		String theoryStart=(theoryPageStart+1)+":"+(theoryStartLine+1);
 		String theoryEnd=(theoryPageEnd+1)+":"+(theoryEndLine+1);
 		
-		lamrimCmdUri+="play?mode="+mode+"&speechStart="+speechStart+"&speechEnd="+speechEnd+"&theoryStart="+theoryStart+"&theoryEnd="+theoryEnd;
-		if(title!=null)lamrimCmdUri+=Uri.encode("&title="+title);
-		shareSegment(lamrimCmdUri);
+		queryStr+="&speechStart="+speechStart+"&speechEnd="+speechEnd+"&theoryStart="+theoryStart+"&theoryEnd="+theoryEnd;
+		if(title!=null)
+			try {
+				queryStr+="&title="+URLEncoder.encode(title,"utf8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		shareSegment(lamrimCmdUri+queryStr);
 	}
 	private void shareSegment(String msg){
 		Intent sendIntent = new Intent();
@@ -998,54 +928,56 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	    final LinearLayout leftBound=(LinearLayout) v.findViewById(R.id.setLeftBound);
 	    final LinearLayout rightBound=(LinearLayout) v.findViewById(R.id.setRightBound);
 	    final LinearLayout saveOpt=(LinearLayout) v.findViewById(R.id.saveOpt);
+	    final LinearLayout shareOpt=(LinearLayout) v.findViewById(R.id.shareOpt);
 	    final ImageView save=(ImageView) v.findViewById(R.id.save);
+	    final ImageView share=(ImageView) v.findViewById(R.id.share);
 	    
 	    if(regionSet[0]!=-1){
 	    	startDesc.setText(SpeechData.getNameId(regionSet[0])+":"+Util.getMsToHMS(regionSet[1],":","",true));
 	    }
-	    if(regionSet[3]!=-1){
+	    if(regionSet[2]!=-1){
 	    	endDesc.setText(SpeechData.getNameId(regionSet[2])+":"+Util.getMsToHMS(regionSet[3],":","",true));
 	    }
-	    if(regionSet[0]!=-1 && regionSet[3]!=-1){
+	    if(regionSet[0]!=-1 && regionSet[2]!=-1){
+	    	saveOpt.setEnabled(true);
+		    shareOpt.setEnabled(true);
 	    	save.setEnabled(true);
+	    	share.setEnabled(true);
 	    }
 	    else{
+	    	saveOpt.setEnabled(false);
+		    shareOpt.setEnabled(false);
 	    	save.setEnabled(false);
+	    	share.setEnabled(false);
 	    }
 	    
 	    leftBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
 				regionSet[0]=mediaIndex;
-				regionSet[1]=mediaPosition;
+				regionSet[1]=mpController.getSubtitle(mediaPosition).startTimeMs;
 				regionStartInfo=mpController.getSubtitle(mediaPosition).text;
-				if(regionSet[0] != -1 && regionSet[2] != -1)
-					((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(true);
-				else ((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(false);
 				setRegionOptDialog.dismiss();
 			}});
 	    rightBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
 				regionSet[2]=mediaIndex;
-				regionSet[3]=mediaPosition;
+				regionSet[3]=mpController.getSubtitle(mediaPosition).endTimeMs;
 				regionEndInfo=mpController.getSubtitle(mediaPosition).text;
-				if(regionSet[0] != -1 && regionSet[2] != -1)
-					((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(true);
-				else ((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(false);
 				setRegionOptDialog.dismiss();
 			}});
 	    saveOpt.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
 				if(Math.abs(regionSet[0]-regionSet[2])>1){
-//					Util.showNarmalToastMsg(LamrimReaderActivity.this, "只能標記相鄰的音檔");
 					BaseDialogs.showErrorDialog(LamrimReaderActivity.this, "只能標記相鄰的音檔");
 					return;
 				}
-				
+		
 				swapRegionSet();
-				Util.showSaveRegionDialog(LamrimReaderActivity.this, regionSet[0] , regionSet[1], regionSet[2], regionSet[3], regionStartInfo+" ~ "+regionEndInfo, new Runnable(){
+				
+				BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this, regionSet[0] , regionSet[1], regionSet[2], regionSet[3], theoryHighlightRegion[0], theoryHighlightRegion[1], theoryHighlightRegion[2], theoryHighlightRegion[3], regionStartInfo+" ~ "+regionEndInfo, -1, new Runnable(){
 					@Override public void run() {
 						runOnUiThread(new Runnable(){
 							@Override
@@ -1062,10 +994,104 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				setRegionOptDialog.dismiss();
 			}});
 	    
+	    shareOpt.setOnClickListener(new View.OnClickListener(){
+			@Override
+			public void onClick(View view) {
+				if(Math.abs(regionSet[0]-regionSet[2])>1){
+					BaseDialogs.showErrorDialog(LamrimReaderActivity.this, "只能標記相鄰的音檔");
+					return;
+				}
+				
+				swapRegionSet();
+				LayoutInflater factory = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			    final View v = factory.inflate(R.layout.save_region_dialog_for_share, null);
+			    
+			    final TextView startTime=(TextView) v.findViewById(R.id.startTime);
+			    final TextView endTime=(TextView) v.findViewById(R.id.endTime);
+			    final String startHMS=SpeechData.getSubtitleName(regionSet[0])+"  "+Util.getMsToHMS(regionSet[1], ":", "", true);
+				final String endHMS=SpeechData.getSubtitleName(regionSet[2])+"  "+Util.getMsToHMS(regionSet[3], ":", "", true);
+				
+				if(theoryHighlightRegion[0] !=0 && theoryHighlightRegion[1] !=0 && theoryHighlightRegion[2] !=0 && theoryHighlightRegion[3] !=0){
+					((EditText)v.findViewById(R.id.startPage)).setText(""+(theoryHighlightRegion[0]+1));
+					((EditText)v.findViewById(R.id.startLine)).setText(""+(theoryHighlightRegion[1]+1));
+					((EditText)v.findViewById(R.id.endPage)).setText(""+(theoryHighlightRegion[2]+1));
+					((EditText)v.findViewById(R.id.endLine)).setText(""+(theoryHighlightRegion[3]+1));
+				}
+				
+			    runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						startTime.setText(startHMS);
+						endTime.setText(endHMS);
+				}});
+			    
+			    final AlertDialog.Builder builder = new AlertDialog.Builder(LamrimReaderActivity.this);
+			    builder.setView(v);
+			    builder.setTitle("分享區段");
+			    builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String inPageStart=((TextView)v.findViewById(R.id.startPage)).getText().toString();
+						String inPageEnd=((TextView)v.findViewById(R.id.endPage)).getText().toString();
+						String inLineStart=((TextView)v.findViewById(R.id.startLine)).getText().toString();
+						String inLineEnd=((TextView)v.findViewById(R.id.endLine)).getText().toString();
+					    
+						// Check Theory page, start line and end line.
+						int theoryPageStart=-1, theoryPageEnd=-1, inStartLine=-1, inEndLine=-1;
+						try{
+							theoryPageStart=Integer.parseInt(inPageStart.trim())-1;
+							theoryPageEnd=Integer.parseInt(inPageEnd.trim())-1;
+							inStartLine=Integer.parseInt(inLineStart.trim())-1;
+							inEndLine=Integer.parseInt(inLineEnd.trim())-1;
+						}catch(NumberFormatException nfe){
+							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgNumberFormatError));
+							dialog.dismiss();
+							return;
+						}
+
+						if(theoryPageStart< 0 || theoryPageEnd< 0 || inStartLine<0 || inEndLine <0){
+							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgPageNumOverPageCount));
+							dialog.dismiss();
+							return;
+						}
+						
+						if(theoryPageStart>=TheoryData.content.length ||  theoryPageEnd >= TheoryData.content.length){
+							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgPageNumOverPageCount));
+							dialog.dismiss();
+							return;
+						}
+						
+						// Check if the same page, but end line greater then start line
+						if(theoryPageEnd < theoryPageStart || (theoryPageEnd == theoryPageStart && inEndLine < inStartLine)){
+							Log.d(getClass().getName(),"User input the same page, but line number end > start.");
+							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgEndLineGreaterThenStart));
+							dialog.dismiss();
+							return;
+						}
+						
+						// Check if the line count over the count of page.
+						if(inStartLine<0 || inEndLine >= TheoryData.content[theoryPageEnd].length()){
+							BaseDialogs.showErrorDialog(LamrimReaderActivity.this, getString(R.string.dlgLineNumOverPageCount));
+							dialog.dismiss();
+							return;
+						}
+						dialog.dismiss();
+						Log.d(getClass().getName(),"Share region: speechStartIndex="+regionSet[0]+", speechTimeMs="+regionSet[1]+", speechEndIndex="+regionSet[2]+", speechTimeMs="+regionSet[3]+", TheoryStart="+theoryPageStart+":"+inStartLine+", theoryEnd="+theoryPageEnd+":"+inEndLine);
+						shareSegment(null, regionSet[0], regionSet[1], regionSet[2], regionSet[3], theoryPageStart, inStartLine, theoryPageEnd, inEndLine);
+					}});
+				
+			    builder.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.cancel();
+					}});
+			    builder.show();
+			}});
 	    setRegionOptDialog.setView(v);
 	    setRegionOptDialog.show();
 	}
 	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -1110,22 +1136,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			cl.getLogDialog().show();
 
 		
-		Intent cmdIntent=this.getIntent();
-		Log.d(getClass().getName(), "Action: "+getIntent().getAction());
-		if(cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
-			startRegionPlay(cmdIntent.getIntExtra("mediaStart", 0),
-					cmdIntent.getIntExtra("startTimeMs",0), 
-					cmdIntent.getIntExtra("mediaEnd",0), 
-					cmdIntent.getIntExtra("endTimeMs",0), 
-					cmdIntent.getIntExtra("theoryStartPage",0), 
-					cmdIntent.getIntExtra("theoryStartLine",0), 
-					cmdIntent.getIntExtra("theoryEndPage",0), 
-					cmdIntent.getIntExtra("theoryEndLint",0));
-			String title=cmdIntent.getStringExtra("theoryEndLint");
-			if(title!=null)actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": "+title;
-			else actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": 未知標題";
-			getIntent().setAction(Intent.ACTION_MAIN);
-		}
+		
 		Log.d(getClass().getName(), "**** Leave onStart() ****");
 	}
 
@@ -1162,9 +1173,29 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		if (mediaIndex == -1)
 			return;
 
-		if (!mpController.isPlayerReady())
+		Intent cmdIntent=this.getIntent();
+		Log.d(getClass().getName(), "Action: "+getIntent().getAction());
+		if(cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
+			GLamrimSectIndex=0;
+			getIntent().setAction(Intent.ACTION_MAIN);
+			String title=cmdIntent.getStringExtra("title");
+			if(title!=null)actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": "+title;
+			else actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": 未知標題";
+
+			startRegionPlay(cmdIntent.getIntExtra("mediaStart", 0),
+					cmdIntent.getIntExtra("startTimeMs",0), 
+					cmdIntent.getIntExtra("mediaEnd",0), 
+					cmdIntent.getIntExtra("endTimeMs",0), 
+					cmdIntent.getIntExtra("theoryStartPage",0), 
+					cmdIntent.getIntExtra("theoryStartLine",0), 
+					cmdIntent.getIntExtra("theoryEndPage",0), 
+					cmdIntent.getIntExtra("theoryEndLine",0));
+		}
+		
+		else if ( !mpController.isPlayerReady())
 			startPlay(mediaIndex);
 
+		
 		Log.d(getClass().getName(), "**** Leave onResume() ****");
 	}
 
@@ -1354,7 +1385,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		SharedPreferences.Editor editor = runtime.edit();
 		switch (requestCode) {
 		case SPEECH_MENU_RESULT:
-
+			Log.d(getClass().getName(),"Return from SPEECH_MENU_RESULT");
 			if(intent == null)return;
 
 			final int selected = intent.getIntExtra("index", -1);
@@ -1370,7 +1401,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			GLamrimSectIndex = -1;
 			
 			final int pageNum = SpeechData.refPage[selected] - 1;
-			if (pageNum < 0){
+			Log.d(getClass().getName(),"The speech reference theory page "+pageNum);
+			if (pageNum >= 0){
 				bookViewMountPoint[0]=pageNum;
 				bookViewMountPoint[1]=0;
 			}
@@ -1382,7 +1414,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			// do start downloader in OnResume.
 			break;
 		case SPEECH_MENU_RESULT_REGION:
-			Log.d(getClass().getName(),"Return from onActivityResult");
+			Log.d(getClass().getName(),"Return from SPEECH_MENU_RESULT_REGION");
 			mpController.reset();
 
 			editor.putInt("mediaIndex", GLamrimSect[0][0]);
@@ -1395,7 +1427,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			//actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": "+rec.title;
 			Log.d(getClass().getName(),"Mark theory: start page="+theoryHighlightRegion[0]+" start line="+theoryHighlightRegion[1]+", offset="+bookViewMountPoint[1]);
 
-			startPlay(mediaIndex);
+			//startPlay(mediaIndex);
 			break;
 		case GLOBAL_LAMRIM_RESULT:
 			if(intent == null)return;
@@ -1696,7 +1728,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				if(end != start){
 					media = FileSysManager.getLocalMediaFile(end);
 					subtitle = FileSysManager.getLocalSubtitleFile(end);
-					if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){param=","+end;}
+					if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){
+						if(param.length()==0)param=""+end;
+						else param+=","+end;
+					}
 				}
 				
 				final String files=param;
@@ -1748,6 +1783,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	}
 
 	private void startRegionPlay(final int mediaStart,final int startTimeMs,final int mediaEnd,final int endTimeMs,final int theoryStartPage,final int theoryStartLine,final int theoryEndPage,final int theoryEndLine){
+		
+		setRegionSec( mediaStart, startTimeMs, mediaEnd, endTimeMs, theoryStartPage, theoryStartLine, theoryEndPage, theoryEndLine);
+		
 		String param="";
 		int start=mediaStart;
 		int end = mediaEnd;
@@ -1757,9 +1795,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		if(end != start){
 			media = FileSysManager.getLocalMediaFile(end);
 			subtitle = FileSysManager.getLocalSubtitleFile(end);
-			if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){param=","+end;}
+			if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){
+				if(param.length()==0)param=""+end;
+				else param+=","+end;
+			}
 		}
 		
+		Log.d(getClass().getName(),"Send download param "+param+" to speechMenuActivity");
 		final String files=param;
 		if(param.length()!=0){
 			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
@@ -1785,14 +1827,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 //			return;
 		}
 
-		mpController.desetPlayRegion();
+		//mpController.desetPlayRegion();
 		mpController.reset();
 		SharedPreferences.Editor editor = runtime.edit();
 		editor.putInt("mediaIndex", mediaStart);
 		editor.putInt("playPosition", startTimeMs);
 		editor.commit();
 		mediaIndex = mediaStart;
-		setRegionSec( mediaStart, startTimeMs, mediaEnd, endTimeMs, theoryStartPage, theoryStartLine, theoryEndPage, theoryEndLine);
 		GLamrimSectIndex=0;
 		Log.d(getClass().getName(),"Mark theory: start page="+theoryHighlightRegion[0]+" start line="+theoryHighlightRegion[1]+", offset="+bookViewMountPoint[1]);
 
@@ -2200,9 +2241,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 	private void showMediaController(){
 		mpController.showControllerView(LamrimReaderActivity.this);
-		if(regionSet[0] != -1 && regionSet[2] != -1)
+/*		if(regionSet[0] != -1 && regionSet[2] != -1)
 			((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(true);
 		else ((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(false);
+		*/
 	}
 	private void highlightView(View v){
 		Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.blank);
@@ -2234,7 +2276,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			ImageButton delButton = (ImageButton) row.findViewById(R.id.deleteButton);
 
 			title.setText(record.title);
-			theoryIndex.setText(String.format(getString(R.string.dlgRecordTheoryIndex), (record.theoryPageStart+1), (record.theoryStartLine+1), (record.theoryPageEnd+1), (record.theoryEndLine+1)));
+			
+			if(record.theoryPageStart!=-1 && record.theoryStartLine != -1 && record.theoryPageEnd != -1 && record.theoryEndLine != -1)
+				theoryIndex.setText(String.format(getString(R.string.dlgRecordTheoryIndex), (record.theoryPageStart+1), (record.theoryStartLine+1), (record.theoryPageEnd+1), (record.theoryEndLine+1)));
 			
 			timeReg.setText(SpeechData.getTheoryName(record.mediaStart) + "  "
 					+ Util.getMsToHMS(record.startTimeMs, "\"", "'", false)+ " ~ "
@@ -2266,7 +2310,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							});
 						}
 					};
-					BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this,	rr.mediaStart, rr.startTimeMs, rr.mediaEnd, rr.endTimeMs, record.info, position, callBack);
+					BaseDialogs.showEditRegionDialog(LamrimReaderActivity.this,	rr.mediaStart, rr.startTimeMs, rr.mediaEnd, rr.endTimeMs, rr.theoryPageStart, rr.theoryStartLine,rr.theoryPageEnd, rr.theoryEndLine, record.info, position, callBack);
 				}
 			});
 
@@ -2371,8 +2415,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				return;
 			}
 			
-			
-			
 			// File exist, play it.
 			SharedPreferences.Editor editor = runtime.edit();				
 			editor.putInt("mediaIndex", index);
@@ -2387,6 +2429,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			}
 
 			Log.d(logTag, "Call reset player.");
+			actionBarTitle=SpeechData.getNameId(index);
+			getSupportActionBar().setTitle(actionBarTitle);
 			mpController.reset();
 			startPlay(index);
 		}

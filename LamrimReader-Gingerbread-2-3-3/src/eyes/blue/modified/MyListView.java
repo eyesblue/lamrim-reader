@@ -147,8 +147,11 @@ public class MyListView extends ListView {
 			float rightBoundX=getWidth()-getMeasuredWidth();
 //			Log.d(getClass().getName(),"Layout params: ("+getLayout().getWidth()+", "+getLayout().getHeight()+", content size: ("+getWidth()+", "+getHeight()+"), meansure size: "+getMeasuredWidth()+", "+getMeasuredHeight());
 			// reached Up/Left bound.
-			if(scrollX<=0)scrollX=0;
-//			if(scrollY<=0)scrollY=0;
+			
+			// Restrict the left side can't be over.
+			// if(scrollX<=0)scrollX=0;
+			// Restrict the right side can't be over.
+			//	if(scrollY<=0)scrollY=0;
 			
 				
 /*			Log.d(getClass().getName(),"textWidth: "+textWidth+", scrollX: "+getScrollX()+", getMeasuredWidth: "+getMeasuredWidth());

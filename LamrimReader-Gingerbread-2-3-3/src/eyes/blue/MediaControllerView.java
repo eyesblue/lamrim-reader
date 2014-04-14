@@ -496,11 +496,11 @@ public class MediaControllerView extends FrameLayout {
     }
 
     
-    public void setOnShareListener(View.OnClickListener listener){
+/*    public void setOnShareListener(View.OnClickListener listener){
     	ImageButton shareButton=(ImageButton)findViewById(R.id.shareBtn);
         shareButton.setOnClickListener(listener);
     }
-
+*/
     public void setOnRegionListener(View.OnClickListener listener){
     	ImageButton regionButton=(ImageButton)findViewById(R.id.regionBtn);
         regionButton.setOnClickListener(listener);

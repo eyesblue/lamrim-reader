@@ -52,8 +52,11 @@ public class IntentActivity  extends SherlockFragmentActivity{
 		int[] theoryEnd=getTheoryData(intentPathUri.getQueryParameter("theoryEnd"));
 		if(theoryEnd == null)finish();
 		
+		// Check the speech index not over 1
 		if(Math.abs(speechStart[0] - speechEnd[0])>1)finish();
 		
+		Log.d(getClass().getName(),"Parse result: mediaStart="+speechStart[0]+", startTimeMs="+speechStart[1]+", mediaEnd="+speechEnd[0]+", theoryStartPage="+theoryStart[0]+", theoryStartLine="+theoryStart[1]
+				+", theoryEndPage="+theoryEnd[0]+", theoryEndLine="+theoryEnd[1]+", title="+Uri.decode(intentPathUri.getQueryParameter("title")));
 		Intent lrInt=new Intent(IntentActivity.this, LamrimReaderActivity.class);
 		Log.d(getClass().getName(),"This intent="+lrInt);
 		lrInt.putExtra("mediaStart", speechStart[0]);
@@ -63,8 +66,8 @@ public class IntentActivity  extends SherlockFragmentActivity{
 		lrInt.putExtra("theoryStartPage", theoryStart[0]);
 		lrInt.putExtra("theoryStartLine", theoryStart[1]);
 		lrInt.putExtra("theoryEndPage", theoryEnd[0]);
-		lrInt.putExtra("theoryEndLint", theoryEnd[1]);
-		lrInt.putExtra("title", intentPathUri.getQueryParameter("title"));
+		lrInt.putExtra("theoryEndLine", theoryEnd[1]);
+		lrInt.putExtra("title", Uri.decode(intentPathUri.getQueryParameter("title")));
 		lrInt.putExtra("mode", "region");
 		lrInt.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		lrInt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

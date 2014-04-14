@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="廣論 999 頁 99 行 ~ 999 頁 99 行"
+                android:text="廣論 ? 頁 ? 行 ~ ? 頁 ? 行"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
         </LinearLayout>
