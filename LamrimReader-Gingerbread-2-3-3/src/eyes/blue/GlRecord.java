@@ -23,17 +23,19 @@ public class GlRecord {
 		return sa;
 	}
 	
+	// return {speechIndex, TimeMs}
 	public static int[] getSpeechStrToInt(String str){
 		if(str==null || str.length()==0)return null;
 		String[] split=str.split(":");
 		if(split.length!=3)return null;
 		
-		int res[]=new int[3];
-		res[0]=SpeechData.getNameToId(split[0]);
-		for(int i=1;i<res.length;i++)
-			res[i]=(int) (Float.parseFloat(split[i]));
-		
-		Log.d("Global Lamrim record","Parse string ["+str+"] to time ["+res[1]+":"+res[2]+"]");
+		int section[]=new int[3];
+		section[0]=SpeechData.getNameToId(split[0]);
+		for(int i=1;i<section.length;i++)
+			section[i]=(int) (Float.parseFloat(split[i])*1000);
+		section[1]*=60;
+		Log.d("Global Lamrim record","Parse string ["+str+"] to time ["+section[1]+":"+section[2]+"]");
+		int res[] ={section[0],section[1]+section[2]};
 		return res;
 	}
 	

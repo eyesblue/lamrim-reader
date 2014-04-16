@@ -355,8 +355,8 @@ public class CalendarActivity extends SherlockActivity {
 	}
 
 	private boolean isFileExist(GlRecord glr) {
-		int[] speechStart = GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
-		int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
+		int[] speechStart = GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex, TimeMs}
+		int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);//  {speechIndex, TimeMs}
 
 		File mediaStart = FileSysManager.getLocalMediaFile(speechStart[0]);
 		File subtitleStart = FileSysManager.getLocalSubtitleFile(speechStart[0]);
@@ -366,8 +366,7 @@ public class CalendarActivity extends SherlockActivity {
 		if(mediaStart == null || subtitleStart == null || mediaEnd == null || subtitleEnd == null)
 			return false;
 		
-		return (mediaStart.exists() && subtitleStart.exists()
-				&& mediaEnd.exists() && subtitleEnd.exists());
+		return (mediaStart.exists() && subtitleStart.exists() && mediaEnd.exists() && subtitleEnd.exists());
 	}
 
 	private File getLocalScheduleFile() {
@@ -506,8 +505,7 @@ public class CalendarActivity extends SherlockActivity {
 		} catch (ParseException e) {
 			e.printStackTrace();
 			Util.showNarmalToastMsg(CalendarActivity.this,
-					getString(R.string.localGlobalLamrimScheduleFileReadErr)
-							+ "\"" + glr + "\"");
+					getString(R.string.localGlobalLamrimScheduleFileReadErr)+ "\"" + glr + "\"");
 			GaLogger.sendException("Date format parse error: startDate="
 					+ startDate + ", endDate=" + endDate, e, true);
 			return false;

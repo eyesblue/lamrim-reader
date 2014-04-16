@@ -95,10 +95,7 @@ public class IntentActivity  extends SherlockFragmentActivity{
 		if(split[0].length()>4 || split[1].length()>2 || split[2].length()>6)return null;
 		int speechData[]=GlRecord.getSpeechStrToInt(str);
 		if(speechData[0]<0 || speechData[0]>=SpeechData.name.length)return null;
-		int result[]=new int[2];
-		result[0]=speechData[0];
-		result[1]=speechData[1]*60000+speechData[2];
-		if(result[1] < 0 || result[1]>SpeechData.length[result[0]])return null;
-		return result;
+		if(speechData[1] < 0 || speechData[1]>SpeechData.length[speechData[0]])return null;
+		return speechData;
 	}
 }

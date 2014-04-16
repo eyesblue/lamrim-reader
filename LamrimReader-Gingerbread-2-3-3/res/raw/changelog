@@ -23,7 +23,16 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+<<<<<<< .mine
+$141
+  % Version 1.3.2
+  _ 2014-04-16
+	* 修正全球廣論時間區間錯誤問題。
+	* 加入新版本偵測能力，解決Google Play更新通知問題。
 $140
+=======
+$140
+>>>>>>> .r140
   % Version 1.3.1
   _ 2014-04-14
 	* 新增區段分享/發佈功能，相容於現有的通訊軟體如Line, Hangouts甚至於簡訊都能正常使用。

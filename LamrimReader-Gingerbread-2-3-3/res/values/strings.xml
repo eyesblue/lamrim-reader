@@ -13,6 +13,8 @@
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
 
     <!-- Default Value -->
+    
+    <string name="versionCheckUrl">http://lamrimreader.eyes-blue.com/appresources/publish/notifier.json</string>
     <integer name="textMaxSize">80</integer>
     <integer name="textMinSize">16</integer>
     <integer name="defFontSize">32</integer>

@@ -119,6 +119,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
+import com.winsontan520.wversionmanager.library.WVersionManager;
 
 import eyes.blue.SpeechMenuActivity.SpeechListAdapter;
 import eyes.blue.modified.MyListView;
@@ -197,6 +198,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	int[][] GLamrimSect=new int[2][3];
 	int GLamrimSectIndex=-1;
 	String actionBarTitle="";
+	String regionStartInfo, regionEndInfo;
 	
 	PrevNextListener prevNextListener = null;
 	final int[] regionSet={-1,-1,-1,-1};
@@ -220,6 +222,16 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 
 		Log.d(funcInto, "******* Into LamrimReader.onCreate *******");
+
+		// Check new version
+		WVersionManager versionManager = new WVersionManager(LamrimReaderActivity.this);
+		versionManager.setUpdateNowLabel("立即更新");
+		versionManager.setRemindMeLaterLabel("稍後通知我");
+		versionManager.setIgnoreThisVersionLabel("忽略此版本");
+		versionManager.setReminderTimer(10);
+	    versionManager.setVersionContentUrl(getString(R.string.versionCheckUrl)); // your update content url, see the response format below
+	    versionManager.checkVersion();
+	    
 		if (savedInstanceState != null) Log.d(logTag, "The savedInstanceState is not null!");
 		Log.d(getClass().getName(), "mediaIndex=" + mediaIndex);
 		powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -917,7 +929,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
     	startActivity(Intent.createChooser(sendIntent, "區段分享"));
 	}
 	
-	String regionStartInfo, regionEndInfo;
+	
 	public void showOnRegionOptionDialog(final int mediaIndex, final int mediaPosition){
 		final AlertDialog setRegionOptDialog=new AlertDialog.Builder(LamrimReaderActivity.this).create();
 		
@@ -1448,11 +1460,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			
 			String sec[]=actionBarTitle.split("/");
 			actionBarTitle=getString(R.string.globalLamrimShortName)+": "+sec[1]+"/"+sec[2];
-			
+			String regionInfo[]=glRecord.desc.split("……");
+			regionStartInfo=regionInfo[0].trim();
+			regionEndInfo=regionInfo[1].trim();
 			setRegionSec(glRecord.speechPositionStart, glRecord.speechPositionEnd, glRecord.theoryLineStart, glRecord.theoryLineEnd);
 			GLamrimSectIndex=0;
 			
-			Log.d(getClass().getName(), "Set mediaIndex="+mediaIndex+", play position=0");
+			Log.d(getClass().getName(), "Set mediaIndex="+mediaIndex+", play position="+GLamrimSect[0][0]);
 			editor.putInt("mediaIndex", GLamrimSect[0][0]);
 			editor.putInt("playPosition", 0);
 			editor.commit();
@@ -1842,13 +1856,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	private void setRegionSec(String speechPositionStart, String speechPositionEnd, String theoryLineStart, String theoryLineEnd){
 		final int[] theoryStart=GlRecord.getTheoryStrToInt(glRecord.theoryLineStart);// {page,line}
 		int[] theoryEnd=GlRecord.getTheoryStrToInt(glRecord.theoryLineEnd);// {page,line}
-		int[] speechStart=GlRecord.getSpeechStrToInt(glRecord.speechPositionStart);// {speechIndex,min,sec}
-		int[] speechEnd=GlRecord.getSpeechStrToInt(glRecord.speechPositionEnd);// {speechIndex,min,sec}
+		int[] speechStart=GlRecord.getSpeechStrToInt(glRecord.speechPositionStart);// {speechIndex, TimeMs}
+		int[] speechEnd=GlRecord.getSpeechStrToInt(glRecord.speechPositionEnd);// {speechIndex, TimeMs}
 		
 		Log.d(getClass().getName(),"Parse result: Theory: P"+theoryStart[0]+"L"+ theoryStart[1]+" ~ P"+theoryEnd[0]+"L"+theoryEnd[1]);
-		Log.d(getClass().getName(),"Parse result: Speech: "+speechStart[0]+":"+ speechStart[1]+":"+speechStart[2]+" ~ "+speechEnd[0]+":"+speechEnd[1]+":"+speechEnd[2]);
+		Log.d(getClass().getName(),"Parse result: Speech: "+speechStart[0]+":"+ Util.getMsToHMS(speechStart[1])+" ~ "+speechEnd[0]+":"+ Util.getMsToHMS(speechEnd[1]));
 
-		setRegionSec(speechStart[0], speechStart[1]*60000+speechStart[2], speechEnd[0], speechEnd[1]*60000+speechEnd[2], theoryStart[0],  theoryStart[1], theoryEnd[0], theoryEnd[1]);
+		setRegionSec(speechStart[0], speechStart[1], speechEnd[0], speechEnd[1], theoryStart[0],  theoryStart[1], theoryEnd[0], theoryEnd[1]);
 	}
 	
 	private void setRegionSec(int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, int theoryStartPage, int theoryStartLine, int theoryEndPage, int thtoryEndLine){
