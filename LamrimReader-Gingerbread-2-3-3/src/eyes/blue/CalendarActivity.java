@@ -184,10 +184,8 @@ public class CalendarActivity extends SherlockActivity {
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
-		if (resultCode == RESULT_CANCELED || selectedGlr == null || !isFileExist(selectedGlr))
-			finish();
-
-		if (intent == null)return;
+		if (resultCode != RESULT_OK || selectedGlr == null || !isFileExist(selectedGlr))
+			return;
 
 		setResult(Activity.RESULT_OK, getResultIntent(selectedGlr));
 		finish();

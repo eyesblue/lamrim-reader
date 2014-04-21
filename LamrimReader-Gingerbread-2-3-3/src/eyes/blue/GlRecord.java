@@ -40,7 +40,7 @@ public class GlRecord {
 	}
 	
 	public static String getSpeechIndexToStr(int index){
-		int num=index/2;
+		int num=(index/2)+1;
 		int alpha=index%2;
 		String result=num+((alpha==0)?"A":"B");
 		return result;

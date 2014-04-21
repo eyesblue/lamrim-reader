@@ -43,7 +43,6 @@ import android.util.Log;
 public class FileSysManager {
 //        public static String[] fileName=null;
 //        public static int[] fileSize=null;
-	static int targetFileIndex=-1;
 	static String logTag=null;
 	static int NO_CACHE=0;
 	public final static int INTERNAL=0;
@@ -61,7 +60,6 @@ public class FileSysManager {
 	static DiskSpaceFullListener diskFullListener=null;
 
 	DownloadListener downloadListener=null;
-	static int downloadFromSite=-1;
 	static GoogleRemoteSource grs=null;
 	static String srcRoot[] = new String[2];
 
@@ -79,7 +77,7 @@ public class FileSysManager {
               
 		FileSysManager.logTag=getClass().getName();
 		FileSysManager.context=context;
-                grs=new GoogleRemoteSource(context);
+		grs=new GoogleRemoteSource(context);
 	}
 	
 	public static String getSysDefMediaDir(){

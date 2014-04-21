@@ -363,8 +363,6 @@ public class FileDownloader {
                         String url=null, outputPath=null;
                         int mediaIndex=-1,type=-1;
                        
-                       
-                       
                         for(int i=0;i<urls.length;i++){
                                 JSONObject j=urls[i];
                                 try {
@@ -374,8 +372,6 @@ public class FileDownloader {
                                         mediaIndex=j.getInt("mediaIndex");
                                 } catch (JSONException e2) {e2.printStackTrace();}
                                
-                               
-
                                 if(cancelled){Log.d(getClass().getName(),"User canceled, download procedure skip!");return false;}
                                
 //                              double d=(double)(i)/urls.length*dlPrgsDialog.getMax();
@@ -384,13 +380,13 @@ public class FileDownloader {
                                 // We not allow download fail either speech nor subtitle, but not speech.
                                 executing=j;
                                 if(!download(url, outputPath,mediaIndex,type)){
-                                        if(cancelled){
-                                        	Log.d(getClass().getName(),"User canceled, return false");
-                                        	return false;
-                                        }
-                                        setProgressMsg(activity.getString(R.string.dlgTitleDownloadFail),activity.getString(R.string.dlgDescDownloadFail));
-                                        Log.d(getClass().getName(),"User canceled, call prepareFail");
-                                        listener.prepareFail(mediaIndex,type);
+                                	if(cancelled){
+                                        Log.d(getClass().getName(),"User canceled, return false");
+                                        return false;
+                                	}
+                                    setProgressMsg(activity.getString(R.string.dlgTitleDownloadFail),activity.getString(R.string.dlgDescDownloadFail));
+                                    Log.d(getClass().getName(),"User canceled, call prepareFail");
+                                    listener.prepareFail(mediaIndex,type);
                                 }
                                 listener.prepareFinish(mediaIndex,type);
                         }

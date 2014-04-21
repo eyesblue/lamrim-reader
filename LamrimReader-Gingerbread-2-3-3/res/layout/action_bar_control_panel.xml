@@ -1,22 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center"
-    android:gravity="center"
-    android:orientation="horizontal" >
-
-    <ImageView
-        android:id="@+id/bookIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/book" />
+    android:id="@+id/LinearLayout1"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="left|center_vertical"
+    android:gravity="left" >
 
     <EditText
         android:id="@+id/jumpPage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
         android:ellipsize="start"
         android:ems="3"
         android:focusable="true"
@@ -27,25 +22,39 @@
         android:numeric="integer"
         android:singleLine="true"
         android:text="1" >
+
+        <requestFocus />
     </EditText>
 
     <ImageView
         android:id="@+id/rightBoundIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:src="@drawable/volume" />
 
     <SeekBar
         android:id="@+id/volumeController"
         style="@style/SeekBarholo"
         android:layout_width="140dp"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1" />
 
     <ImageButton
         android:id="@+id/textSize"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:background="#00000000"
         android:src="@drawable/font_size" />
+
+    <ImageButton
+        android:id="@+id/search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="#00000000"
+        android:src="@drawable/search" />
 
 </LinearLayout>

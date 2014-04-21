@@ -68,7 +68,7 @@ public class TheoryPageView extends TextView {
 		
 		int strLen=length+invalidStrCount;
 		int color=context.getResources().getColor(R.color.theoryHighColor);
-		text.setSpan(new BackgroundColorSpan(color), startIndex, strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		text.setSpan(new BackgroundColorSpan(color), startIndex, startIndex+strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		super.setText(text);
 	}
 	

@@ -8,6 +8,11 @@
         <item name="android:imageButtonStyle">@style/ImageButtonholo</item>
         <item name="android:seekBarStyle">@style/SeekBarholo</item>
     </style>
+    
+    <style name="MyTheme.TitleTextStyle" parent="@style/TextAppearance.Sherlock.Widget.ActionBar.Title">
+        <item name="android:minEms">16</item>
+        <item name="android:width">500sp</item>
+    </style>
 
     <!-- For CalendarView -->
 <!--     <style name="CalendarTheme" parent="@android:style/Theme">

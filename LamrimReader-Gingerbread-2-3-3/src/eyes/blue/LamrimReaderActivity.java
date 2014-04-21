@@ -186,7 +186,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	EditText jumpPage = null;
 	SeekBar volumeController = null;
 	ImageButton textSize = null;
-
+	ImageButton search = null;
+	
 	int[][] readingModeSEindex = null;
 	String readingModeAllSubtitle = null;
 	static Point screenDim = new Point();
@@ -225,6 +226,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		// Check new version
 		WVersionManager versionManager = new WVersionManager(LamrimReaderActivity.this);
+		versionManager.setTitle("新版本已發佈");
 		versionManager.setUpdateNowLabel("立即更新");
 		versionManager.setRemindMeLaterLabel("稍後通知我");
 		versionManager.setIgnoreThisVersionLabel("忽略此版本");
@@ -392,6 +394,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				showSetTextSizeDialog();
 			}});
 		
+		search=(ImageButton) actionBarControlPanel.findViewById(R.id.search);
+		search.setOnClickListener(new View.OnClickListener (){
+			@Override
+			public void onClick(View v) {
+				search.setEnabled(false);
+				showSearchDialog();
+				search.setEnabled(true);
+			}});
 		fakeSample.put(null, null);
 		RegionRecord.init(this);
 		regionFakeList = new ArrayList<HashMap<String, String>>();
@@ -527,10 +537,16 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							ActionBar actionBar=getSupportActionBar();
 							if(actionBar != null)actionBar.setTitle(actionBarTitle);
 							if(GLamrimSectIndex!=-1){
+								new Handler().postDelayed(new Runnable(){
+									@Override
+									public void run() {
+										bookView.setHighlightLine(theoryHighlightRegion[0], theoryHighlightRegion[1], theoryHighlightRegion[2], theoryHighlightRegion[3]);
+									}}, 1000);
+								
 								mpController.refreshSeekBar();
 								Log.d(logTag, "GlobalLamrim mode: play index "+GLamrimSect[GLamrimSectIndex][0]+", Sec: "+GLamrimSect[GLamrimSectIndex][1]+":"+GLamrimSect[GLamrimSectIndex][2]);
 								Log.d(getClass().getName(),"Mark theory: start page="+theoryHighlightRegion[0]+" start line="+theoryHighlightRegion[1]+", offset="+bookViewMountPoint[1]);
-								bookView.setHighlightLine(theoryHighlightRegion[0], theoryHighlightRegion[1], theoryHighlightRegion[2], theoryHighlightRegion[3]);
+								
 								int regionStart=GLamrimSect[GLamrimSectIndex][1];
 								int regionEnd=GLamrimSect[GLamrimSectIndex][2];
 								if(regionEnd==-1)regionEnd=mpController.getDuration()-1000;
@@ -706,23 +722,20 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					}
 				});
 
-		final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(
-				this.getApplicationContext(),
-				new SimpleOnScaleGestureListener() {
+		final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(this.getApplicationContext(), new SimpleOnScaleGestureListener() {
+			int textSizeMax=getResources().getInteger(R.integer.textMaxSize);
+    		int textSizeMin=getResources().getInteger(R.integer.textMinSize);
 					@Override
 					public boolean onScaleBegin(ScaleGestureDetector detector) {
-						Log.d(getClass().getName(),
-								"Begin scale called factor: "
-										+ detector.getScaleFactor());
-						GaLogger.sendEvent("ui_action", "subtitle_event",
-								"scale_start", null);
+						Log.d(getClass().getName(),	"Begin scale called factor: " + detector.getScaleFactor());
+						GaLogger.sendEvent("ui_action", "subtitle_event", "scale_start", null);
 						return true;
 					}
 
 					@Override
 					public boolean onScale(ScaleGestureDetector detector) {
-						float size = subtitleView.getTextSize()
-								* detector.getScaleFactor();
+						float size = subtitleView.getTextSize()	* detector.getScaleFactor();
+						if(size<textSizeMin || size > textSizeMax)return true;
 						// Log.d(getClass().getName(),"Get scale rate: "+detector.getScaleFactor()+", current Size: "+adapter.getTextSize()+", setSize: "+adapter.getTextSize()*detector.getScaleFactor());
 						subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
 						// Log.d(getClass().getName(),"Realy size after setting: "+adapter.getTextSize());
@@ -874,6 +887,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		// +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
 		String appSubtitle = getString(R.string.app_name) + " V" + pkgInfo.versionName;
 		ActionBar actionBar=getSupportActionBar();
+		// Disable show App icon.
+		actionBar.setDisplayShowHomeEnabled(false);
 		if(actionBar != null)actionBar.setSubtitle(appSubtitle);
 		
 		/*
@@ -1121,21 +1136,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		GaLogger.activityStart(this);
 		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart", null);
 
-		// Dump default settings to DB
-		int isInit = runtime.getInt("mediaIndex", -1);
-		if (isInit == -1) {
-			Log.d(logTag, "This is first time launch LamrimReader, initial default settings.");
-//			subtitleView.setTextSize(getResources().getInteger(R.integer.defFontSize));
-			// int currentIndex=mpController.getCurrentPosition();
-			SharedPreferences.Editor editor = runtime.edit();
-			editor.putInt("mediaIndex", isInit);
-			// editor.putInt("playerStatus",
-			// mpController.getMediaPlayerState());
-			editor.putInt("playPosition", 0);
-			editor.commit();
-
-		}
-
 		int defTitleTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int subtitleTextSize = runtime.getInt(getString(R.string.subtitleFontSizeKey), defTitleTextSize);
 		subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, subtitleTextSize);
@@ -1180,11 +1180,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 * return; } } catch (IllegalStateException e) { e.printStackTrace();}
 		 */
 
-		mediaIndex = runtime.getInt("mediaIndex", -1);
-		Log.d(getClass().getName(), "Media index = "+mediaIndex);
-		if (mediaIndex == -1)
-			return;
-
 		Intent cmdIntent=this.getIntent();
 		Log.d(getClass().getName(), "Action: "+getIntent().getAction());
 		if(cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
@@ -1202,12 +1197,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					cmdIntent.getIntExtra("theoryStartLine",0), 
 					cmdIntent.getIntExtra("theoryEndPage",0), 
 					cmdIntent.getIntExtra("theoryEndLine",0));
+			return;
 		}
 		
-		else if ( !mpController.isPlayerReady())
+		// Check is mediaPlayer loaded.
+		mediaIndex = runtime.getInt("mediaIndex", -1);
+		Log.d(getClass().getName(), "Media index = "+mediaIndex);
+		if ( !mpController.isPlayerReady() && mediaIndex != -1)
 			startPlay(mediaIndex);
 
-		
 		Log.d(getClass().getName(), "**** Leave onResume() ****");
 	}
 
@@ -1409,7 +1407,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			editor.putInt("mediaIndex", selected);
 			editor.putInt("playPosition", 0);
 			editor.commit();
-//			regionPlayIndex = -1;
+			mediaIndex=selected;
 			GLamrimSectIndex = -1;
 			
 			final int pageNum = SpeechData.refPage[selected] - 1;
@@ -1465,6 +1463,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			regionEndInfo=regionInfo[1].trim();
 			setRegionSec(glRecord.speechPositionStart, glRecord.speechPositionEnd, glRecord.theoryLineStart, glRecord.theoryLineEnd);
 			GLamrimSectIndex=0;
+			mediaIndex = GLamrimSect[0][0];
 			
 			Log.d(getClass().getName(), "Set mediaIndex="+mediaIndex+", play position="+GLamrimSect[0][0]);
 			editor.putInt("mediaIndex", GLamrimSect[0][0]);
@@ -1671,6 +1670,71 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		setTextSizeDialog.show();
 	}
 
+
+	private void showSearchDialog(){
+		LayoutInflater factory = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+		final View searchView = factory.inflate(R.layout.search_view, null);
+		final ImageButton searchBtn= (ImageButton) searchView.findViewById(R.id.searchBtn);
+		final EditText searchInput=(EditText) searchView.findViewById(R.id.searchInput);
+		searchBtn.setOnClickListener(new SearchListener(searchInput, searchBtn));
+		
+        
+		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		AlertDialog searchDialog = builder.create();
+		searchDialog.setView(searchView);
+		searchDialog.setCanceledOnTouchOutside(true);
+		WindowManager.LayoutParams lp=searchDialog.getWindow().getAttributes();
+        lp.alpha=0.8f;
+        searchDialog.getWindow().setAttributes(lp);
+		searchDialog.show();
+		searchDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				searchBtn.setEnabled(true);
+			}});
+	}
+	
+	class SearchListener implements View.OnClickListener{
+		int index[]={-1,-1,-1};
+		String lastSearch="";
+		EditText searchInput=null;
+		ImageButton searchBtn=null;
+		
+		public SearchListener(EditText searchInput, ImageButton searchBtn){
+			this.searchInput=searchInput;
+			this.searchBtn=searchBtn;
+		}
+		
+		@Override
+		public void onClick(View v) {
+			searchBtn.setEnabled(false);
+			if(searchInput.length() == 0){
+				Log.d(getClass().getName(),"User input length = 0, skip search");
+				searchBtn.setEnabled(true);
+				return;
+			}
+			final String str=searchInput.getText().toString();
+			if(!str.equals(lastSearch)){index[0]=0;index[1]=0;index[2]=0;}
+			
+			lastSearch=str;
+			int result[] = bookView.search(index[0], index[1], index[2], str);
+
+			if(result==null){
+				Log.d(getClass().getName(),"Not found.");
+				searchBtn.setEnabled(true);
+				return;
+			}
+			else{
+				index=result;
+				bookView.setViewToPosition(index[0],index[1]);
+				bookView.setHighlightWord(index[0], index[1], index[2],str.length());
+				index[2]++;
+
+				Log.d(getClass().getName(),"Change start word from "+index[2]);
+			}
+			searchBtn.setEnabled(true);
+		}
+	};
 /*	private void showSaveRegionDialog() {
 		int regionStartMs = mpController.getRegionStartPosition();
 		int regionEndMs = mpController.getRegionEndPosition();
@@ -1865,7 +1929,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		setRegionSec(speechStart[0], speechStart[1], speechEnd[0], speechEnd[1], theoryStart[0],  theoryStart[1], theoryEnd[0], theoryEnd[1]);
 	}
 	
-	private void setRegionSec(int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, int theoryStartPage, int theoryStartLine, int theoryEndPage, int thtoryEndLine){
+	private void setRegionSec(int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, final int theoryStartPage, final int theoryStartLine, int theoryEndPage, int thtoryEndLine){
 		Log.d(getClass().getName(),"Set region[0]: startIndex="+speechStartIndex+", startMs="+ speechStartMs+", speechEndIndex="+speechEndIndex+", endMs="+speechEndMs);
 		if(speechStartIndex == speechEndIndex){
 			Log.d(getClass().getName(),"Set region[0]: startIndex="+speechStartIndex+", startMs="+ speechStartMs+", endMs="+speechEndMs+"; region[1]: -1, -1, -1");
