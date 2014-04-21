@@ -1715,22 +1715,26 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			}
 			final String str=searchInput.getText().toString();
 			if(!str.equals(lastSearch)){index[0]=0;index[1]=0;index[2]=0;}
-			
-			lastSearch=str;
-			int result[] = bookView.search(index[0], index[1], index[2], str);
+			try{
+				lastSearch=str;
+				int result[] = bookView.search(index[0], index[1], index[2], str);
 
-			if(result==null){
-				Log.d(getClass().getName(),"Not found.");
-				searchBtn.setEnabled(true);
-				return;
-			}
-			else{
-				index=result;
-				bookView.setViewToPosition(index[0],index[1]);
-				bookView.setHighlightWord(index[0], index[1], index[2],str.length());
-				index[2]++;
+				if(result==null){
+					Log.d(getClass().getName(),"Not found.");
+					searchBtn.setEnabled(true);
+					return;
+				}
+				else{
+					index=result;
+					bookView.setViewToPosition(index[0],index[1]);
+					bookView.setHighlightWord(index[0], index[1], index[2],str.length());
+					index[2]++;
 
-				Log.d(getClass().getName(),"Change start word from "+index[2]);
+					Log.d(getClass().getName(),"Change start word from "+index[2]);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+				GaLogger.sendException("Error happen while SEARCH "+str, e, true);
 			}
 			searchBtn.setEnabled(true);
 		}
