@@ -205,7 +205,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final int[] regionSet={-1,-1,-1,-1};
 	
 	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
-	
+	WVersionManager versionManager=null;
 	
 //	boolean repeatPlay=false;
 	@Override
@@ -225,7 +225,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		Log.d(funcInto, "******* Into LamrimReader.onCreate *******");
 
 		// Check new version
-		WVersionManager versionManager = new WVersionManager(LamrimReaderActivity.this);
+		versionManager = new WVersionManager(LamrimReaderActivity.this);
 		versionManager.setTitle("新版本已發佈");
 		versionManager.setUpdateNowLabel("立即更新");
 		versionManager.setRemindMeLaterLabel("稍後通知我");

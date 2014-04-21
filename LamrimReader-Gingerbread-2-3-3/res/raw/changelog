@@ -23,10 +23,11 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
-$143
-  % Version 1.3.4
+$144
+  % Version 1.3.5
   _ 2014-04-22
 	* 加入論文搜尋功能
+	* 修正1.3.2更新後於Android 2.x 版本有時無法開啟App的錯誤。
 	
 $142
   % Version 1.3.3
