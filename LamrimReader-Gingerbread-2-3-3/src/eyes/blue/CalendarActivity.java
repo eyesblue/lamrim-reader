@@ -102,6 +102,7 @@ public class CalendarActivity extends SherlockActivity {
 		downloadPDialog.setMessage(String.format(
 				getString(R.string.dlgDescDownloading), "",
 				getString(R.string.title_activity_calendar)));
+		new FileSysManager(CalendarActivity.this);
 	}
 
 	@Override
@@ -388,29 +389,23 @@ public class CalendarActivity extends SherlockActivity {
 					Charset.forName("UTF-8"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
-					getString(R.string.localGlobalLamrimScheduleFileNotFound));
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileNotFound));
 			GaLogger.sendException("File: " + file.getAbsolutePath(), e, true);
 			return false;
 		}
 
 		try {
 			if (!csvr.readRecord()) {
-				Util.showNarmalToastMsg(
-						CalendarActivity.this,
-						getString(R.string.localGlobalLamrimScheduleFileReadErr));
+				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileReadErr));
 				GaLogger.sendException(
 						"Error happen while csv reader read record csvr.readRecord()",
-						new Exception(
-								"Error happen while read record of csv reader."),
+						new Exception("Error happen while read record of csv reader."),
 						true);
 				return false;
 			}
 			int count = csvr.getColumnCount();
 			if (count < 2) {
-				Util.showNarmalToastMsg(
-						CalendarActivity.this,
-						getString(R.string.localGlobalLamrimScheduleFileRangeFmtErr));
+				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileRangeFmtErr));
 				GaLogger.sendException(
 						"Error: the date start and date end colume of global lamrim schedule file is not 2 colume",
 						new Exception(
@@ -436,9 +431,7 @@ public class CalendarActivity extends SherlockActivity {
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				Util.showNarmalToastMsg(
-						CalendarActivity.this,
-						getString(R.string.localGlobalLamrimScheduleFileDateFmtErr));
+				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileDateFmtErr));
 				GaLogger.sendException(
 						"Error happen while parse data region of Global Lamrim schedule file: data1="
 								+ csvr.get(0) + ", data2=" + csvr.get(1), e,
@@ -447,8 +440,7 @@ public class CalendarActivity extends SherlockActivity {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
-					getString(R.string.localGlobalLamrimScheduleFileReadErr));
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileReadErr));
 			GaLogger.sendException(
 					"IOException happen while read date region of global lamrim schedule file.",
 					e, true);
@@ -478,10 +470,9 @@ public class CalendarActivity extends SherlockActivity {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.localGlobalLamrimScheduleFileDecodeErr));
-			GaLogger.sendException(
-					"IOException happen while read data of global lamrim schedule file.",
+			GaLogger.sendException("IOException happen while read data of global lamrim schedule file.",
 					e, true);
 			return false;
 		}
@@ -502,7 +493,7 @@ public class CalendarActivity extends SherlockActivity {
 			length = (int) ((endDate.getTime() - startDate.getTime()) / 86400000) + 1;
 		} catch (ParseException e) {
 			e.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.localGlobalLamrimScheduleFileReadErr)+ "\"" + glr + "\"");
 			GaLogger.sendException("Date format parse error: startDate="
 					+ startDate + ", endDate=" + endDate, e, true);
@@ -547,7 +538,7 @@ public class CalendarActivity extends SherlockActivity {
 			respCode = response.getStatusLine().getStatusCode();
 			if (respCode != HttpStatus.SC_OK) {
 				httpclient.getConnectionManager().shutdown();
-				Util.showNarmalToastMsg(CalendarActivity.this,
+				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 						getString(R.string.dlgDescDownloadFail));
 				downloadPDialog.dismiss();
 				return false;
@@ -556,7 +547,7 @@ public class CalendarActivity extends SherlockActivity {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
 			return false;
@@ -575,14 +566,14 @@ public class CalendarActivity extends SherlockActivity {
 			}
 			httpclient.getConnectionManager().shutdown();
 			e2.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
 			return false;
 		} catch (IOException e2) {
 			httpclient.getConnectionManager().shutdown();
 			e2.printStackTrace();
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
 			return false;
@@ -633,7 +624,7 @@ public class CalendarActivity extends SherlockActivity {
 			e.printStackTrace();
 			Log.d(getClass().getName(), Thread.currentThread().getName()
 					+ ": IOException happen while download media.");
-			Util.showNarmalToastMsg(CalendarActivity.this,
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
 			downloadPDialog.dismiss();
 			return false;

@@ -20,18 +20,23 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
+import android.view.ViewGroup.LayoutParams;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -76,7 +81,7 @@ public class Util {
 			GaLogger.sendEvent("ui_action", "show_dialog", "save_region", null);
 	}
 */	
-	public static void showSubtitleToast(final Activity activity,final String s){
+/*	public static void showSubtitleToast(final Activity activity,final String s){
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				if(toast!=null)toast.cancel();
@@ -96,8 +101,59 @@ public class Util {
 			}
 		});
 	}
+*/	
+	static View toastView=null;
+	static PopupWindow mPopToast=null;
+	static long subtitleLastShowTime=-1;
+	static ImageView subtitleIcon=null;
+	static ImageView infoIcon=null;
+	static ImageView errorIcon=null;
+	public static void showSubtitlePopupWindow(final Activity activity, final View rootView, final String s){
+		showToastPopupWindow(activity, rootView, s, R.drawable.ic_launcher);
+	}
+	public static void showInfoPopupWindow(final Activity activity, final View rootView, final String s){
+		showToastPopupWindow(activity, rootView, s, R.drawable.info_icon);
+	}
+	public static void showErrorPopupWindow(final Activity activity, final View rootView, final String s){
+		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon);
+	}
 	
-	public static void showNarmalToastMsg(final Activity activity, final String s){
+	public static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon){
+		activity.runOnUiThread(new Runnable() {
+			public void run() {
+				if(mPopToast==null)initToastView(activity);
+				if(mPopToast.isShowing())mPopToast.dismiss();
+				ImageView image=(ImageView) toastView.findViewById(R.id.image);
+				image.setImageResource(icon);
+				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
+				
+				toastTextView.setText(s);
+				mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+				subtitleLastShowTime=System.currentTimeMillis();
+				new Handler().postDelayed(new Runnable(){
+					@Override
+					public void run() {
+						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
+							mPopToast.dismiss();
+					}},2000);
+			}
+		});
+	}
+	private static void initToastView(Activity activity){
+		LayoutInflater inflater = activity.getLayoutInflater();
+		toastView = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
+		TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
+		Typeface educFont=Typeface.createFromAsset(activity.getAssets(), "EUDC.TTF");
+		toastTextView.setTypeface(educFont);
+		
+		mPopToast = new PopupWindow(toastView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
+		mPopToast.setOutsideTouchable(false);// 設置觸摸外面時消失
+		mPopToast.setFocusable(false);
+		mPopToast.setAnimationStyle(android.R.style.Animation_Toast);// 設置動畫效果
+	}
+	
+
+	/*public static void showNarmalToastMsg(final Activity activity, final String s){
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				if(toast!=null)toast.cancel();
@@ -118,9 +174,11 @@ public class Util {
 		});
 	}
 	
+	*/
+	
 	public static void cancelToast(){
-		if(toast==null)return;
-		toast.cancel();
+		if(mPopToast==null)return;
+		mPopToast.dismiss();
 	}
 	
 	/**

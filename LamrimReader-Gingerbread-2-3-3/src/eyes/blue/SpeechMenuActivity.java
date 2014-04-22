@@ -356,7 +356,7 @@ public class SpeechMenuActivity extends Activity {
 			File subtitleFile=FileSysManager.getLocalSubtitleFile(index[i]);
 		
 			if(mediaFile==null || subtitleFile==null){
-				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView),"下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
 				return;
 			}
 		}
@@ -401,7 +401,7 @@ public class SpeechMenuActivity extends Activity {
 			@Override
 			public void prepareFail(final int i, int type){
 				if(type==FileSysManager.MEDIA_FILE)everFail=true;
-				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
 				updateUi(i);
 			}
 			
@@ -436,7 +436,7 @@ public class SpeechMenuActivity extends Activity {
 			}
 			@Override
 			public void prepareFail(final int i, int type){
-				Util.showNarmalToastMsg(SpeechMenuActivity.this, "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
 				updateUi(i);
 			}
 			

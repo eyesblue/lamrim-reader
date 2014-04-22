@@ -320,6 +320,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public boolean isPlaying() {
 		try{
 			synchronized(mediaPlayerKey){
+				if(mediaPlayer==null)return false;
 				return mediaPlayer.isPlaying();
 			}
 		} catch (Exception e) {

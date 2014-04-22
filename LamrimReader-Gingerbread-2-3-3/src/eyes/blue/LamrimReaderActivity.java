@@ -294,7 +294,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					if (subtitleViewRenderMode == SUBTITLE_MODE) {
 						if (mpController == null || !mpController.isSubtitleReady()	|| readingModeAllSubtitle == null) 
 						{
-							Util.showNarmalToastMsg(LamrimReaderActivity.this, getString(R.string.dlgHintLoadMediaBeforeSwitchToReadingMode));
+							Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), getString(R.string.dlgHintLoadMediaBeforeSwitchToReadingMode));
 							return true;
 						}
 						setSubtitleViewMode(READING_MODE);
@@ -481,9 +481,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 									// synchronized (mpController){
 									switch (subtitleViewRenderMode) {
 									case SUBTITLE_MODE:
-										Util.showSubtitleToast(LamrimReaderActivity.this,
-												subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false)
-														+ " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
+										//Util.showSubtitleToast(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
+										Util.showSubtitlePopupWindow(LamrimReaderActivity.this, rootLayout, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
 										break;
 									case READING_MODE:
 										SpannableString str = new SpannableString(readingModeAllSubtitle);
@@ -828,7 +827,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		});
 
 		bookView.setOnTouchListener(new View.OnTouchListener() {
-
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -1479,7 +1477,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			File file=new File(filePath);
 			
 			if(!file.exists()){
-				Util.showNarmalToastMsg(LamrimReaderActivity.this, "您所選擇的檔案不存在或無法讀取。");
+				Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "您所選擇的檔案不存在或無法讀取。");
 				return;
 			}
 			
@@ -2009,7 +2007,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				else if(which == 1)startGlobalLamrimCalendarActivity();
 				else if(which == 2){
 					if (RegionRecord.records.size() == 0) {
-						Util.showNarmalToastMsg(LamrimReaderActivity.this, "沒有區段記錄，請先記錄區段。");
+						Util.showInfoPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "沒有區段記錄，請先記錄區段。");
 						return;
 					}
 					showRecordListPopupMenu();
@@ -2027,7 +2025,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			}
 		});
 		*/
-		builderSingle.show();
+		
+		AlertDialog dialog=builderSingle.create();
+		dialog.setCanceledOnTouchOutside(true);
+		dialog.show();
 	}
 	
 	private void shwoRenderModeOptMenu(){
@@ -2054,7 +2055,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				dialog.dismiss();
 			}
 		});*/
-		builderSingle.show();
+		AlertDialog dialog=builderSingle.create();
+		dialog.setCanceledOnTouchOutside(true);
+		dialog.show();
 	}
 	
 	private void setRenderModeOptsToDefault(){
@@ -2101,7 +2104,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
                     }
                 });
 */       
-        builderSingle.show();
+        AlertDialog dialog=builderSingle.create();
+		dialog.setCanceledOnTouchOutside(true);
+		dialog.show();
     }
 
 	private void switchMainView(){
@@ -2114,7 +2119,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 			getSupportActionBar().show();
-			
 	    }
 		else{
 			showRenderModeWarring();
@@ -2192,6 +2196,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
         lp.alpha=0.8f;
         colorDialog.getWindow().setAttributes(lp);
+        colorDialog.setCanceledOnTouchOutside(true);
         colorDialog.show();
     }
 	
@@ -2217,6 +2222,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
     		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
             lp.alpha=0.8f;
             colorDialog.getWindow().setAttributes(lp);
+            colorDialog.setCanceledOnTouchOutside(true);
             colorDialog.show();
     }
 	
@@ -2244,6 +2250,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
     		WindowManager.LayoutParams lp=colorDialog.getWindow().getAttributes();
             lp.alpha=0.8f;
             colorDialog.getWindow().setAttributes(lp);
+            colorDialog.setCanceledOnTouchOutside(true);
             colorDialog.show();
     }
 	
@@ -2273,7 +2280,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
                 editor.putInt(getString(R.string.subtitleAlphaKey), alpha);
                 editor.commit();
 			}});
-		builderSingle.show();
+		AlertDialog dialog=builderSingle.create();
+		dialog.setCanceledOnTouchOutside(true);
+		dialog.show();
 		
 		
 		/*.setPositiveButton("确定", new DialogInterface.OnClickListener() {

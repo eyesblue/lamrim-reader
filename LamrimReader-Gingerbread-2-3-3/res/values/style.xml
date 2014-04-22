@@ -5,7 +5,7 @@
         <item name="android:windowEnterAnimation">@anim/in_bounce</item>
         <item name="android:windowExitAnimation">@anim/out_bounce</item>
     </style>
-
+    
     <style name="Buttonholo" parent="android:Widget.Button">
         <item name="android:background">@drawable/btn_default_holo_dark</item>
         <item name="android:minHeight">48dip</item>

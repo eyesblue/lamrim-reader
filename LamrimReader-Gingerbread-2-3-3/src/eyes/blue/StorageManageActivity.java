@@ -130,7 +130,7 @@ public class StorageManageActivity extends Activity {
 								runOnUiThread(new Runnable(){
 									@Override
 									public void run() {
-										Util.showNarmalToastMsg(StorageManageActivity.this, "搬移檔案時發生錯誤: 來源 "+from.getAbsolutePath()+", 目的地:  "+to.getAbsolutePath());
+										Util.showErrorPopupWindow(StorageManageActivity.this, findViewById(R.id.smRootView), "搬移檔案時發生錯誤: 來源 "+from.getAbsolutePath()+", 目的地:  "+to.getAbsolutePath());
 								}});
 								
 							}
@@ -478,7 +478,7 @@ public class StorageManageActivity extends Activity {
 					public void run() {
 						File destFile=new File(path);
 						if(!FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd) || !FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd))
-							Util.showNarmalToastMsg(StorageManageActivity.this, "檔案搬移失敗，請確認目的地空間是否足夠。");
+							Util.showErrorPopupWindow(StorageManageActivity.this, findViewById(R.id.smRootView), "檔案搬移失敗，請確認目的地空間是否足夠。");
 						pd.dismiss();
 						refreshUsage();
 					}});
