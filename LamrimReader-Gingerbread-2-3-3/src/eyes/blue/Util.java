@@ -42,7 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Util {
-	static Toast toast = null;
+//	static Toast toast = null;
 	static ArrayList<HashMap<String,String>> regionFakeList = new ArrayList<HashMap<String,String>>();
 	static HashMap<String,String> fakeSample = new HashMap();
 
@@ -122,7 +122,14 @@ public class Util {
 		activity.runOnUiThread(new Runnable() {
 			public void run() {
 				if(mPopToast==null)initToastView(activity);
-				if(mPopToast.isShowing())mPopToast.dismiss();
+				if(mPopToast.isShowing()){
+					try{
+						mPopToast.dismiss();
+					}catch(Exception e){
+						e.printStackTrace();
+					}
+				}
+				
 				ImageView image=(ImageView) toastView.findViewById(R.id.image);
 				image.setImageResource(icon);
 				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
@@ -134,7 +141,11 @@ public class Util {
 					@Override
 					public void run() {
 						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
-							mPopToast.dismiss();
+							try{
+								mPopToast.dismiss();
+							}catch(Exception e){
+								e.printStackTrace();
+							}
 					}},2000);
 			}
 		});
@@ -178,7 +189,11 @@ public class Util {
 	
 	public static void cancelToast(){
 		if(mPopToast==null)return;
-		mPopToast.dismiss();
+		try{
+			mPopToast.dismiss();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	/**

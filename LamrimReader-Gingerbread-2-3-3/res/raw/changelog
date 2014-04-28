@@ -23,6 +23,11 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$146
+  % Version 1.3.7
+  _ 2014-04-28
+	* 修正提示訊息顯示造成強制關閉問題。
+	
 $145
   % Version 1.3.6
   _ 2014-04-23
