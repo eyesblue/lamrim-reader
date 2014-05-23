@@ -204,6 +204,19 @@ public class FileSysManager {
     		return null;
         }
       
+        public static File getLocalMediaFileSavePath(int i){
+        	boolean useThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
+        	String userSpecDir=runtime.getString(context.getString(R.string.userSpecifySpeechDir),null);
+        	
+        	if(useThirdDir && userSpecDir!=null)
+        		return new File(userSpecDir+File.separator+SpeechData.name[i]);
+        	
+        	if(isExtMemWritable())
+        		return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
+        	
+        	return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
+        }
+        
         /*
          * The location of media file is [PackageDir]\[AppName](LamrimReader)\Audio
          * If the file exist, return the exist file no matter internal or external,
@@ -225,6 +238,13 @@ public class FileSysManager {
         		return intF;
         	
         	return null;
+        }
+        
+        public static File getLocalSubtitleFileSavePath(int i){
+        	if(isExtMemWritable())
+        		return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
+        	
+        	return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         }
         
         public static File[] getMediaFileList(int locate){

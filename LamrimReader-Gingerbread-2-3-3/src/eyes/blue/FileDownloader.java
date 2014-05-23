@@ -153,7 +153,7 @@ public class FileDownloader {
                                                 if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.setProgress(i+1);
                                                 if(this.isCancelled()){
                                                         mkDlTaskDialog.dismiss();
-//                                                        mkDlTaskDialog=null;
+//                                                      mkDlTaskDialog=null;
                                                         return null;
                                                 }
                                         }
@@ -248,7 +248,7 @@ public class FileDownloader {
                 startDownloadThread();
         }
        
-        private void startDownloadThread(final int... index){
+       private void startDownloadThread(final int... index){
         	downloader = new Downloader();
         	activity.runOnUiThread(new Runnable() {
         		public void run() {
@@ -273,7 +273,7 @@ public class FileDownloader {
                 try {
                         jObj.put("mediaIndex", index);
                         jObj.put("type", activity.getResources().getInteger(R.integer.SUBTITLE_TYPE));
-                        jObj.put("outputPath",FileSysManager.getLocalSubtitleFile(index));
+                        jObj.put("outputPath",FileSysManager.getLocalSubtitleFileSavePath(index));
                         jObj.put("url", rs.getSubtitleFileAddress(index));
                 } catch (JSONException e) {e.printStackTrace();}
                 return jObj;
@@ -286,7 +286,7 @@ public class FileDownloader {
                 try {
                         jObj.put("mediaIndex", index);
                         jObj.put("type", activity.getResources().getInteger(R.integer.MEDIA_TYPE));
-                        jObj.put("outputPath",FileSysManager.getLocalMediaFile(index));
+                        jObj.put("outputPath",FileSysManager.getLocalMediaFileSavePath(index));
                         jObj.put("url", rs.getMediaFileAddress(index));
                 } catch (JSONException e) {e.printStackTrace();}
                 return jObj;
@@ -296,14 +296,14 @@ public class FileDownloader {
                 final SharedPreferences.Editor editor = runtime.edit();
                
                 LayoutInflater adbInflater = LayoutInflater.from(activity);
-        View eulaLayout = adbInflater.inflate(R.layout.net_access_warn_dialog, null);
-        final CheckBox dontShowAgain= (CheckBox) eulaLayout.findViewById(R.id.skip);
+                View eulaLayout = adbInflater.inflate(R.layout.net_access_warn_dialog, null);
+                final CheckBox dontShowAgain= (CheckBox) eulaLayout.findViewById(R.id.skip);
        
                 AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                 builder.setView(eulaLayout);
-            builder.setTitle(activity.getString(R.string.dlgNetAccessTitle));
-            builder.setMessage(activity.getString(R.string.dlgNetAccessMsg));
-            builder.setPositiveButton(activity.getString(R.string.dlgAllow), new DialogInterface.OnClickListener() {
+                builder.setTitle(activity.getString(R.string.dlgNetAccessTitle));
+                builder.setMessage(activity.getString(R.string.dlgNetAccessMsg));
+                builder.setPositiveButton(activity.getString(R.string.dlgAllow), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                         Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
                        

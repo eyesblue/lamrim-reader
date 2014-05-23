@@ -1434,8 +1434,8 @@ containing a value of this type.
         public static final int scroll=0x7f08008b;
         public static final int scrollView1=0x7f080058;
         public static final int search=0x7f080054;
-        public static final int searchBtn=0x7f0800d6;
-        public static final int searchInput=0x7f0800d7;
+        public static final int searchBtn=0x7f0800d7;
+        public static final int searchInput=0x7f0800d6;
         public static final int setLeftBound=0x7f080092;
         public static final int setRightBound=0x7f080090;
         public static final int share=0x7f080099;

@@ -2,7 +2,15 @@ package eyes.blue;
 
 public class SpeechData {
 	public static String getNameId(int i){
-		return name[i].substring(0, 7);
+		String result=null;
+		try{
+			result=name[i].substring(0, 7);
+		}catch(ArrayIndexOutOfBoundsException e){
+			GaLogger.sendException("Access index of name["+i+"]", e, true);
+			throw new ArrayIndexOutOfBoundsException();
+		}
+				
+		return result;
 	}
 	public static String getSubtitleName(int i){
 		return name[i].substring(3, 7);

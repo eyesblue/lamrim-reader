@@ -135,7 +135,15 @@ public class Util {
 				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
 				
 				toastTextView.setText(s);
-				mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+				
+				//mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+				rootView.post(new Runnable() {
+					   public void run() {
+						   if (! activity.isFinishing())
+							   mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+						   }
+						});
+				
 				subtitleLastShowTime=System.currentTimeMillis();
 				new Handler().postDelayed(new Runnable(){
 					@Override

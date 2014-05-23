@@ -594,12 +594,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						@Override
 						public void onStartPlay() {
 							Log.d(getClass().getName(),"Hide Title bar.");
-							hideTitle();
+//							hideTitle();
 						}
 						@Override
 						public void onPause() {
 							Log.d(getClass().getName(),"Show Title bar.");
-							showTitle();
+//							showTitle();
 							
 							//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 							//getSupportActionBar().show();
@@ -610,7 +610,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						@Override
 						public void onComplatePlay() {
 							Log.d(getClass().getName(),"Show Title bar.");
-							showTitle();
+//							showTitle();
 							if (wakeLock.isHeld())
 								wakeLock.release();
 						}
@@ -979,6 +979,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	    leftBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
+				if(mpController == null || mpController.getSubtitle()==null)return;
 				regionSet[0]=mediaIndex;
 				regionSet[1]=mpController.getSubtitle(mediaPosition).startTimeMs;
 				regionStartInfo=mpController.getSubtitle(mediaPosition).text;
@@ -987,6 +988,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	    rightBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
+				if(mpController == null || mpController.getSubtitle()==null)return;
 				regionSet[2]=mediaIndex;
 				regionSet[3]=mpController.getSubtitle(mediaPosition).endTimeMs;
 				regionEndInfo=mpController.getSubtitle(mediaPosition).text;
@@ -1180,7 +1182,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		Intent cmdIntent=this.getIntent();
 		Log.d(getClass().getName(), "Action: "+getIntent().getAction());
-		if(cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
+		if(cmdIntent != null && cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
 			GLamrimSectIndex=0;
 			getIntent().setAction(Intent.ACTION_MAIN);
 			String title=cmdIntent.getStringExtra("title");
@@ -1684,7 +1686,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		WindowManager.LayoutParams lp=searchDialog.getWindow().getAttributes();
         lp.alpha=0.8f;
         searchDialog.getWindow().setAttributes(lp);
-		searchDialog.show();
+        searchDialog.setCanceledOnTouchOutside(true);
+        searchDialog.show();
 		searchDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
 			@Override
 			public void onCancel(DialogInterface dialog) {
@@ -2298,7 +2301,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 					}})
 					.setNegativeButton("取消", null).show();*/
     }
-	
+/*	
 	private void hideTitle(){
 		if(!getSupportActionBar().isShowing())return;
 		double inch=Util.getDisplaySizeInInch(LamrimReaderActivity.this);
@@ -2329,7 +2332,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				getSupportActionBar().show();
 			}});
 	}
-
+*/
 	private void showMediaController(){
 		mpController.showControllerView(LamrimReaderActivity.this);
 /*		if(regionSet[0] != -1 && regionSet[2] != -1)
