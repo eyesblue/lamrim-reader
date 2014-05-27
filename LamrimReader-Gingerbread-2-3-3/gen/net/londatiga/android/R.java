@@ -42,21 +42,21 @@ public final class R {
 		public static final int quickaction_slider_grip_right = 0x7f0200ba;
 		public static final int quickaction_top_frame = 0x7f0200bb;
 		public static final int quickcontact_drop_shadow = 0x7f0200bc;
-		public static final int textfield_default = 0x7f0200e0;
+		public static final int textfield_default = 0x7f0200e1;
 	}
 	public static final class id {
-		public static final int arrow_down = 0x7f08008e;
-		public static final int arrow_up = 0x7f08008a;
+		public static final int arrow_down = 0x7f08008f;
+		public static final int arrow_up = 0x7f08008b;
 		public static final int btn1 = 0x7f080068;
 		public static final int btn2 = 0x7f080069;
-		public static final int footer = 0x7f08008d;
-		public static final int header2 = 0x7f080089;
+		public static final int footer = 0x7f08008e;
+		public static final int header2 = 0x7f08008a;
 		public static final int i_more = 0x7f08006b;
 		public static final int iv_icon = 0x7f080055;
 		public static final int l_list = 0x7f08006a;
-		public static final int scroll = 0x7f08008b;
+		public static final int scroll = 0x7f08008c;
 		public static final int t_name = 0x7f08006c;
-		public static final int tracks = 0x7f08008c;
+		public static final int tracks = 0x7f08008d;
 		public static final int tv_title = 0x7f080056;
 	}
 	public static final class layout {

@@ -34,7 +34,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -105,6 +107,8 @@ import android.widget.MediaController;
 import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 import android.widget.SeekBar;
@@ -387,6 +391,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 						GaLogger.sendEvent("ui_action", "SeekBar_scored", "volume_control_arg1", null);
 					}
 				});
+		
+		
+		
 		textSize=(ImageButton) actionBarControlPanel.findViewById(R.id.textSize);
 		textSize.setOnClickListener(new View.OnClickListener (){
 			@Override
@@ -622,6 +629,92 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 				showOnRegionOptionDialog(mediaIndex, mpController.getCurrentPosition());
 			}
 		});
+		
+		mpController.setOnReportClick(new View.OnClickListener(){
+			@Override
+			public void onClick(View v) {
+				if(mpController == null || mpController.getSubtitle() == null)return;
+				
+				LayoutInflater factory = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+				View reportView=factory.inflate(R.layout.report_view, null);
+				
+				// Prepare data
+				final RadioGroup rg=(RadioGroup)reportView.findViewById(R.id.reportGroup);
+				SubtitleElement se=mpController.getSubtitle(mpController.getCurrentPosition());
+				final String time=Util.getMsToHMS(se.startTimeMs, ":", "", true)+" ~ "+Util.getMsToHMS(se.endTimeMs, ":", "", true);
+				final String text=se.text;
+				final String media=SpeechData.getNameId(mediaIndex);
+				
+				RadioButton rb = (RadioButton) rg.findViewById(R.id.subtitleTimeErr);
+				rb.setText(String.format((String)rb.getText(),time));
+				rb = (RadioButton) rg.findViewById(R.id.subtitleTextErr);
+				rb.setText(String.format((String)rb.getText(),text));
+				rb = (RadioButton) rg.findViewById(R.id.finishCheckSubtitle);
+				rb.setText(String.format((String)rb.getText(),media));
+				
+				AlertDialog dialog=null;
+				AlertDialog.Builder builder = new AlertDialog.Builder(LamrimReaderActivity.this);
+				builder.setTitle("回報錯誤");
+				builder.setNegativeButton(R.string.dlgCancel, new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.dismiss();
+					}});
+				builder.setPositiveButton(R.string.dlgOk, new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String subject="廣論App錯誤回報", content=null;
+						
+						switch(rg.getCheckedRadioButtonId()){
+						case R.id.subtitleTimeErr:
+							content="貴團隊您好:\n\n末學發現字幕時間在 "+media+" 的 "+time+"("+text+")"+"處疑似有顯示時間上的錯誤，煩請再確認校正。\n\n";
+							break;
+						case R.id.subtitleTextErr:
+							content="貴團隊您好:\n\n末學發現字幕內容在 "+media+" 的 "+time+"("+text+")"+"處疑似有文字內容上的錯誤，煩請再確認校正。\n\n";
+							break;
+						case R.id.finishCheckSubtitle:
+							content="貴團隊您好:\n\n末學已將音檔"+media+"完整確認過無誤，可以開始封存該字幕。\n\n";
+							break;
+						case R.id.theoryTextErr:
+							content="貴團隊您好:\n\n末學發現廣論論文於 () 頁、()行、()字處疑似有內容上的錯誤，煩請再確認校正。\n\n";
+							break;
+						}
+						
+						Intent i = new Intent(Intent.ACTION_SEND);
+						i.setData(Uri.parse("mailto:"));
+						i.setType("message/rfc822");
+						i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"eyesblue@eyes-blue.com"});
+						i.putExtra(Intent.EXTRA_SUBJECT, subject);
+						i.putExtra(Intent.EXTRA_TEXT   , content);
+						
+						PackageManager pkManager = getPackageManager();
+						List<ResolveInfo> activities = pkManager.queryIntentActivities(i, 0);
+						if (activities.size() > 1) {
+						    // Create and start the chooser
+						    Intent chooser = Intent.createChooser(i, "請選擇郵件App");
+						    startActivity(chooser);
+						  }
+						else if(activities.size()==1){
+							Log.d(getClass().getName(),"There is only one mail app for send report message.");
+						    startActivity( i );
+						}
+						else 
+							Util.showErrorPopupWindow(LamrimReaderActivity.this, rootLayout, "您的裝置上未安裝任何可供使用的電子郵件系統，無法寄送郵件。");
+						
+						/*try {
+						    startActivity(Intent.createChooser(i, "請選擇郵件App"));
+						} catch (android.content.ActivityNotFoundException ex) {
+							Util.showErrorPopupWindow(LamrimReaderActivity.this, rootLayout, "您的裝置上未安裝任何可供使用的電子郵件系統，無法寄送郵件。");
+						}
+						*/
+						dialog.dismiss();
+					}});
+				builder.setView(reportView);
+				dialog=builder.create();
+				dialog.show();
+			}
+		});
+		
 		
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
 		subtitleView.setTypeface(educFont);
@@ -979,7 +1072,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	    leftBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
-				if(mpController == null || mpController.getSubtitle()==null)return;
+				if(mpController == null || mpController.getSubtitle()==null){
+					Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "播放器或字幕未載入");
+					return;
+				}
 				regionSet[0]=mediaIndex;
 				regionSet[1]=mpController.getSubtitle(mediaPosition).startTimeMs;
 				regionStartInfo=mpController.getSubtitle(mediaPosition).text;
@@ -988,7 +1084,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	    rightBound.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View v) {
-				if(mpController == null || mpController.getSubtitle()==null)return;
+				if(mpController == null || mpController.getSubtitle()==null){
+					Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "播放器或字幕未載入");
+					return;
+				}
 				regionSet[2]=mediaIndex;
 				regionSet[3]=mpController.getSubtitle(mediaPosition).endTimeMs;
 				regionEndInfo=mpController.getSubtitle(mediaPosition).text;
@@ -1380,7 +1479,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		if (wakeLock.isHeld())wakeLock.release();
 		Uri uri = Uri.parse(getString(R.string.projectWebUrl));
 		Intent it = new Intent(Intent.ACTION_VIEW, uri);
-		startActivity(it);
+		try {
+			startActivity(it);
+		} catch (android.content.ActivityNotFoundException ex) {
+		    Toast.makeText(LamrimReaderActivity.this, "您的裝置上未安裝任何可供使用的網頁瀏覽元件，無法開啟網頁。", Toast.LENGTH_LONG).show();
+		}
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -1479,7 +1582,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			File file=new File(filePath);
 			
 			if(!file.exists()){
-				Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "您所選擇的檔案不存在或無法讀取。");
+				Util.showErrorPopupWindow(LamrimReaderActivity.this, findViewById(R.id.rootLayout), "您所選擇的檔案損毀或無法讀取。");
 				return;
 			}
 			

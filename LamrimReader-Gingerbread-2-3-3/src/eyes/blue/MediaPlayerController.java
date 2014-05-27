@@ -358,6 +358,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setOnRegionListener(listener);
 	}
 	
+	public void setOnReportClick(View.OnClickListener listener){
+		mediaController.setOnReportListener(listener);
+    }
+	
 /*	public void setOnShareClickListener(View.OnClickListener listener){
 		mediaController.setOnShareListener(listener);
 	}
@@ -466,6 +470,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				mediaPlayer.setDataSource(context, speechFileUri);
 				mpState=MP_INITED;
 				mediaPlayer.prepare();
+			}catch(IOException ioe){
+				Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀或儲存空間已滿: "+speechFile);
 			}catch(Exception e){
 				changedListener.onPlayerError();
 				e.printStackTrace();

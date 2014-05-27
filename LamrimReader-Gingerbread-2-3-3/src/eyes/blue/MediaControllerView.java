@@ -505,6 +505,11 @@ public class MediaControllerView extends FrameLayout {
     	ImageButton regionButton=(ImageButton)findViewById(R.id.regionBtn);
         regionButton.setOnClickListener(listener);
     }
+    
+    public void setOnReportListener(View.OnClickListener listener){
+    	ImageButton reportBtn=(ImageButton)findViewById(R.id.reportBtn);
+    	reportBtn.setOnClickListener(listener);
+    }
 
     public void setButtonVisiable(boolean lastPage, boolean nextPage){
     	((ImageButton) findViewById(R.id.prev)).setVisibility((lastPage)?View.VISIBLE:View.GONE);
