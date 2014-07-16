@@ -228,7 +228,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}			
 	}
 	
-	
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer. create new subtitleTimer for subtitle changed event.
 	 * */
@@ -239,36 +238,43 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		if(mediaPlayer==null)return;
 		
 		changedListener.onStartPlay();
-		if(subtitleTimer!=null){
-			subtitleTimer.cancel(false);
-			subtitleTimer=null;
-		}
-		
-		if(subtitle!=null){
-			Log.d(getClass().getName(),"The subtitle exist, prepare subtitle timer.");
-			subtitleTimer = new SubtitleTimer();
-			subtitleTimer.execute(subtitle);
-		}
-		
+
 		// Avoid some problem.
 		if(mpState>=MP_PREPARED)
 		synchronized(mediaPlayerKey){
 			try{
 				mediaPlayer.start();
 				mpState=MP_PLAYING;
-//				if(playingIndex!=-1 && subtitle != null)
-//					mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
+				
+				if(subtitleTimer!=null){
+					subtitleTimer.cancel(false);
+					subtitleTimer=null;
+				}
+				
+				if(subtitle!=null){
+					Log.d(getClass().getName(),"The subtitle exist, prepare subtitle timer.");
+					subtitleTimer = new SubtitleTimer();
+					subtitleTimer.execute(subtitle);
+				}
+				if(playingIndex!=-1 && subtitle != null)
+					mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
 				/*
 				 * While user drag the seek bar over end of media control view, the control view hide and reset the
 				 * MediaPlayer.currentPosition() to 0, it seems control by MediaPlayer, reset it to regionStartMs here. 
 				 * */
-/*				if(isRegionPlay() && mediaPlayer.getCurrentPosition() < regionStartMs){
+				if(isRegionPlay() && mediaPlayer.getCurrentPosition() < regionStartMs){
 					Log.d(getClass().getName(),"Reset the play start position to region start MS.");
 					mediaPlayer.seekTo(regionStartMs);
-					changedListener.startRegionPlay();
+//					changedListener.startRegionPlay();
 				}
-*/				if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
+				if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
 			}catch(Exception e){
+				// Stop the subtitle timer if start failure.
+				if(subtitleTimer!=null){
+					subtitleTimer.cancel(false);
+					subtitleTimer=null;
+				}
+				
 				changedListener.onPlayerError();
 				e.printStackTrace();
 				GaLogger.sendException("mpState="+mpState, e, true);
@@ -377,6 +383,14 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
 	public void reset(){
+		// If already reset, skip it avoid the state exception(reset after reset).
+		synchronized(mediaPlayerKey){
+			if(mpState == MP_IDLE){
+				Log.d(getClass().getName(),"Get reset after reset command, skip this reset command.");
+				return;
+			}
+		}
+		
 		if(subtitleTimer!=null){
 			subtitleTimer.cancel(false);
 			subtitleTimer=null;
@@ -449,11 +463,13 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		
 		if(speechFile==null || !speechFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech file not exist, skip!!!");
+			Util.showErrorPopupWindow(activity, anchorView, speechFile+"音檔不存在！取消播放！");
 			return;
 		}
 
 		if( subtitleFile==null || !subtitleFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
+			Util.showInfoPopupWindow(activity, anchorView, "字幕檔案不存在，取消字幕功能。");
 			subtitle=null;
 		}
 		else{

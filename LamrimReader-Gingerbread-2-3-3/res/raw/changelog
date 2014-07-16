@@ -23,6 +23,14 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$150
+  % Version 1.3.11
+  _ 2014-07-016
+	* 修正從音檔選單啟動音檔時，廣論論文錨點遺失的問題。
+	* 修正字幕無反應問題。
+	* 修正全廣/區段播放結束後，再次按播放會回到音檔最初位置而非區段開頭位置的問題。
+	* 回應錯誤介面新增機器型態與作業系統版本資訊。
+  
 $148
   % Version 1.3.9
   _ 2014-05-28

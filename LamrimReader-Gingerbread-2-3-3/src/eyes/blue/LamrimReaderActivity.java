@@ -151,8 +151,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final static int SUBTITLE_MODE = 1;
 	final static int READING_MODE = 2;
 	
-	
-
 	int subtitleViewRenderMode = SUBTITLE_MODE;
 	static int mediaIndex = -1;
 	MediaPlayerController mpController;
@@ -585,6 +583,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 								actionBarTitle=SpeechData.getNameId(mediaIndex);
 								if(actionBar != null)actionBar.setTitle(actionBarTitle);
 								
+								
+								final int pageNum = SpeechData.refPage[mediaIndex] - 1;
+								Log.d(getClass().getName(),"The speech reference theory page "+pageNum);
+								if (pageNum >= 0){
+									bookViewMountPoint[0]=pageNum;
+									bookViewMountPoint[1]=0;
+								}
+								
 								int seekPosition = runtime.getInt("playPosition", 0);
 								Log.d(logTag, "Seek to last play positon " + seekPosition);
 								mpController.setPrevNextListeners(normalModePrevNextListener.getPrevPageListener(), normalModePrevNextListener.getNextPageListener());
@@ -679,6 +685,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 							content="貴團隊您好:\n\n末學發現廣論論文於 () 頁、()行、()字處疑似有內容上的錯誤，煩請再確認校正。\n\n";
 							break;
 						}
+						
+						content+=Util.getDeviceName()+ " V"+android.os.Build.VERSION.RELEASE + ", App版本: "+ pkgInfo.versionName+"("+pkgInfo.versionCode+")";
 						
 						Intent i = new Intent(Intent.ACTION_SEND);
 						i.setData(Uri.parse("mailto:"));
@@ -1513,13 +1521,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			mediaIndex=selected;
 			GLamrimSectIndex = -1;
 			
-			final int pageNum = SpeechData.refPage[selected] - 1;
-			Log.d(getClass().getName(),"The speech reference theory page "+pageNum);
-			if (pageNum >= 0){
-				bookViewMountPoint[0]=pageNum;
-				bookViewMountPoint[1]=0;
-			}
-			actionBarTitle=SpeechData.getNameId(selected);
 			Log.d(logTag, "Call reset player in onActivityResult.");
 			
 			GaLogger.sendEvent("activity", "SpeechMenu_result", "select_index_"	+ selected, null);
@@ -2599,6 +2600,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		private void startLamrimSection(int index){
 			Log.d(getClass().getName(),"Switch to speech "+SpeechData.getTheoryName(index));
+			mpController.hideMediaPlayerController();
 			File media = FileSysManager.getLocalMediaFile(index);
 			File subtitle = FileSysManager.getLocalSubtitleFile(index);
 			
