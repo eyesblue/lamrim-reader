@@ -42,7 +42,7 @@ public class TheoryPageView extends TextView {
 	float orgDist = 1f;
 	float orgFontSize=0;
 	float[][] dots=new float[100][3];
-	Paint samplePaint=new Paint();
+	
 	
 	public TheoryPageView(Context context) {
 		super(context);
@@ -241,7 +241,8 @@ public class TheoryPageView extends TextView {
 		int pointSize=(int) (getTextSize()/7);
 		int yShift=(int) (getTextSize()/5);
 		int dotColor=getContext().getResources().getColor(R.color.theoryDotTextColor);
-		getPaint().setColor(dotColor);
+		Paint paint=getPaint();
+		paint.setColor(dotColor);
 		
 //		StaticLayout tempLayout = new StaticLayout(boldText, paint, 10000, android.text.Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
 //		int lineCount = tempLayout.getLineCount();
@@ -258,8 +259,8 @@ public class TheoryPageView extends TextView {
 			
 			int y=getLineBounds((int) d[0], rect);
 			float fontSize=orgTextSize*d[2];
-			samplePaint.setTextSize(fontSize);
-			canvas.drawCircle(rect.left+(samplePaint.measureText(lineContent[(int) d[0]],0,(int) d[1])), y+yShift, pointSize, getPaint());
+			paint.setTextSize(fontSize);
+			canvas.drawCircle(rect.left+(paint.measureText(lineContent[(int) d[0]],0,(int) d[1])), y+yShift, pointSize, paint);
 		}
 		
 		getPaint().setTextSize(orgTextSize);
@@ -368,7 +369,7 @@ public class TheoryPageView extends TextView {
 //        canvas.drawLine(bounds.left, baseLine + 1, bounds.right, baseLine + 1, paint);
     }
 */
-	
+	/*
 	OnTouchListener touchListener=new OnTouchListener(){
 		public boolean onTouch(View v, MotionEvent event) {
 			float x,y;
@@ -418,4 +419,5 @@ public class TheoryPageView extends TextView {
 			return true;  
 		  }  	
 	};
+	*/
 }
