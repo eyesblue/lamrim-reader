@@ -31,11 +31,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class StorageManageActivity extends Activity {
-	TextView extFreePercent, intFreePercent, extAppUsagePercent, intAppUsagePercent, intFree, extFree, extAppUseage, intAppUseage, labelChoicePath;
+	TextView extSpeechPathInfo, extSubtitlePathInfo, intSpeechPathInfo, intSubtitlePathInfo, extFreePercent, intFreePercent, extAppUsagePercent, intAppUsagePercent, intFree, extFree, extAppUseage, intAppUseage, labelChoicePath;
 	Button btnMoveAllToExt, btnMoveAllToInt, btnDelExtFiles, btnDelIntFiles, btnOk;
 	ImageButton btnChoicePath;
 	RadioGroup radioMgnType =null;
-	EditText filePathInput = null;
+	EditText filePathInput;
 	boolean isUseThirdDir=false;
 	
 	private PowerManager.WakeLock wakeLock = null;
@@ -75,6 +75,10 @@ public class StorageManageActivity extends Activity {
 		btnOk = (Button) findViewById(R.id.btnOk);
 		radioMgnType = (RadioGroup) findViewById(R.id.radioMgnType);
 		filePathInput = (EditText) findViewById(R.id.fieldPathInput);
+		extSpeechPathInfo = (TextView) findViewById(R.id.extSpeechPathInfo);
+		extSubtitlePathInfo = (TextView) findViewById(R.id.extSubtitlePathInfo);
+		intSpeechPathInfo = (TextView) findViewById(R.id.intSpeechPathInfo);
+		intSubtitlePathInfo = (TextView) findViewById(R.id.intSubtitlePathInfo);
 
 		// The ImageButton can't disable from xml.
 		btnChoicePath.setClickable(false);
@@ -320,6 +324,17 @@ public class StorageManageActivity extends Activity {
 					break;
 				}
 			}});
+		
+		String extSpeechDir=FileSysManager.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
+		String extSubtitleDir=FileSysManager.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
+		String intSpeechDir=FileSysManager.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
+		String intSubtitleDir=FileSysManager.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
+		
+		extSpeechPathInfo.setText(((extSpeechDir != null)?extSpeechDir:getString(R.string.noExtSpace)));
+		extSubtitlePathInfo.setText(((extSubtitleDir != null)?extSubtitleDir:getString(R.string.noExtSpace)));
+		intSpeechPathInfo.setText(intSpeechDir);
+		intSubtitlePathInfo.setText(intSubtitleDir);
+		
 		Log.d(getClass().getName(),"Leave onCreate");
 	}
 	

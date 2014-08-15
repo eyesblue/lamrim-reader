@@ -271,9 +271,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 				modeSwBtn.setPressed(true);
 				int height = (int) (screenDim.y - event.getRawY());
-				float upBoundDp = (float) getResources().getInteger(R.integer.subtitleScrollTouchBtnHeightPercentDp) / 100 * screenDim.y;
+//				float upBoundDp = (float) getResources().getInteger(R.integer.subtitleScrollTouchBtnHeightPercentDp) / 100 * screenDim.y;
 				int minHeight = (int) subtitleView.getLineHeight();
-				int maxHeight = (int) (rootLayout.getHeight() - upBoundDp);
+				//int maxHeight = (int) (rootLayout.getHeight() - upBoundDp);
+				int maxHeight = (int) (rootLayout.getHeight() - modeSwBtn.getHeight());
 				// int maxHeight=(int)
 				// (rootLayout.getHeight()-getResources().getDisplayMetrics().density*getResources().getInteger(R.integer.subtitleScrollTouchUpperBoundDp));
 
@@ -1230,16 +1231,17 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	protected void onStart() {
 		super.onStart();
 		Log.d(getClass().getName(), "**** onStart() ****");
-
+/*
 		float modeSwBtnHeight = (float) getResources().getInteger(
 				R.integer.subtitleScrollTouchBtnHeightPercentDp)
 				/ 100 * screenDim.y;
 		float modeSwBtnWidth = (float) getResources().getInteger(
 				R.integer.subtitleScrollTouchBtnWidthPercentDp)
 				/ 100 * screenDim.x;
-		modeSwBtn.getLayoutParams().width = (int) modeSwBtnWidth;
-		modeSwBtn.getLayoutParams().height = (int) modeSwBtnHeight;
-
+		// modeSwBtn.getLayoutParams().width = (int) modeSwBtnWidth;
+		// modeSwBtn.getLayoutParams().height = (int) modeSwBtnHeight;
+*/
+		
 		GaLogger.activityStart(this);
 		GaLogger.sendEvent("activity", "LamrimReaderActivity", "into_onStart", null);
 
@@ -1782,7 +1784,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		final EditText searchInput=(EditText) searchView.findViewById(R.id.searchInput);
 		searchBtn.setOnClickListener(new SearchListener(searchInput, searchBtn));
 		
-        
+		String lastSearch=runtime.getString(getString(R.string.lastSearchLamrimKey), "");
+		searchInput.setText(lastSearch);
+		
 		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		AlertDialog searchDialog = builder.create();
 		searchDialog.setView(searchView);
@@ -1795,6 +1799,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		searchDialog.setOnCancelListener(new DialogInterface.OnCancelListener(){
 			@Override
 			public void onCancel(DialogInterface dialog) {
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putString(getString(R.string.lastSearchLamrimKey), searchInput.getText().toString());
+				editor.commit();
 				searchBtn.setEnabled(true);
 			}});
 	}

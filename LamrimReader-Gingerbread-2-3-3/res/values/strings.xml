@@ -109,6 +109,7 @@
     <string name="inputTitleHint">請輸入標題！</string>
     <string name="regionRecordListViewPage">regionListPage</string>
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
+    <string name="lastSearchLamrimKey">lastSearchLamrimWords</string>
 
     <color name="defSubtitleBGcolor">#0F395E</color>
     <color name="subtitleRedingModeHilightColor">#FFF82A</color>
@@ -129,7 +130,8 @@
     <!-- FileSysManager -->
     <integer name="reservSpacePercent">10</integer>
     <integer name="subtitleReservSizeK">102400</integer>
-
+	<string name="noExtSpace">無外部空間</string>
+	
     <!-- Dialogs -->
     <string name="dlgTitleDownloadFail">下載失敗</string>
     <string name="dlgDescDownloadFail">下載資源失敗，請確認磁碟空間充足及您所在區域的網路品質是否正常</string>

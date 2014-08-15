@@ -218,6 +218,7 @@ public class CalendarActivity extends SherlockActivity {
 						final GlRecord glr = glSchedule.get(key);
 						if (glr == null) {
 							Log.d(getClass().getName(), "No record for: " + key);
+							dialogShowing = false;
 							return;
 						}
 

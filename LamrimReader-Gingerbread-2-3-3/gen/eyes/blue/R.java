@@ -1226,6 +1226,8 @@ containing a value of this type.
         public static final int TextView02=0x7f0800ce;
         public static final int TextView03=0x7f0800d2;
         public static final int TextView04=0x7f0800d0;
+        public static final int TextView05=0x7f08010d;
+        public static final int TextView06=0x7f080110;
         public static final int View01=0x7f080098;
         public static final int aboutTextContent=0x7f08002c;
         public static final int aboutTextTitle=0x7f08002b;
@@ -1268,7 +1270,7 @@ containing a value of this type.
         public static final int abs__textButton=0x7f080030;
         public static final int abs__title=0x7f080038;
         public static final int abs__up=0x7f080026;
-        public static final int action_settings=0x7f080111;
+        public static final int action_settings=0x7f080118;
         public static final int arrow_down=0x7f08008f;
         public static final int arrow_up=0x7f08008b;
         public static final int bookIcon=0x7f0800ee;
@@ -1283,7 +1285,7 @@ containing a value of this type.
         public static final int btnManageStorage=0x7f0800e4;
         public static final int btnMoveAllToExt=0x7f0800ff;
         public static final int btnMoveAllToInt=0x7f080101;
-        public static final int btnOk=0x7f08010b;
+        public static final int btnOk=0x7f080112;
         public static final int calendarRootView=0x7f080074;
         public static final int color_panel_new=0x7f080018;
         public static final int color_panel_old=0x7f080017;
@@ -1345,6 +1347,8 @@ containing a value of this type.
         public static final int extAppUseage=0x7f0800fd;
         public static final int extFree=0x7f0800f9;
         public static final int extFreePercent=0x7f0800f2;
+        public static final int extSpeechPathInfo=0x7f08010c;
+        public static final int extSubtitlePathInfo=0x7f08010e;
         public static final int extUsageText=0x7f0800f1;
         public static final int fdButtonCancel=0x7f080062;
         public static final int fdButtonCreate=0x7f080063;
@@ -1364,12 +1368,14 @@ containing a value of this type.
         public static final int homeAsUp=0x7f080021;
         public static final int horizontalScrollView1=0x7f08006e;
         public static final int i_more=0x7f08006b;
-        public static final int image=0x7f08010f;
+        public static final int image=0x7f080116;
         public static final int info=0x7f080089;
         public static final int intAppUsagePercent=0x7f0800f6;
         public static final int intAppUseage=0x7f0800fe;
         public static final int intFree=0x7f0800fb;
         public static final int intFreePercent=0x7f0800f4;
+        public static final int intSpeechPathInfo=0x7f08010f;
+        public static final int intSubtitlePathInfo=0x7f080111;
         public static final int intUsageText=0x7f0800f3;
         public static final int iv_icon=0x7f080055;
         public static final int jumpPage=0x7f080050;
@@ -1387,8 +1393,8 @@ containing a value of this type.
         public static final int modeSwBtn=0x7f080072;
         public static final int next=0x7f080079;
         public static final int normal=0x7f08001c;
-        public static final int pageContentView=0x7f08010c;
-        public static final int pageNumView=0x7f08010d;
+        public static final int pageContentView=0x7f080113;
+        public static final int pageNumView=0x7f080114;
         public static final int path=0x7f080064;
         public static final int pause=0x7f080077;
         public static final int preference_preview_color_panel=0x7f080019;
@@ -1468,10 +1474,11 @@ containing a value of this type.
         public static final int tableRow2=0x7f0800ec;
         public static final int tableRow3=0x7f0800f7;
         public static final int tableRow4=0x7f0800fc;
-        public static final int text=0x7f080110;
+        public static final int text=0x7f080117;
         public static final int textSize=0x7f080053;
         public static final int textView=0x7f0800ef;
         public static final int textView1=0x7f0800db;
+        public static final int textView2=0x7f08010b;
         public static final int textView3=0x7f0800e5;
         public static final int textView5=0x7f080090;
         public static final int textView6=0x7f0800f8;
@@ -1485,7 +1492,7 @@ containing a value of this type.
         public static final int timeRegion=0x7f080084;
         public static final int time_current=0x7f08007d;
         public static final int title=0x7f0800e8;
-        public static final int toastLayout=0x7f08010e;
+        public static final int toastLayout=0x7f080115;
         public static final int tracks=0x7f08008d;
         public static final int tv_title=0x7f080056;
         public static final int useLogo=0x7f08001f;
@@ -1630,7 +1637,7 @@ containing a value of this type.
         /**  Description of a share target (both in the list of such or the default share button) in a ShareActionProvider (share UI). [CHAR LIMIT=NONE] 
          */
         public static final int abs__shareactionprovider_share_with_application=0x7f06000d;
-        public static final int action_settings=0x7f06007b;
+        public static final int action_settings=0x7f06007d;
         /**  For LamrimReaderActivity 
          */
         public static final int app_name=0x7f060000;
@@ -1639,15 +1646,15 @@ containing a value of this type.
          */
         public static final int bookFontSize=0x7f06003d;
         public static final int bookFontSizeKey=0x7f06003f;
-        public static final int cancel=0x7f060089;
-        public static final int cant_read_folder=0x7f060085;
+        public static final int cancel=0x7f06008b;
+        public static final int cant_read_folder=0x7f060087;
         /**  For ChangeLog 
          */
-        public static final int changelog_full_title=0x7f06008e;
-        public static final int changelog_ok_button=0x7f060090;
-        public static final int changelog_show_full=0x7f060091;
-        public static final int changelog_title=0x7f06008f;
-        public static final int create=0x7f06008a;
+        public static final int changelog_full_title=0x7f060090;
+        public static final int changelog_ok_button=0x7f060092;
+        public static final int changelog_show_full=0x7f060093;
+        public static final int changelog_title=0x7f060091;
+        public static final int create=0x7f06008c;
         public static final int currentDayOfMonthFont=0x7f060004;
         public static final int dayOfMonthFont=0x7f060003;
         public static final int dayOfWeekFont=0x7f060002;
@@ -1655,49 +1662,49 @@ containing a value of this type.
          */
         public static final int defSubtitleType=0x7f060026;
         public static final int defTheoryType=0x7f060027;
-        public static final int digOptSetRegionStart=0x7f060094;
-        public static final int dlgAllow=0x7f06006c;
-        public static final int dlgCancel=0x7f06006b;
-        public static final int dlgDelWarnMsg=0x7f060077;
-        public static final int dlgDelWarnTitle=0x7f060076;
-        public static final int dlgDescConnecting=0x7f060065;
-        public static final int dlgDescDownloadFail=0x7f060063;
-        public static final int dlgDescDownloading=0x7f060067;
-        public static final int dlgDescPrepareSpeech=0x7f060069;
-        public static final int dlgDescPrepareSubtitle=0x7f060068;
-        public static final int dlgDisallow=0x7f06006d;
-        public static final int dlgDontShowThisWarnDesc=0x7f06006e;
-        public static final int dlgEndLineGreaterThenStart=0x7f060080;
-        public static final int dlgEndPageGreaterThenStart=0x7f06007f;
-        public static final int dlgExitMsg=0x7f060072;
-        public static final int dlgExitTitle=0x7f060071;
+        public static final int digOptSetRegionStart=0x7f060096;
+        public static final int dlgAllow=0x7f06006e;
+        public static final int dlgCancel=0x7f06006d;
+        public static final int dlgDelWarnMsg=0x7f060079;
+        public static final int dlgDelWarnTitle=0x7f060078;
+        public static final int dlgDescConnecting=0x7f060067;
+        public static final int dlgDescDownloadFail=0x7f060065;
+        public static final int dlgDescDownloading=0x7f060069;
+        public static final int dlgDescPrepareSpeech=0x7f06006b;
+        public static final int dlgDescPrepareSubtitle=0x7f06006a;
+        public static final int dlgDisallow=0x7f06006f;
+        public static final int dlgDontShowThisWarnDesc=0x7f060070;
+        public static final int dlgEndLineGreaterThenStart=0x7f060082;
+        public static final int dlgEndPageGreaterThenStart=0x7f060081;
+        public static final int dlgExitMsg=0x7f060074;
+        public static final int dlgExitTitle=0x7f060073;
         public static final int dlgHintLoadMediaBeforeSwitchToReadingMode=0x7f060053;
         public static final int dlgHintMpControllerNoSubtitle=0x7f060054;
         public static final int dlgHintShowMpController=0x7f060052;
-        public static final int dlgInputError=0x7f06007c;
-        public static final int dlgInputNotFill=0x7f06007d;
-        public static final int dlgLineNumOverPageCount=0x7f060081;
-        public static final int dlgManageSrcDel=0x7f060075;
-        public static final int dlgManageSrcPlay=0x7f060073;
-        public static final int dlgManageSrcUpdate=0x7f060074;
-        public static final int dlgMsgDlNotComplete=0x7f060061;
-        public static final int dlgMsgMaintaining=0x7f060079;
-        public static final int dlgNetAccessMsg=0x7f060070;
-        public static final int dlgNetAccessTitle=0x7f06006f;
-        public static final int dlgNumberFormatError=0x7f06007e;
-        public static final int dlgOk=0x7f06006a;
-        public static final int dlgOptSetRegionEnd=0x7f060095;
-        public static final int dlgPageNumOverPageCount=0x7f060082;
-        public static final int dlgRecordTheoryIndex=0x7f060083;
-        public static final int dlgTitleConnecting=0x7f060064;
+        public static final int dlgInputError=0x7f06007e;
+        public static final int dlgInputNotFill=0x7f06007f;
+        public static final int dlgLineNumOverPageCount=0x7f060083;
+        public static final int dlgManageSrcDel=0x7f060077;
+        public static final int dlgManageSrcPlay=0x7f060075;
+        public static final int dlgManageSrcUpdate=0x7f060076;
+        public static final int dlgMsgDlNotComplete=0x7f060062;
+        public static final int dlgMsgMaintaining=0x7f06007b;
+        public static final int dlgNetAccessMsg=0x7f060072;
+        public static final int dlgNetAccessTitle=0x7f060071;
+        public static final int dlgNumberFormatError=0x7f060080;
+        public static final int dlgOk=0x7f06006c;
+        public static final int dlgOptSetRegionEnd=0x7f060097;
+        public static final int dlgPageNumOverPageCount=0x7f060084;
+        public static final int dlgRecordTheoryIndex=0x7f060085;
+        public static final int dlgTitleConnecting=0x7f060066;
         /**  Dialogs 
          */
-        public static final int dlgTitleDownloadFail=0x7f060062;
-        public static final int dlgTitleDownloading=0x7f060066;
-        public static final int dlgTitleMaintaining=0x7f060078;
+        public static final int dlgTitleDownloadFail=0x7f060064;
+        public static final int dlgTitleDownloading=0x7f060068;
+        public static final int dlgTitleMaintaining=0x7f06007a;
         public static final int downloadSchedule=0x7f06002f;
         public static final int downloadTmpPostfix=0x7f060021;
-        public static final int err=0x7f06008c;
+        public static final int err=0x7f06008e;
         public static final int errIAEwhileSetPlayerSrc=0x7f060056;
         public static final int errIOEwhilePrepPlayer=0x7f06005b;
         public static final int errIOEwhileSetPlayerSrc=0x7f060059;
@@ -1710,7 +1717,7 @@ containing a value of this type.
         public static final int eyes_blue_SpeechMenuActivity=0x7f060017;
         public static final int eyes_blue_StorageManageActivity=0x7f060018;
         public static final int filePathRoot=0x7f06001a;
-        public static final int file_name=0x7f060088;
+        public static final int file_name=0x7f06008a;
         /**  Replace placeholder ID with your tracking ID 
          */
         public static final int ga_trackingId=0x7f060015;
@@ -1722,13 +1729,14 @@ containing a value of this type.
         public static final int globalLamrimScheduleFileFormat=0x7f06002b;
         public static final int globalLamrimShortName=0x7f06002d;
         public static final int hello=0x7f060005;
-        public static final int hello_world=0x7f060093;
+        public static final int hello_world=0x7f060095;
         public static final int inputTitleHint=0x7f06005c;
         public static final int isAllowNetAccess=0x7f06001b;
         public static final int isShowModeSwBtnKey=0x7f060039;
         public static final int isShowNetAccessWarn=0x7f06001c;
         public static final int isUseThirdDir=0x7f06001d;
-        public static final int lamrimCmdUri=0x7f060096;
+        public static final int lamrimCmdUri=0x7f060098;
+        public static final int lastSearchLamrimKey=0x7f06005f;
         public static final int localGlobalLamrimScheduleFileDataErr=0x7f060034;
         public static final int localGlobalLamrimScheduleFileDateFmtErr=0x7f060033;
         public static final int localGlobalLamrimScheduleFileDecodeErr=0x7f060035;
@@ -1737,7 +1745,7 @@ containing a value of this type.
         public static final int localGlobalLamrimScheduleFileReadErr=0x7f060031;
         /**  For file selector 
          */
-        public static final int location=0x7f060084;
+        public static final int location=0x7f060086;
         public static final int mediaCheckSumWhileDownload=0x7f060020;
         public static final int menuStrGlobalLamrim=0x7f060044;
         public static final int menuStrOpenProjectWeb=0x7f06004a;
@@ -1750,12 +1758,13 @@ containing a value of this type.
         public static final int monthTitleFont=0x7f060001;
         /**  For Speech Menu 
          */
-        public static final int musicSign=0x7f06005f;
+        public static final int musicSign=0x7f060060;
         public static final int newMediaPlayPosition=0x7f060051;
         public static final int newMediaTarget=0x7f060050;
-        public static final int nnew=0x7f060086;
+        public static final int nnew=0x7f060088;
+        public static final int noExtSpace=0x7f060063;
         public static final int noSubtitleDesc=0x7f06004d;
-        public static final int no_data=0x7f06008b;
+        public static final int no_data=0x7f06008d;
         public static final int projectWebUrl=0x7f06004b;
         public static final int regionRecordColumeName=0x7f060029;
         public static final int regionRecordFile=0x7f060028;
@@ -1769,7 +1778,7 @@ containing a value of this type.
         /**  Runtime options 
          */
         public static final int runtimeStateFile=0x7f060019;
-        public static final int select=0x7f060087;
+        public static final int select=0x7f060089;
         public static final int selectIndexFromMenuDesc=0x7f06004e;
         public static final int setupFontSizeStr=0x7f060041;
         public static final int setupTextSizeSample=0x7f060042;
@@ -1780,12 +1789,12 @@ containing a value of this type.
         public static final int subtitleFgColorKey=0x7f06003a;
         public static final int subtitleFontSize=0x7f06003e;
         public static final int subtitleFontSizeKey=0x7f060040;
-        public static final int subtitleSign=0x7f060060;
+        public static final int subtitleSign=0x7f060061;
         public static final int theoryDirName=0x7f060024;
         public static final int title_activity_calendar=0x7f06002e;
-        public static final int title_activity_file_dialog=0x7f06008d;
-        public static final int title_activity_intent=0x7f060092;
-        public static final int title_activity_storage_manage=0x7f06007a;
+        public static final int title_activity_file_dialog=0x7f06008f;
+        public static final int title_activity_intent=0x7f060094;
+        public static final int title_activity_storage_manage=0x7f06007c;
         public static final int userSpecifySpeechDir=0x7f06001e;
         /**  Default Value 
          */

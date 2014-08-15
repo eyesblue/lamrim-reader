@@ -73,17 +73,41 @@ public class FileSysManager {
 		statFs[EXTERNAL]=new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
 		srcRoot[INTERNAL]=context.getFileStreamPath(context.getString(R.string.filePathRoot)).getAbsolutePath();
 		boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
-		if(extWritable)srcRoot[EXTERNAL]=context.getExternalFilesDir(File.separator+context.getString(R.string.filePathRoot)).getAbsolutePath();
-              
+		if(extWritable && context.getExternalFilesDir(null)!=null)
+			srcRoot[EXTERNAL]=context.getExternalFilesDir(context.getString(R.string.filePathRoot)).getAbsolutePath();
+
 		FileSysManager.logTag=getClass().getName();
 		FileSysManager.context=context;
 		grs=new GoogleRemoteSource(context);
 	}
 	
 	public static String getSysDefMediaDir(){
-		boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
-		if(extWritable)return srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName);
-		return srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName);
+        boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+        if(extWritable && context.getExternalFilesDir(null)!=null)
+        	return srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName);
+        return srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName);
+}
+
+	
+	public static String getLocateDir(int locate, int type){
+		int mediaType=context.getResources().getInteger(R.integer.MEDIA_TYPE);
+		int subtitleType=context.getResources().getInteger(R.integer.SUBTITLE_TYPE);
+		String audioDirName=context.getString(R.string.audioDirName);
+		String subtitleDirName=context.getString(R.string.subtitleDirName);
+		
+		if(locate == EXTERNAL){
+			boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
+			if(!extWritable || context.getExternalFilesDir(null) == null)
+				return null;
+		}
+
+		if(type == mediaType)
+			return srcRoot[locate]+File.separator+audioDirName;
+		else if(type == subtitleType)
+			return srcRoot[locate]+File.separator+subtitleDirName;
+		
+		// shouldn't into bellow line.
+		return null;
 	}
 	
 	public void setDownloadListener(DownloadListener listener){
