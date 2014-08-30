@@ -995,10 +995,14 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	
 	private class SubtitleTimer extends AsyncTask<SubtitleElement, Void, Void> {
 		protected Void doInBackground(SubtitleElement... se) {
-//			playingIndex=-2;
+			String logTag="SubtitleTimer";
+			int playPoint=-1, playArrayIndex=-1;
 			int monInterval=activity.getResources().getInteger(R.integer.subtitleMonInterval);
 			while(true){
-				if(isCancelled())return null;	// playArrayIndex not last one
+				if(isCancelled()){
+					Log.d(logTag,"Exit nomaly.");
+					return null;	// playArrayIndex not last one
+				}
 				try{
 //					Log.d(getClass().getName(),"Subtitle index miss, search the index.");
 					synchronized(playingIndexKey){
@@ -1011,8 +1015,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 							return null;
 						}
 //						Log.d(logTag,"SubtitleTimer: the mpState is not MP_COMPLETE.");
-						int playPoint=mediaPlayer.getCurrentPosition();
-                        int playArrayIndex=Util.subtitleBSearch(se, playPoint);
+						playPoint=mediaPlayer.getCurrentPosition();
+                        playArrayIndex=Util.subtitleBSearch(se, playPoint);
                        
                         //Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
                         // Play region function has set, and over the region, stop play.
@@ -1033,14 +1037,24 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 					// The last of subtitle has reached.
 					//if(playArrayIndex==se.length-1)return null;
 					
+					if(isCancelled()){
+						Log.d(logTag,"Exit nomaly.");
+						return null;
+					}
+					
 					Thread.sleep(monInterval);
-					if(this.isCancelled())return null;
 					
 					}catch(IllegalStateException e) {
 						e.printStackTrace();
+						GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="+mpState+", playPoint="+playPoint+", playArrayIndex="+playArrayIndex+", regionEndMs="+regionEndMs, e, true);
 						return null;
 					}catch (InterruptedException e) {
 //						e.printStackTrace();
+						GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="+mpState+", playPoint="+playPoint+", playArrayIndex="+playArrayIndex+", regionEndMs="+regionEndMs, e, true);
+						return null;
+					}catch (Exception e) {
+//						e.printStackTrace();
+						GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="+mpState+", playPoint="+playPoint+", playArrayIndex="+playArrayIndex+", regionEndMs="+regionEndMs, e, true);
 						return null;
 					}
 				}

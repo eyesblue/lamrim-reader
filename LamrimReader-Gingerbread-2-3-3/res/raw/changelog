@@ -23,6 +23,18 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$153
+  % Version 1.3.14
+  _ 2014-08-30
+	* 廣論標題數字部分加入顏色標記。
+	* 補足音檔選單中缺失的標題。
+	* 強化搜尋功能：
+	# 加入"向上"搜尋功能
+	# 搜尋行為由固定從第一頁開始搜尋改為從當前頁面開始搜尋。
+	# 加深文字標記顏色。
+	# 提高搜尋對話框透明度。
+	# 修正當搜尋中的字串切隔為二行時搜尋不到的問題。
+	
 $152
   % Version 1.3.13
   _ 2014-08-14
