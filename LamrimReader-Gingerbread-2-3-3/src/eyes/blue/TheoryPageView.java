@@ -67,7 +67,7 @@ public class TheoryPageView extends TextView {
 		}
 		
 		int strLen=length+invalidStrCount;
-		int color=context.getResources().getColor(R.color.theoryHighColor);
+		int color=context.getResources().getColor(R.color.theoryHighColorWord);
 		text.setSpan(new BackgroundColorSpan(color), startIndex, startIndex+strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		super.setText(text);
 	}
@@ -86,7 +86,7 @@ public class TheoryPageView extends TextView {
 			Log.d(getClass().getName(),"highlight to end: "+endLine);
 		}
 		int wordCounter=0;
-		int color=context.getResources().getColor(R.color.theoryHighColor);
+		int color=context.getResources().getColor(R.color.theoryHighColorLine);
 		
 		for(int i=0;i<lines.length;i++){
 			if(i>=startLine && i<=endLine){
@@ -100,10 +100,13 @@ public class TheoryPageView extends TextView {
 
 	public void setText(String text){
 		int lineCounter=0;
-        int start=0,end=0;
-        float smallSize=(float)getContext().getResources().getInteger(R.integer.theorySmallTextSizePercent)/100;
+		int start=0,end=0;
+		float smallSize=(float)getContext().getResources().getInteger(R.integer.theorySmallTextSizePercent)/100;
+		int defTextColor=getContext().getResources().getColor(R.color.theoryTextDefColor);
+		int bgColor=getContext().getResources().getColor(R.color.theoryBgColor);
         int numColor=getContext().getResources().getColor(R.color.theoryNumTextColor);
         int boldColor=getContext().getResources().getColor(R.color.theoryBoldColor);
+        
         
 		SpannableStringBuilder  page = new SpannableStringBuilder ();
         SpannableStringBuilder  line = new SpannableStringBuilder ();
@@ -136,6 +139,7 @@ public class TheoryPageView extends TextView {
         	else if(c=='.'){
         		if(text.charAt(start)!='.'){
         			SpannableString str=new SpannableString (text.substring(start, end));
+        			//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isBold){
         				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -166,6 +170,7 @@ public class TheoryPageView extends TextView {
 //        		Log.d("LamrimReader","Get new line, draw text from "+start+" to "+end+",on ("+x+","+y+") text length="+text.length());
         		//canvas.drawText(text, start, end, x, y, getPaint());
         		SpannableString str=new SpannableString (text.substring(start, end)+"\n");
+        		//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         		if(isBold){
     				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -184,6 +189,7 @@ public class TheoryPageView extends TextView {
         		if(debug)Log.d("LamrimReader","Find a command start");
         		if(end-start>0){
         			SpannableString str=new SpannableString (text.substring(start, end));
+        			//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isBold){
         				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -204,6 +210,7 @@ public class TheoryPageView extends TextView {
         	else if(i==text.length()-1){
         		if(end-start<0)continue;
         		SpannableString str=new SpannableString (text.substring(start, end+1));
+        		//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			if(isBold){
     				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);

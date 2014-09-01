@@ -20,9 +20,10 @@
     <integer name="defFontSize">32</integer>
     <integer name="theorySmallTextSizePercent">90</integer>
 
+    <!--  <color name="theoryTextDefColor">#FFFFFF</color>
     <color name="theoryNumTextColor">#0000CC</color>
     <color name="theoryDotTextColor">#835930</color>
-    <color name="theoryBoldColor">#006600</color>
+    <color name="theoryBoldColor">#006600</color> -->
 
     <integer name="subtitleMonInterval">100</integer>
     <integer name="downloadBufferSize">16384</integer>
@@ -46,7 +47,7 @@
     <string name="globalLamrimScheduleFile">GlobalLamrimSchedule</string>
     <string name="globalLamrimScheduleFileFormat">CSV</string>
 
-    <color name="theoryHighColor">#96FF91</color>
+    
 
     <!-- For Global Lamrim -->
     <string name="globalLamrim">全球廣論</string>
@@ -69,7 +70,7 @@
     <string name="subtitleBgColorKey">subtitleBgColor</string>
     <string name="subtitleAlphaKey">subtitleAlpha</string>
 
-    <color name="defSubtitleFGcolor">#FFFFFF</color>
+    
 
     <!-- For Option Panel -->
     <string name="bookFontSize">論文</string>
@@ -111,9 +112,7 @@
     <string name="regionRecordListViewPageShift">regionListPageShift</string>
     <string name="lastSearchLamrimKey">lastSearchLamrimWords</string>
 
-    <color name="defSubtitleBGcolor">#0F395E</color>
-    <color name="subtitleRedingModeHilightColor">#FFF82A</color>
-    <color name="subtitleScrollPressColor">#E17D37</color>
+    
 
     <integer name="subtitleScrollTouchBtnHeightPercentDp">3</integer>
     <integer name="subtitleScrollTouchBtnWidthPercentDp">10</integer>
@@ -178,7 +177,7 @@
     <string name="create">儲存</string>
     <string name="no_data">無資料</string>
 
-    <color name="gray">#ffff0000</color>
+    
 
     <string name="err">錯誤</string>
     <string name="title_activity_file_dialog">FileDialogActivity</string>

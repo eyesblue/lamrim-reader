@@ -50,6 +50,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
@@ -727,7 +728,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		
 		subtitleView = (TextView) findViewById(R.id.subtitleView);
 		subtitleView.setTypeface(educFont);
-		subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
+		//subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
 
 		// subtitleView = new TextView(LamrimReaderActivity.this);
 		/*
@@ -877,7 +878,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		});
 
 		bookView = (MyListView) findViewById(R.id.bookPageGrid);
-		bookView.setFadeColor(getResources().getColor(R.color.defSubtitleBGcolor));
+//		bookView.setFadeColor(getResources().getColor(R.color.defSubtitleBGcolor));
 		int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
 		final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey), defTheoryTextSize);
 		bookView.setTextSize(theoryTextSize);
@@ -1290,8 +1291,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 */
 
 		Intent cmdIntent=this.getIntent();
-		Log.d(getClass().getName(), "Action: "+getIntent().getAction());
+		Log.d(getClass().getName(), "Check command intent : "+((cmdIntent==null)?"is null.":"not null."));
 		if(cmdIntent != null && cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
+			Log.d(getClass().getName(), "Action: "+getIntent().getAction());
 			GLamrimSectIndex=0;
 			getIntent().setAction(Intent.ACTION_MAIN);
 			String title=cmdIntent.getStringExtra("title");
@@ -2457,7 +2459,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			renderView.setVisibility(View.GONE);
 			bookView.setVisibility(View.VISIBLE);
 			subtitleView.setTextColor(getResources().getColor(R.color.defSubtitleFGcolor));
-			subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
+			//subtitleView.setBackgroundColor(getResources().getColor(R.color.defSubtitleBGcolor));
+			if (Build.VERSION.SDK_INT >= 16)
+				subtitleView.setBackground(getResources().getDrawable(R.drawable.subtitle_background));
+			else
+				subtitleView.setBackgroundDrawable(getResources().getDrawable(R.drawable.subtitle_background));
+			
 			modeSwBtn.setVisibility(View.VISIBLE);
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);  
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);

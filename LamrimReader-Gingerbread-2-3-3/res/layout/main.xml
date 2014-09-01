@@ -47,10 +47,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:background="#0F395E"
+        android:background="@drawable/subtitle_background"
         android:gravity="center"
         android:text="@string/app_name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
+    <!-- android:background="#0F395E" -->
 
     <Button
         android:id="@+id/modeSwBtn"

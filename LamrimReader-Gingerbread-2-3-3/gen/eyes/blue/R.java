@@ -831,22 +831,23 @@ containing a value of this type.
         public static final int abs__bright_foreground_disabled_holo_light=0x7f09000e;
         public static final int abs__bright_foreground_holo_dark=0x7f09000b;
         public static final int abs__bright_foreground_holo_light=0x7f09000c;
-        public static final int abs__primary_text_disable_only_holo_dark=0x7f09001b;
-        public static final int abs__primary_text_disable_only_holo_light=0x7f09001c;
-        public static final int abs__primary_text_holo_dark=0x7f09001d;
-        public static final int abs__primary_text_holo_light=0x7f09001e;
+        public static final int abs__primary_text_disable_only_holo_dark=0x7f09001a;
+        public static final int abs__primary_text_disable_only_holo_light=0x7f09001b;
+        public static final int abs__primary_text_holo_dark=0x7f09001c;
+        public static final int abs__primary_text_holo_light=0x7f09001d;
         public static final int black=0x7f090004;
         public static final int blue=0x7f090002;
         public static final int currentDayOfMonthColor=0x7f090008;
         public static final int dayOfMonthColor=0x7f090007;
         public static final int dayOfWeekColor=0x7f090006;
+        /**  defSubtitleBGcolor is used for render mode. 
+         */
         public static final int defSubtitleBGcolor=0x7f090017;
         public static final int defSubtitleFGcolor=0x7f090016;
-        public static final int gray=0x7f09001a;
+        /**  <color name="subtitleScrollPressColor">#E17D37</color> 
+         */
+        public static final int gray=0x7f090019;
         public static final int green=0x7f090001;
-        public static final int markBlue=0x7f090011;
-        public static final int markGreen=0x7f090010;
-        public static final int markRed=0x7f09000f;
         /**  Fonts 
          */
         public static final int monthTitleColor=0x7f090005;
@@ -858,11 +859,13 @@ containing a value of this type.
         public static final int red=0x7f090000;
         public static final int silver=0x7f090003;
         public static final int subtitleRedingModeHilightColor=0x7f090018;
-        public static final int subtitleScrollPressColor=0x7f090019;
-        public static final int theoryBoldColor=0x7f090014;
-        public static final int theoryDotTextColor=0x7f090013;
-        public static final int theoryHighColor=0x7f090015;
-        public static final int theoryNumTextColor=0x7f090012;
+        public static final int theoryBgColor=0x7f090010;
+        public static final int theoryBoldColor=0x7f090013;
+        public static final int theoryDotTextColor=0x7f090012;
+        public static final int theoryHighColorLine=0x7f090014;
+        public static final int theoryHighColorWord=0x7f090015;
+        public static final int theoryNumTextColor=0x7f090011;
+        public static final int theoryTextDefColor=0x7f09000f;
     }
     public static final class dimen {
         /**  Default height of an action bar. 
@@ -1213,18 +1216,21 @@ containing a value of this type.
         public static final int share_icon=0x7f0200dd;
         public static final int speech=0x7f0200de;
         public static final int speech_d=0x7f0200df;
-        public static final int storage_external=0x7f0200e0;
-        public static final int storage_internal=0x7f0200e1;
-        public static final int subtitle=0x7f0200e2;
-        public static final int subtitle_d=0x7f0200e3;
-        public static final int textfield_default=0x7f0200e4;
-        public static final int update=0x7f0200e5;
-        public static final int volume=0x7f0200e6;
+        public static final int speech_menu_item_d=0x7f0200e0;
+        public static final int speech_menu_item_e=0x7f0200e1;
+        public static final int storage_external=0x7f0200e2;
+        public static final int storage_internal=0x7f0200e3;
+        public static final int subtitle=0x7f0200e4;
+        public static final int subtitle_background=0x7f0200e5;
+        public static final int subtitle_d=0x7f0200e6;
+        public static final int textfield_default=0x7f0200e7;
+        public static final int theory_background=0x7f0200e8;
+        public static final int update=0x7f0200e9;
+        public static final int volume=0x7f0200ea;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f08004f;
         public static final int RelativeLayout1=0x7f080075;
-        public static final int TableRow1=0x7f0800e8;
         public static final int TextView01=0x7f0800d5;
         public static final int TextView02=0x7f0800ce;
         public static final int TextView03=0x7f0800d2;
@@ -1276,7 +1282,7 @@ containing a value of this type.
         public static final int action_settings=0x7f080119;
         public static final int arrow_down=0x7f08008f;
         public static final int arrow_up=0x7f08008b;
-        public static final int bookIcon=0x7f0800ef;
+        public static final int bookIcon=0x7f0800ee;
         public static final int bookPageGrid=0x7f08006f;
         public static final int btn1=0x7f080068;
         public static final int btn2=0x7f080069;
@@ -1349,10 +1355,10 @@ containing a value of this type.
         public static final int extAppUsagePercent=0x7f0800f6;
         public static final int extAppUseage=0x7f0800fe;
         public static final int extFree=0x7f0800fa;
-        public static final int extFreePercent=0x7f0800f3;
+        public static final int extFreePercent=0x7f0800f2;
         public static final int extSpeechPathInfo=0x7f08010d;
         public static final int extSubtitlePathInfo=0x7f08010f;
-        public static final int extUsageText=0x7f0800f2;
+        public static final int extUsageText=0x7f0800f1;
         public static final int fdButtonCancel=0x7f080062;
         public static final int fdButtonCreate=0x7f080063;
         public static final int fdButtonNew=0x7f08005d;
@@ -1376,10 +1382,10 @@ containing a value of this type.
         public static final int intAppUsagePercent=0x7f0800f7;
         public static final int intAppUseage=0x7f0800ff;
         public static final int intFree=0x7f0800fc;
-        public static final int intFreePercent=0x7f0800f5;
+        public static final int intFreePercent=0x7f0800f4;
         public static final int intSpeechPathInfo=0x7f080110;
         public static final int intSubtitlePathInfo=0x7f080112;
-        public static final int intUsageText=0x7f0800f4;
+        public static final int intUsageText=0x7f0800f3;
         public static final int iv_icon=0x7f080055;
         public static final int jumpPage=0x7f080050;
         public static final int l_list=0x7f08006a;
@@ -1405,6 +1411,7 @@ containing a value of this type.
         public static final int radioAutoMgnStorage=0x7f080106;
         public static final int radioMgnType=0x7f080105;
         public static final int radioUserMgnStorage=0x7f080107;
+        public static final int rangeDesc=0x7f0800e9;
         public static final int recordListView=0x7f080082;
         public static final int regionBtn=0x7f08007b;
         public static final int regionRowTitle=0x7f080083;
@@ -1459,28 +1466,28 @@ containing a value of this type.
         public static final int showHome=0x7f080020;
         public static final int showTitle=0x7f080022;
         public static final int skip=0x7f080081;
-        public static final int smRootView=0x7f0800ee;
+        public static final int smRootView=0x7f0800ed;
         public static final int speechDesc=0x7f0800e3;
         public static final int speechMenuRootView=0x7f0800e1;
         public static final int startLine=0x7f0800d3;
         public static final int startPage=0x7f0800d1;
         public static final int startTime=0x7f0800d8;
         public static final int startTimeTitle=0x7f0800d7;
-        public static final int subject=0x7f0800ea;
-        public static final int subtitleSign=0x7f0800ec;
+        public static final int subject=0x7f0800e8;
+        public static final int subtitleSign=0x7f0800ea;
         public static final int subtitleSizeBar=0x7f0800e0;
         public static final int subtitleTextErr=0x7f08009d;
         public static final int subtitleTimeErr=0x7f08009c;
         public static final int subtitleView=0x7f080071;
         public static final int t_name=0x7f08006c;
         public static final int tabMode=0x7f08001e;
-        public static final int tableRow1=0x7f0800f1;
-        public static final int tableRow2=0x7f0800ed;
+        public static final int tableRow1=0x7f0800f0;
+        public static final int tableRow2=0x7f0800f5;
         public static final int tableRow3=0x7f0800f8;
         public static final int tableRow4=0x7f0800fd;
         public static final int text=0x7f080118;
         public static final int textSize=0x7f080053;
-        public static final int textView=0x7f0800f0;
+        public static final int textView=0x7f0800ef;
         public static final int textView1=0x7f0800db;
         public static final int textView2=0x7f08010c;
         public static final int textView3=0x7f0800e6;
@@ -1495,7 +1502,7 @@ containing a value of this type.
         public static final int time=0x7f08007f;
         public static final int timeRegion=0x7f080084;
         public static final int time_current=0x7f08007d;
-        public static final int title=0x7f0800e9;
+        public static final int title=0x7f0800ec;
         public static final int toastLayout=0x7f080116;
         public static final int tracks=0x7f08008d;
         public static final int tv_title=0x7f080056;
@@ -1517,6 +1524,11 @@ containing a value of this type.
         /**  FileSysManager 
          */
         public static final int reservSpacePercent=0x7f0c000e;
+        /**   <color name="theoryTextDefColor">#FFFFFF</color>
+    <color name="theoryNumTextColor">#0000CC</color>
+    <color name="theoryDotTextColor">#835930</color>
+    <color name="theoryBoldColor">#006600</color> 
+         */
         public static final int subtitleMonInterval=0x7f0c0007;
         public static final int subtitleReservSizeK=0x7f0c000f;
         public static final int subtitleScrollTouchBtnHeightPercentDp=0x7f0c000c;
@@ -3329,7 +3341,7 @@ containing a value of this type.
          */
         public static final int[] SherlockSpinner = {
             0x010100af, 0x01010175, 0x01010176, 0x0101017b,
-            0x01010262, 0x010102ac, 0x010102ad, 0x0101043a
+            0x01010262, 0x010102ac, 0x010102ad, 0x0101043d
         };
         /**
           <p>

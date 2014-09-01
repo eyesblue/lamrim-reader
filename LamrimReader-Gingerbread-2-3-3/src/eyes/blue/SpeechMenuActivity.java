@@ -12,6 +12,7 @@ import net.londatiga.android.QuickAction;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -25,6 +26,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
@@ -48,7 +50,7 @@ import android.widget.Toast;
 public class SpeechMenuActivity extends Activity {
 	ImageButton btnDownloadAll, btnMaintain,  btnManageStorage;
 	boolean speechFlags[], subtitleFlags[]=null;
-	String[] descs, subjects;
+	String[] descs, subjects, rangeDescs;
 	ArrayList<HashMap<String,Boolean>> fakeList = new ArrayList<HashMap<String,Boolean>>();
 	SimpleAdapter adapter=null;
 	ListView speechList=null;
@@ -143,11 +145,13 @@ public class SpeechMenuActivity extends Activity {
 	String infos[]=getResources().getStringArray(R.array.desc);
 	descs=new String[infos.length];
 	subjects=new String[infos.length];
+	rangeDescs=new String[infos.length];
 	for(int i=0;i<infos.length;i++){
 //		Log.d(getClass().getName(),"Desc: "+infos[i]);
 		String[] sep=infos[i].split("-");
 		descs[i]=sep[0];
 		if(sep.length>1)subjects[i]=sep[1];
+		if(sep.length>2)rangeDescs[i]=sep[2];
 	}
 
 	speechFlags=new boolean[SpeechData.name.length];
@@ -529,6 +533,7 @@ public class SpeechMenuActivity extends Activity {
 			super(context, data, resource, from, to);
 		}
 
+		@SuppressLint("NewApi")
 		@Override
 		public View getView(final int position, View convertView, ViewGroup parent) {
 			View row = convertView;
@@ -541,9 +546,10 @@ public class SpeechMenuActivity extends Activity {
 //			Log.d(getClass().getName(), "Set "+SpeechData.getNameId(position)+": is speech exist: "+speechFlags[position]+", is subtitle exist: "+subtitleFlags[position]);
 			TextView title = (TextView) row.findViewById(R.id.title);
 			TextView subject = (TextView) row.findViewById(R.id.subject);
+			TextView speechDesc = (TextView) row.findViewById(R.id.speechDesc);
+			TextView rangeDesc = (TextView) row.findViewById(R.id.rangeDesc);
 			ImageView mediaSign = (ImageView) row.findViewById(R.id.mediaSign);
 			ImageView subtitleSign = (ImageView) row.findViewById(R.id.subtitleSign);
-			TextView speechDesc = (TextView) row.findViewById(R.id.speechDesc);
 			
 			if(speechFlags[position])
 				mediaSign.setImageResource(R.drawable.speech);
@@ -556,21 +562,30 @@ public class SpeechMenuActivity extends Activity {
 			//subtitleSign.setBackgroundColor(Color.BLACK);
 			else subtitleSign.setImageResource(R.drawable.subtitle_d); 
 			if(speechFlags[position]&&subtitleFlags[position]){
-				title.setTextColor(Color.BLACK);
-				subject.setTextColor(Color.BLACK);
+//				title.setTextColor(Color.BLACK);
+//				subject.setTextColor(Color.BLACK);
 //				speechDesc.setTextColor(Color.BLACK);
-				row.setBackgroundColor(0xFFFFFFDF);
+				//row.setBackgroundColor(0xFFFFFFDF);
+				if (Build.VERSION.SDK_INT >= 16)
+					row.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+				else
+					row.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
 			}
 			else {
-				title.setTextColor(Color.WHITE);
-				subject.setTextColor(Color.WHITE);
+//				title.setTextColor(Color.WHITE);
+//				subject.setTextColor(Color.WHITE);
 //				speechDesc.setTextColor(Color.GRAY);
-				row.setBackgroundColor(Color.BLACK);
+				//row.setBackgroundColor(Color.BLACK);
+				if (Build.VERSION.SDK_INT >= 16)
+					row.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_d));
+				else
+					row.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_d));
 			}
 			
 			title.setText(SpeechData.getNameId(position));
 			subject.setText(subjects[position]);
 			speechDesc.setText(descs[position]);
+			rangeDesc.setText(rangeDescs[position]);
 			return row;
 		}
 	}

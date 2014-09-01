@@ -61,19 +61,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.ImageButton;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 public class CalendarActivity extends SherlockActivity {
 	Hashtable<String, GlRecord> glSchedule = new Hashtable<String, GlRecord>();
@@ -409,9 +397,7 @@ public class CalendarActivity extends SherlockActivity {
 				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.localGlobalLamrimScheduleFileRangeFmtErr));
 				GaLogger.sendException(
 						"Error: the date start and date end colume of global lamrim schedule file is not 2 colume",
-						new Exception(
-								"Global Lamrim schedule file format error."),
-						true);
+						new Exception("Global Lamrim schedule file format error."),	true);
 				return false;
 			}
 			// DateFormat df = DateFormat.getDateInstance();

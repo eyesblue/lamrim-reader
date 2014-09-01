@@ -171,7 +171,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
 	public void pause() {
-		if(subtitleTimer!=null)subtitleTimer.cancel(true);
+		if(subtitleTimer!=null)subtitleTimer.cancel(false);
 		subtitleTimer=null;
 		
 		synchronized(mediaPlayerKey){
@@ -428,7 +428,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
 	 * */
 	public void release(){
-		if(subtitleTimer!=null)subtitleTimer.cancel(true);
+		if(subtitleTimer!=null)subtitleTimer.cancel(false);
 		subtitleTimer=null;
 			synchronized(mediaPlayerKey){
 				if(mediaPlayer==null)return;
@@ -495,7 +495,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				return;
 			}
 		}
-
 	}
 	
 

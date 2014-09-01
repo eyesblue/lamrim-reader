@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="markRed">#F9B3B6</color>
-    <color name="markGreen">#B3F9BD</color>
-    <color name="markBlue">#B3B3F9</color>
+
+    <color name="theoryTextDefColor">#EDEDED</color>
+    <color name="theoryBgColor">#000000</color>
+    <color name="theoryNumTextColor">#7373FF</color>
+    <color name="theoryDotTextColor">#F5A658</color>
+    <color name="theoryBoldColor">#00D400</color>
+    <color name="theoryHighColorLine">#3B003A</color>
+    <color name="theoryHighColorWord">#BF00BC</color>
+    
+    <color name="defSubtitleFGcolor">#FFFFFF</color>
+    <!-- defSubtitleBGcolor is used for render mode. -->
+    <color name="defSubtitleBGcolor">#0F395E</color>
+    <color name="subtitleRedingModeHilightColor">#FFF82A</color>
+    <!-- <color name="subtitleScrollPressColor">#E17D37</color> -->
+    
+    <color name="gray">#ffff0000</color>
 </resources>
