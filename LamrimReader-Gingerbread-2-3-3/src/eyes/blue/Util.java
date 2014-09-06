@@ -140,8 +140,10 @@ public class Util {
 				//mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
 				rootView.post(new Runnable() {
 					   public void run() {
-						   if (! activity.isFinishing())
-							   mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+						   if (activity != null && !activity.isFinishing())
+							   try{
+								   mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+							   }catch(Exception e){}
 						   }
 						});
 				

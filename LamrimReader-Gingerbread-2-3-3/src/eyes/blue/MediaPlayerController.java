@@ -85,6 +85,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	Object mediaPlayerKey=new Object();
 //	FileInputStream fis = null;
 	int playingIndex=-2, playPosition=0;
+	Integer loadingMedia=-1;
 //	long monInterval=100;
 	Toast toast = null;
 	int regionStartMs = -1;
@@ -467,6 +468,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			return;
 		}
 
+		// indicate that the media loading now.
+		loadingMedia=index;
+		
 		if( subtitleFile==null || !subtitleFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
 			Util.showInfoPopupWindow(activity, anchorView, "字幕檔案不存在，取消字幕功能。");
@@ -498,11 +502,20 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	}
 	
 
+	public int getLoadingMediaIndex(){
+		synchronized(loadingMedia){
+			return loadingMedia;
+		}
+	}
+	
 	/*
 	 * Return the stage of MediaPlayer to avoid error.
 	 * */
-	public int getMediaPlayerState(){
-		return mpState;
+	public synchronized int getMediaPlayerState(){
+		synchronized(mediaPlayerKey){
+			return mpState;
+		}
+		
 	}
 	
 	/*
@@ -869,6 +882,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			
 			Log.d(logTag, "Prepare data");
 			changedListener.onMediaPrepared();
+			
+			loadingMedia=-1;
 			Log.d(getClass().getName(),"**** Leave onPreparedListener of MediaPlayer ****");
 		}
 	};

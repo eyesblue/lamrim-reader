@@ -600,7 +600,7 @@ public class MyListView extends ListView {
 						}
 						break;
 					}
-					System.out.print("Compare: "+sample.charAt(i-j-shift)+" and "+str.charAt(str.length()-1-j));
+					// System.out.print("Compare: "+sample.charAt(i-j-shift)+" and "+str.charAt(str.length()-1-j));
 					if(sample.charAt(i-j-shift) != str.charAt(str.length()-1-j)){
 						System.out.println();
 						break;

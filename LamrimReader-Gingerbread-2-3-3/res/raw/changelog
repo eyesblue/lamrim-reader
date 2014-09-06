@@ -23,6 +23,14 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$155
+  % Version 1.3.16
+  _ 2014-09-05
+  	* 廣論原文中少見的的"﹙"與"﹚"跨號取代為常見的"（"與"）"跨號。
+  	* 從搜尋程式中移除除錯碼以加速搜尋速度。
+  	* 修正短訊息通知造成強制關閉問題。
+  	* 修正少數機型於休眠模式回復時強制關閉錯誤問題。
+  	
 $154
   % Version 1.3.15
   _ 2014-09-01

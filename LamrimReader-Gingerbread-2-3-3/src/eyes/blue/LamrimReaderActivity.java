@@ -137,7 +137,7 @@ import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
  * LamrimReaderActivity.java 111 2013-12-29 04:01:44Z kingofeyesblue@gmail.com
  * $$
  */
-public class LamrimReaderActivity extends SherlockFragmentActivity {
+public class LamrimReaderActivity extends SherlockFragmentActivity{
 	/** Called when the activity is first created. */
 	private static final long serialVersionUID = 4L;
 	final static String logTag = "LamrimReader";
@@ -210,6 +210,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
 	WVersionManager versionManager=null;
 	
+	public Boolean isActivityLoaded = new Boolean(false);
 //	boolean repeatPlay=false;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -1002,6 +1003,21 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 		 * fm.beginTransaction().add(mTaskFragment, "PlayerTask").commit(); }
 		 * Log.d(funcLeave, "******* onCreate *******");
 		 */
+		
+		/*
+		Log.d(getClass().getName(),"Let's check the undisplayable text:");
+		for(int i=0;i<TheoryData.content.length;i++){
+			Log.d(getClass().getName(),"Check page "+i+":");
+			float sampleW=subtitleView.getPaint().measureText("中");
+			String content=MyListView.getContentStr(i, 0, MyListView.TO_END);
+			for(int j=0;j<content.length();j++){
+				if(content.charAt(j)=='\n')continue;
+				float f=subtitleView.getPaint().measureText(""+content.charAt(j));
+				if(f!=sampleW)
+					Log.d(getClass().getName(),"Get difference word at Page: "+(i+1)+", index: "+j+", word: "+content.charAt(j-1)+"["+content.charAt(j)+"]"+content.charAt(j+1)+", Code: "+((int)content.charAt(j)));
+			}
+		}
+	    */
 	}
 	
 	private void swapRegionSet(){
@@ -1292,7 +1308,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 
 		Intent cmdIntent=this.getIntent();
 		Log.d(getClass().getName(), "Check command intent : "+((cmdIntent==null)?"is null.":"not null."));
-		if(cmdIntent != null && cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
+		if(cmdIntent != null && cmdIntent.getAction()!=null && cmdIntent.getAction().equals(Intent.ACTION_VIEW)){
 			Log.d(getClass().getName(), "Action: "+getIntent().getAction());
 			GLamrimSectIndex=0;
 			getIntent().setAction(Intent.ACTION_MAIN);
@@ -1318,6 +1334,24 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			startPlay(mediaIndex);
 
 		Log.d(getClass().getName(), "**** Leave onResume() ****");
+	}
+	
+	// I use the function check is the activity has load and ready for operation.
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+	 // TODO Auto-generated method stub
+	 super.onWindowFocusChanged(hasFocus);
+	 	if(hasFocus){
+			synchronized(isActivityLoaded){
+				isActivityLoaded=true;
+			}
+	 	}
+	}
+	
+	public synchronized boolean isActivityLoaded(){
+		synchronized(isActivityLoaded){
+			return isActivityLoaded;
+		}
 	}
 
 	@Override
@@ -1612,6 +1646,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity {
 			@Override
 			protected Void doInBackground(Void... params) {
 				try {
+					// Check duplicate load media.
+					int loadingMedia=mpController.getLoadingMediaIndex();
+					if(loadingMedia==mediaIndex){
+						Log.d(logTag,"The media index "+mediaIndex+" has loading, skip this procedure.");
+						return null;
+					}
+					
 					// Reset subtitle to SUBTITLE_MODE
 					bookView.clearHighlightLine();
 					setSubtitleViewMode(SUBTITLE_MODE);
