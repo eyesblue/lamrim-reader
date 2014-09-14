@@ -18,6 +18,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
@@ -68,7 +69,8 @@ public class CalendarActivity extends SherlockActivity {
 	ProgressDialog downloadPDialog = null;
 	SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
 	Date glRangeStart = null, glRangeEnd = null;
-
+	FileSysManager fsm=null;
+	
 	// For Calendar view.
 	private RobotoCalendarView robotoCalendarView;
 	private Calendar currentCalendar;
@@ -90,7 +92,7 @@ public class CalendarActivity extends SherlockActivity {
 		downloadPDialog.setMessage(String.format(
 				getString(R.string.dlgDescDownloading), "",
 				getString(R.string.title_activity_calendar)));
-		new FileSysManager(CalendarActivity.this);
+		fsm=new FileSysManager(CalendarActivity.this);
 	}
 
 	@Override
@@ -240,7 +242,13 @@ public class CalendarActivity extends SherlockActivity {
 											int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
 											dialog.dismiss();
 											dialogShowing = false;
-											speechMenu.putExtra("index", speechStart[0] + "," + speechEnd[0]);
+											int[] intentCmd = null;
+											if(speechStart[0] == speechEnd[0])
+												intentCmd = new int[]{speechStart[0]};
+											else
+												intentCmd = fsm.getUnreadyList(speechStart[0], speechEnd[0]);
+											
+											speechMenu.putExtra("index", intentCmd);
 											startActivityForResult(speechMenu, 0);
 										}
 									}
@@ -346,10 +354,10 @@ public class CalendarActivity extends SherlockActivity {
 		int[] speechStart = GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex, TimeMs}
 		int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);//  {speechIndex, TimeMs}
 
-		File mediaStart = FileSysManager.getLocalMediaFile(speechStart[0]);
-		File subtitleStart = FileSysManager.getLocalSubtitleFile(speechStart[0]);
-		File mediaEnd = FileSysManager.getLocalMediaFile(speechEnd[0]);
-		File subtitleEnd = FileSysManager.getLocalSubtitleFile(speechEnd[0]);
+		File mediaStart = fsm.getLocalMediaFile(speechStart[0]);
+		File subtitleStart = fsm.getLocalSubtitleFile(speechStart[0]);
+		File mediaEnd = fsm.getLocalMediaFile(speechEnd[0]);
+		File subtitleEnd = fsm.getLocalSubtitleFile(speechEnd[0]);
 		
 		if(mediaStart == null || subtitleStart == null || mediaEnd == null || subtitleEnd == null)
 			return false;

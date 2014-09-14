@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class StorageManageActivity extends Activity {
+	FileSysManager fsm=null;
 	TextView extSpeechPathInfo, extSubtitlePathInfo, intSpeechPathInfo, intSubtitlePathInfo, extFreePercent, intFreePercent, extAppUsagePercent, intAppUsagePercent, intFree, extFree, extAppUseage, intAppUseage, labelChoicePath;
 	Button btnMoveAllToExt, btnMoveAllToInt, btnDelExtFiles, btnDelIntFiles, btnOk;
 	ImageButton btnChoicePath;
@@ -54,7 +55,7 @@ public class StorageManageActivity extends Activity {
 		PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
-		new FileSysManager(this);
+		fsm=new FileSysManager(this);
 		toast = Toast.makeText(this, "", Toast.LENGTH_LONG);
 		//if(!wakeLock.isHeld()){wakeLock.acquire();}
 		
@@ -94,7 +95,7 @@ public class StorageManageActivity extends Activity {
 		}
 		
 		String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
-		if(thirdDir==null || thirdDir.length()==0)thirdDir=FileSysManager.getSysDefMediaDir();
+		if(thirdDir==null || thirdDir.length()==0)thirdDir=fsm.getSysDefMediaDir();
 		filePathInput.setText(thirdDir,null);
 		
 		btnMoveAllToExt.setOnClickListener(new View.OnClickListener (){
@@ -106,7 +107,7 @@ public class StorageManageActivity extends Activity {
 				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						FileSysManager.moveAllFilesTo(FileSysManager.INTERNAL,FileSysManager.EXTERNAL,new CopyListener(){
+						fsm.moveAllFilesTo(FileSysManager.INTERNAL,FileSysManager.EXTERNAL,new CopyListener(){
 							@Override
 							public void copyFinish(){
 								refreshUsage();
@@ -124,7 +125,7 @@ public class StorageManageActivity extends Activity {
 				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						FileSysManager.moveAllFilesTo(FileSysManager.EXTERNAL,FileSysManager.INTERNAL,new CopyListener(){
+						fsm.moveAllFilesTo(FileSysManager.EXTERNAL,FileSysManager.INTERNAL,new CopyListener(){
 							@Override
 							public void copyFinish(){
 								refreshUsage();
@@ -159,8 +160,8 @@ public class StorageManageActivity extends Activity {
 						Thread t=new Thread(new Runnable(){
 							@Override
 							public void run() {
-								FileSysManager.deleteAllSpeechFiles(FileSysManager.EXTERNAL);
-								FileSysManager.deleteAllSubtitleFiles(FileSysManager.EXTERNAL);
+								fsm.deleteAllSpeechFiles(FileSysManager.EXTERNAL);
+								fsm.deleteAllSubtitleFiles(FileSysManager.EXTERNAL);
 								pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
@@ -190,8 +191,8 @@ public class StorageManageActivity extends Activity {
 						Thread t=new Thread(new Runnable(){
 							@Override
 							public void run() {
-								FileSysManager.deleteAllSpeechFiles(FileSysManager.INTERNAL);
-								FileSysManager.deleteAllSubtitleFiles(FileSysManager.INTERNAL);
+								fsm.deleteAllSpeechFiles(FileSysManager.INTERNAL);
+								fsm.deleteAllSubtitleFiles(FileSysManager.INTERNAL);
 								pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
@@ -234,7 +235,7 @@ public class StorageManageActivity extends Activity {
 				}
 				
 				if(filePathInput.getText().toString().length()==0){
-					filePathInput.setText(FileSysManager.getSysDefMediaDir());
+					filePathInput.setText(fsm.getSysDefMediaDir());
 					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 					builder.setTitle("目錄錯誤");
 					builder.setMessage("路徑不可為空！請重新選擇。");
@@ -325,10 +326,10 @@ public class StorageManageActivity extends Activity {
 				}
 			}});
 		
-		String extSpeechDir=FileSysManager.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
-		String extSubtitleDir=FileSysManager.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
-		String intSpeechDir=FileSysManager.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
-		String intSubtitleDir=FileSysManager.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
+		String extSpeechDir=fsm.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
+		String extSubtitleDir=fsm.getLocateDir(FileSysManager.EXTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
+		String intSpeechDir=fsm.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.MEDIA_TYPE));
+		String intSubtitleDir=fsm.getLocateDir(FileSysManager.INTERNAL, getResources().getInteger(R.integer.SUBTITLE_TYPE));
 		
 		extSpeechPathInfo.setText(((extSpeechDir != null)?extSpeechDir:getString(R.string.noExtSpace)));
 		extSubtitlePathInfo.setText(((extSubtitleDir != null)?extSubtitleDir:getString(R.string.noExtSpace)));
@@ -354,12 +355,12 @@ public class StorageManageActivity extends Activity {
 		new Thread(new Runnable(){
 			@Override
 			public void run() {
-				intFreeB=FileSysManager.getFreeMemory(FileSysManager.INTERNAL);
-				extFreeB=FileSysManager.getFreeMemory(FileSysManager.EXTERNAL);
-				intTotal=FileSysManager.getTotalMemory(FileSysManager.INTERNAL);
-				extTotal=FileSysManager.getTotalMemory(FileSysManager.EXTERNAL);
-				intUsed=FileSysManager.getAppUsed(FileSysManager.INTERNAL);
-				extUsed=FileSysManager.getAppUsed(FileSysManager.EXTERNAL);
+				intFreeB=fsm.getFreeMemory(FileSysManager.INTERNAL);
+				extFreeB=fsm.getFreeMemory(FileSysManager.EXTERNAL);
+				intTotal=fsm.getTotalMemory(FileSysManager.INTERNAL);
+				extTotal=fsm.getTotalMemory(FileSysManager.EXTERNAL);
+				intUsed=fsm.getAppUsed(FileSysManager.INTERNAL);
+				extUsed=fsm.getAppUsed(FileSysManager.EXTERNAL);
 				userSpecDir=runtime.getString(getString(R.string.userSpecifySpeechDir), null);
 				
 				runOnUiThread(new Runnable(){
@@ -419,7 +420,7 @@ public class StorageManageActivity extends Activity {
 		if(isUserSpecifyDir)
 			GaLogger.sendEvent("storage_status", "user_specify_dir", runtime.getString(getString(R.string.userSpecifySpeechDir), null), null);
 			
-		else GaLogger.sendEvent("storage_status", "user_specify_dir", FileSysManager.getSysDefMediaDir(), null);
+		else GaLogger.sendEvent("storage_status", "user_specify_dir", fsm.getSysDefMediaDir(), null);
 	}
 	
 	private String numToKMG(long num){
@@ -492,7 +493,7 @@ public class StorageManageActivity extends Activity {
 					@Override
 					public void run() {
 						File destFile=new File(path);
-						if(!FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd) || !FileSysManager.moveAllMediaFileToUserSpecifyDir(destFile, pd))
+						if(!fsm.moveAllMediaFileToUserSpecifyDir(destFile, pd) || !fsm.moveAllMediaFileToUserSpecifyDir(destFile, pd))
 							Util.showErrorPopupWindow(StorageManageActivity.this, findViewById(R.id.smRootView), "檔案搬移失敗，請確認目的地空間是否足夠。");
 						pd.dismiss();
 						refreshUsage();

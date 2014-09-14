@@ -85,10 +85,11 @@ public class FileDownloader {
         AlertDialog netAccessWarnDialog = null;
         private PowerManager.WakeLock wakeLock = null;
         JSONObject[] downloadTasks = null;
+        FileSysManager fsm=null;
         /*
          * Give the activity and download listener.
          * */
-        public FileDownloader(Activity activity){
+        public FileDownloader(Activity activity,FileSysManager fsm){
                 this.activity=activity;
                 PowerManager powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
                 wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
@@ -104,10 +105,11 @@ public class FileDownloader {
                 
                 dlPrgsDialog = getDlprgsDialog();
                 mkDlTaskDialog= new ProgressDialog(activity);
+                this.fsm=fsm;
         }
        
-        public FileDownloader(Activity activity,DownloadListener listener){
-                this(activity);
+        public FileDownloader(Activity activity,FileSysManager fsm,DownloadListener listener){
+                this(activity, fsm);
                 this.listener=listener;
         }
 
@@ -145,9 +147,9 @@ public class FileDownloader {
                         protected Void doInBackground(Void... params) {
                                 for(int i:index){
                                         Log.d(getClass().getName(),"Check sources of index "+i);
-                                        if(!FileSysManager.isFileValid(i, activity.getResources().getInteger(R.integer.SUBTITLE_TYPE)))
+                                        if(!fsm.isFileValid(i, activity.getResources().getInteger(R.integer.SUBTITLE_TYPE)))
                                         	al.add(getSubtitleDesc(i));
-                                        if(!FileSysManager.isFileValid(i, activity.getResources().getInteger(R.integer.MEDIA_TYPE)))
+                                        if(!fsm.isFileValid(i, activity.getResources().getInteger(R.integer.MEDIA_TYPE)))
                                         	al.add(getMediaDesc(i));
                                         synchronized(mkDlTaskKey){
                                                 if(mkDlTaskDialog!=null && mkDlTaskDialog.isShowing())mkDlTaskDialog.setProgress(i+1);
@@ -273,7 +275,7 @@ public class FileDownloader {
                 try {
                         jObj.put("mediaIndex", index);
                         jObj.put("type", activity.getResources().getInteger(R.integer.SUBTITLE_TYPE));
-                        jObj.put("outputPath",FileSysManager.getLocalSubtitleFileSavePath(index));
+                        jObj.put("outputPath",fsm.getLocalSubtitleFileSavePath(index));
                         jObj.put("url", rs.getSubtitleFileAddress(index));
                 } catch (JSONException e) {e.printStackTrace();}
                 return jObj;
@@ -286,7 +288,7 @@ public class FileDownloader {
                 try {
                         jObj.put("mediaIndex", index);
                         jObj.put("type", activity.getResources().getInteger(R.integer.MEDIA_TYPE));
-                        jObj.put("outputPath",FileSysManager.getLocalMediaFileSavePath(index));
+                        jObj.put("outputPath",fsm.getLocalMediaFileSavePath(index));
                         jObj.put("url", rs.getMediaFileAddress(index));
                 } catch (JSONException e) {e.printStackTrace();}
                 return jObj;

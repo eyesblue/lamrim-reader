@@ -119,18 +119,20 @@ public class Util {
 		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon);
 	}
 	
-	public static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon){
-		activity.runOnUiThread(new Runnable() {
+	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon){
+		rootView.post(new Runnable(){
 			public void run() {
-				if(mPopToast==null)initToastView(activity);
-				if(mPopToast.isShowing()){
+				
+				if(mPopToast!=null && mPopToast.isShowing()){
 					try{
 						mPopToast.dismiss();
 					}catch(Exception e){
+						GaLogger.sendException("DISMISS_LAST_TOAST", e, true);
 						e.printStackTrace();
 					}
 				}
 				
+				initToastView(activity);
 				ImageView image=(ImageView) toastView.findViewById(R.id.image);
 				image.setImageResource(icon);
 				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
@@ -138,28 +140,27 @@ public class Util {
 				toastTextView.setText(s);
 				
 				//mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
-				rootView.post(new Runnable() {
-					   public void run() {
-						   if (activity != null && !activity.isFinishing())
-							   try{
-								   mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
-							   }catch(Exception e){}
-						   }
-						});
+				try{
+					mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+				}catch(Exception e){
+					GaLogger.sendException("SHOW_TOAST", e, true);
+					e.printStackTrace();
+					return;
+				}
 				
 				subtitleLastShowTime=System.currentTimeMillis();
-				new Handler().postDelayed(new Runnable(){
+				rootView.postDelayed(new Runnable(){
 					@Override
 					public void run() {
 						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
 							try{
 								mPopToast.dismiss();
 							}catch(Exception e){
+								GaLogger.sendException("DISMISS_TOAST", e, true);
 								e.printStackTrace();
 							}
-					}},2000);
-			}
-		});
+				}},2000);
+		}});
 	}
 	private static void initToastView(Activity activity){
 		LayoutInflater inflater = activity.getLayoutInflater();
@@ -475,4 +476,6 @@ public class Util {
 		else
 			return Character.toUpperCase(first) + s.substring(1);
 	}
+	
+	
 }

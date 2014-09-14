@@ -81,7 +81,11 @@ public class FileSysManager {
 		grs=new GoogleRemoteSource(context);
 	}
 	
-	public static String getSysDefMediaDir(){
+	public FileSysManager(DownloadAllService downloadAllService) {
+		// TODO Auto-generated constructor stub
+	}
+
+	public String getSysDefMediaDir(){
         boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         if(extWritable && context.getExternalFilesDir(null)!=null)
         	return srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName);
@@ -89,7 +93,7 @@ public class FileSysManager {
 }
 
 	
-	public static String getLocateDir(int locate, int type){
+	public String getLocateDir(int locate, int type){
 		int mediaType=context.getResources().getInteger(R.integer.MEDIA_TYPE);
 		int subtitleType=context.getResources().getInteger(R.integer.SUBTITLE_TYPE);
 		String audioDirName=context.getString(R.string.audioDirName);
@@ -119,7 +123,7 @@ public class FileSysManager {
          * the file structure is follow
          * [PackageDir]\[AppName](LamrimReader)\{Audio,Book,Subtitle}
          * */
-        public static void checkFileStructure(){
+        public void checkFileStructure(){
         	boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         	File appRoot=null;
         	
@@ -184,7 +188,7 @@ public class FileSysManager {
          * If the file exist, return the exist file no matter internal or external,
          * if file not exist, return the allocate place of the file, allocate in external first, if not, return internal file.
          * */
-        public static File getLocalMediaFile(int i){
+        public File getLocalMediaFile(int i){
         	// Check the directory by user specify.
         	boolean useThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
         	String userSpecDir=runtime.getString(context.getString(R.string.userSpecifySpeechDir),null);
@@ -228,7 +232,7 @@ public class FileSysManager {
     		return null;
         }
       
-        public static File getLocalMediaFileSavePath(int i){
+        public File getLocalMediaFileSavePath(int i){
         	boolean useThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
         	String userSpecDir=runtime.getString(context.getString(R.string.userSpecifySpeechDir),null);
         	
@@ -246,7 +250,7 @@ public class FileSysManager {
          * If the file exist, return the exist file no matter internal or external,
          * if file not exist, return the allocate place of the file, allocate in external first, if not, return internal file.
          * */
-        public static File getLocalSubtitleFile(int i){
+        public File getLocalSubtitleFile(int i){
         	File extF=null, intF=null;
         	if(isExtMemWritable()){
         		extF= new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
@@ -264,21 +268,21 @@ public class FileSysManager {
         	return null;
         }
         
-        public static File getLocalSubtitleFileSavePath(int i){
+        public File getLocalSubtitleFileSavePath(int i){
         	if(isExtMemWritable())
         		return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         	
         	return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         }
         
-        public static File[] getMediaFileList(int locate){
+        public File[] getMediaFileList(int locate){
         	String dir=context.getString(R.string.audioDirName);
 
         	File srcDir=new File(srcRoot[locate]+File.separator+dir);
         	return srcDir.listFiles();
         }
         
-        public static void deleteAllSpeechFiles(int locate){
+        public void deleteAllSpeechFiles(int locate){
         	Log.d("FileSysManager","Delete all speech file in "+locateDesc[locate]);
         	String dir=context.getString(R.string.audioDirName);
 
@@ -288,7 +292,7 @@ public class FileSysManager {
 
         }
         
-        public static void deleteAllSubtitleFiles(int locate){
+        public void deleteAllSubtitleFiles(int locate){
         	Log.d("FileSysManager","Delete all subtitle file in "+locateDesc[locate]);
         	String dir=context.getString(R.string.subtitleDirName);
        		File srcDir=new File(srcRoot[locate]+File.separator+dir);
@@ -300,7 +304,7 @@ public class FileSysManager {
          * Not test yet.
          * Move all files of INTERNAL or EXTERNAL to EXTERNAL or INTERNAL
          * */
-        public static void moveAllFilesTo(int from,int to,final CopyListener listener){
+        public void moveAllFilesTo(int from,int to,final CopyListener listener){
         	final ProgressDialog pd= new ProgressDialog(context);
         	pd.setCancelable(false);
         	pd.setTitle("檔案搬移");
@@ -345,7 +349,7 @@ public class FileSysManager {
     		pd.show();
         }
         
-        public static boolean moveAllMediaFileToUserSpecifyDir(File destDir, ProgressDialog pd){
+        public boolean moveAllMediaFileToUserSpecifyDir(File destDir, ProgressDialog pd){
         	File intDir=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName));
         	File extDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
         	if(!moveContentsOfDir(intDir,destDir,pd))return false;
@@ -353,7 +357,7 @@ public class FileSysManager {
         	return true;
         }
         
-        private static boolean moveContentsOfDir(File srcDir, File destDir, final ProgressDialog pd){
+        private boolean moveContentsOfDir(File srcDir, File destDir, final ProgressDialog pd){
         	final File[] files=srcDir.listFiles();
         	Log.d(logTag,"There are "+files.length+" files wait for move.");
     		context.runOnUiThread(new Runnable(){
@@ -383,7 +387,7 @@ public class FileSysManager {
     		return true;
         }
         
-        private static boolean moveFile(File from, File to){
+        private boolean moveFile(File from, File to){
         	File distTemp=new File(to.getAbsolutePath()+context.getString(R.string.downloadTmpPostfix));
 			FileInputStream fis = null;
 			FileOutputStream fos = null;
@@ -418,7 +422,7 @@ public class FileSysManager {
 			return true;
         }
         
-        public static void maintainStorages(){
+        public void maintainStorages(){
         	File userSpecDir=null;
         	boolean isUseThirdDir=runtime.getBoolean(context.getString(R.string.isUseThirdDir), false);
         	if(isUseThirdDir){
@@ -477,12 +481,12 @@ public class FileSysManager {
         }
         
         // NOT test yet
-        public static File getLocalTheoryFile(int i){
+        public File getLocalTheoryFile(int i){
         	if(isExtMemWritable())return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.theoryDirName)+File.separator+SpeechData.getTheoryName(i)+"."+context.getString(R.string.defTheoryType));
         	else return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.theoryDirName)+File.separator+SpeechData.getTheoryName(i)+"."+context.getString(R.string.defTheoryType));
         }
 
-        public static boolean isFileValid(int i,int resType){
+        public boolean isFileValid(int i,int resType){
 //        	Log.d(logTag,Thread.currentThread().getName()+":Check the existed file");
         	File file=null;
         	
@@ -539,37 +543,37 @@ public class FileSysManager {
         	return false;
         }
         
-        public static boolean isFromUserSpecifyDir(File speechFile){
+        public boolean isFromUserSpecifyDir(File speechFile){
         	boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]))return false;
         	if(extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return false;
         	return true;
         }
         
-        public static boolean isExtMemWritable(){
+        public boolean isExtMemWritable(){
         	return (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         }
         
-        public static long getTotalMemory(int locate)
+        public long getTotalMemory(int locate)
         {
         	if(statFs[locate]==null)return 0;
         	return ((long)statFs[locate].getBlockCount() * (long)statFs[locate].getBlockSize());
         }
 
-        public static long getFreeMemory(int locate)
+        public long getFreeMemory(int locate)
         {
         	if(statFs[locate]==null)return 0;
         	return ((long)statFs[locate].getAvailableBlocks() * (long)statFs[locate].getBlockSize());
         }
         
-        public static int getGlobalUsage(int locate){
+        public int getGlobalUsage(int locate){
         	if(statFs[locate]==null)return 0;
         	double result=statFs[locate].getAvailableBlocks();
         	result/=statFs[locate].getBlockCount();
         	return (int) (result*100);
         }
         
-        public static long getAppUsed(int locate){
+        public long getAppUsed(int locate){
         	if(srcRoot[locate]==null)return 0;
         	long total=0;
         	String[] dirs={context.getString(R.string.audioDirName),context.getString(R.string.subtitleDirName)};
@@ -588,6 +592,32 @@ public class FileSysManager {
             this.diskFullListener=dsfl;
         }
     
+        public boolean isFilesReady(int id){
+        	File media = getLocalMediaFile(id);
+    		File subtitle = getLocalSubtitleFile(id);
+    		if(media == null || subtitle == null || !media.exists() || !subtitle.exists())
+    			return false;
+    		return true;
+        }
+        /*
+         * Given the media ids you wish to check that is those ready, return the unready ids. 
+         * */
+        public int[] getUnreadyList(int ...ids){
+        	ArrayList<Integer> list=new ArrayList<Integer>();
+        	
+        	for(int i:ids){
+        		File media = getLocalMediaFile(i);
+        		File subtitle = getLocalSubtitleFile(i);
+        		if(media == null || subtitle == null || !media.exists() || !subtitle.exists())
+        			list.add(i);
+        	}
+        	if(list.size()==0)return null;
+        	
+        	int[] ia=new int[list.size()];
+        	for(int i=0;i<list.size();i++)
+        		ia[i]=list.get(i);
+        	return ia;
+    	}
 
         
     class DiskSpaceFullListener{

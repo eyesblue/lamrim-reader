@@ -73,6 +73,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	AudioManager audioManager=null;
 	Activity activity=null;
 	String logTag=null;
+	FileSysManager fsm=null;
 	MediaPlayer mediaPlayer=new MediaPlayer();
 	MediaControllerView mediaController=null;
 	SubtitleTimer subtitleTimer=null;
@@ -93,9 +94,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	ViewGroup anchorView=null;
 	
 //	VideoControllerView controller;
-	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, final MediaPlayerControllerListener changedListener){
+	public MediaPlayerController(LamrimReaderActivity activity, View anchorView, FileSysManager fsm, final MediaPlayerControllerListener changedListener){
 		this(activity, anchorView);
 		setChangeListener(changedListener);
+		this.fsm=fsm;
 	}
 	public void setChangeListener(MediaPlayerControllerListener changedListener) {
 		this.changedListener=changedListener;
@@ -108,7 +110,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		this.anchorView=(ViewGroup) anchorView;
 		logTag=activity.getResources().getString(R.string.app_name);
 		powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
-		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
+		//wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
+		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, logTag);
 		
 		
 		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
@@ -255,7 +258,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				if(subtitle!=null){
 					Log.d(getClass().getName(),"The subtitle exist, prepare subtitle timer.");
 					subtitleTimer = new SubtitleTimer();
-					subtitleTimer.execute(subtitle);
+					subtitleTimer.start();
 				}
 				if(playingIndex!=-1 && subtitle != null)
 					mediaPlayer.seekTo(subtitle[playingIndex].startTimeMs);
@@ -459,8 +462,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * */
 	public void setDataSource(Context context,int index) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException{
 		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
-		final File subtitleFile=FileSysManager.getLocalSubtitleFile(index);
-		File speechFile=FileSysManager.getLocalMediaFile(index);
+		final File subtitleFile=fsm.getLocalSubtitleFile(index);
+		File speechFile=fsm.getLocalMediaFile(index);
 		
 		if(speechFile==null || !speechFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech file not exist, skip!!!");
@@ -502,7 +505,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	}
 	
 
-	public int getLoadingMediaIndex(){
+	public synchronized int getLoadingMediaIndex(){
 		synchronized(loadingMedia){
 			return loadingMedia;
 		}
@@ -1007,7 +1010,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	    }
 	}
 	
-	private class SubtitleTimer extends AsyncTask<SubtitleElement, Void, Void> {
+/*	private class SubtitleTimer extends AsyncTask<SubtitleElement, Void, Void> {
 		protected Void doInBackground(SubtitleElement... se) {
 			String logTag="SubtitleTimer";
 			int playPoint=-1, playArrayIndex=-1;
@@ -1023,7 +1026,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 						/*
 						 * While user drag the seek bar indicator over end of media control view, the MediaPlayer will complete play,
 						 * if there isn't check mpState, that will cause the indicator of SeekBar jump back to random position.
-						 * */
+						 * 
 						if(mpState == MP_COMPLETE){
 							Log.d(logTag,"SubtitleTimer: the mpState is MP_COMPLETE, terminate subtitleTimer");
 							return null;
@@ -1074,7 +1077,107 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				}
 		}
 	}
-	
+*/	
+
+	private class SubtitleTimer extends Thread{
+		boolean isCanceled=false;
+		public void cancel(){
+			isCanceled=true;
+		}
+		public void cancel(boolean dontCare){
+			isCanceled=true;
+		}
+		
+		private boolean isCancelled(){
+			return isCanceled;
+		}
+		
+		@Override
+		public void run(){
+			String logTag = "SubtitleTimer";
+			int playPoint = -1, playArrayIndex = -1;
+			int monInterval = activity.getResources().getInteger(
+					R.integer.subtitleMonInterval);
+			while (true) {
+				if (isCancelled()) {
+					Log.d(logTag, "Exit nomaly.");
+					return; // playArrayIndex not last one
+				}
+				try {
+					// Log.d(getClass().getName(),"Subtitle index miss, search the index.");
+					synchronized (playingIndexKey) {
+						/*
+						 * While user drag the seek bar indicator over end of
+						 * media control view, the MediaPlayer will complete
+						 * play, if there isn't check mpState, that will cause
+						 * the indicator of SeekBar jump back to random
+						 * position.
+						 */
+						if (mpState == MP_COMPLETE) {
+							Log.d(logTag,
+									"SubtitleTimer: the mpState is MP_COMPLETE, terminate subtitleTimer");
+							return;
+						}
+						// Log.d(logTag,"SubtitleTimer: the mpState is not MP_COMPLETE.");
+						playPoint = mediaPlayer.getCurrentPosition();
+						playArrayIndex = Util.subtitleBSearch(subtitle, playPoint);
+
+						// Log.d(logTag,"check play status: isPlayRegion="+isPlayRegion+", region start="+regionStartMs+", region end="+regionEndMs+", play point="+playPoint);
+						// Play region function has set, and over the region,
+						// stop play.
+						// if(isRegionPlay() && playPoint > regionEndMs){
+						if (regionEndMs > 0 && playPoint > regionEndMs) {
+							Log.d(logTag, "Stop Play: play point=" + playPoint
+									+ ", regionEndMs=" + regionEndMs);
+							pause();
+							changedListener.onComplatePlay();
+							return;
+						}
+
+						if (playingIndex != playArrayIndex) {
+							playingIndex = playArrayIndex;
+							if (playArrayIndex != -1)
+								changedListener.onSubtitleChanged(
+										playArrayIndex,
+										subtitle[playArrayIndex]);
+						}
+						// Log.d(logTag,"SubtitleTimer: release playingIndexKey.");
+					}
+					// The last of subtitle has reached.
+					// if(playArrayIndex==se.length-1)return null;
+
+					if (isCancelled()) {
+						Log.d(logTag, "Exit nomaly.");
+						return;
+					}
+
+					Thread.sleep(monInterval);
+
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+					GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="
+							+ mpState + ", playPoint=" + playPoint
+							+ ", playArrayIndex=" + playArrayIndex
+							+ ", regionEndMs=" + regionEndMs, e, true);
+					return;
+				} catch (InterruptedException e) {
+					// e.printStackTrace();
+					GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="
+							+ mpState + ", playPoint=" + playPoint
+							+ ", playArrayIndex=" + playArrayIndex
+							+ ", regionEndMs=" + regionEndMs, e, true);
+					return;
+				} catch (Exception e) {
+					// e.printStackTrace();
+					GaLogger.sendException("SubtitleTimer_EXCEPTION: mpState="
+							+ mpState + ", playPoint=" + playPoint
+							+ ", playArrayIndex=" + playArrayIndex
+							+ ", regionEndMs=" + regionEndMs, e, true);
+					return;
+				}
+			}
+		}
+	}
 	public SubtitleElement[] getSubtitle(){
 		return subtitle;
 	}

@@ -164,7 +164,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 	MenuItem rootMenuItem, speechMenu, globalLamrim, playRegionRec,swRenderMode, prjWeb, exitApp;
 
-	FileSysManager fileSysManager = null;
+	FileSysManager fsm = null;
 	// FileDownloader fileDownloader = null;
 	RelativeLayout rootLayout = null;
 
@@ -210,7 +210,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
 	WVersionManager versionManager=null;
 	
-	public Boolean isActivityLoaded = new Boolean(false);
+	public Boolean isActivityLoaded = Boolean.valueOf(false);
 //	boolean repeatPlay=false;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -223,6 +223,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		setContentView(R.layout.main);
 		getSupportActionBar();
 
+		fsm = new FileSysManager(this);
+		fsm.checkFileStructure();
+		
 		// setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 
@@ -242,6 +245,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		Log.d(getClass().getName(), "mediaIndex=" + mediaIndex);
 		powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		educFont = Typeface.createFromAsset(this.getAssets(), "EUDC.TTF");
 		try {
 			pkgInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -428,7 +432,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			// LamrimReaderActivity.this.findViewById(android.R.id.content), new
 			// MediaPlayerControllerListener() {
 			mpController = new MediaPlayerController(LamrimReaderActivity.this,
-					LamrimReaderActivity.this.findViewById(R.id.mediaControllerMountPoint),
+					LamrimReaderActivity.this.findViewById(R.id.mediaControllerMountPoint), fsm,
 					new MediaPlayerControllerListener() {
 						@Override
 						public void onSubtitleChanged(final int index,
@@ -982,8 +986,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
 //		rootLayout.setLongClickable(false);
 
-		fileSysManager = new FileSysManager(this);
-		FileSysManager.checkFileStructure();
+		
 
 		// String appSubtitle=getString(R.string.app_name)
 		// +" V"+pkgInfo.versionName+"."+pkgInfo.versionCode;
@@ -1330,8 +1333,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		// Check is mediaPlayer loaded.
 		mediaIndex = runtime.getInt("mediaIndex", -1);
 		Log.d(getClass().getName(), "Media index = "+mediaIndex);
-		if ( !mpController.isPlayerReady() && mediaIndex != -1)
+		if ( !mpController.isPlayerReady() && mediaIndex != -1){
+			Log.d(getClass().getName(), "onResume: call startPlay media "+mediaIndex);
 			startPlay(mediaIndex);
+		}
 
 		Log.d(getClass().getName(), "**** Leave onResume() ****");
 	}
@@ -1634,11 +1639,64 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		Log.d(funcLeave, "Leave onActivityResult");
 	}
 	
-	
 
+	public boolean startPlay(final int mediaIndex) {
+		File f = fsm.getLocalMediaFile(mediaIndex);
+		if (f == null || !f.exists()) {
+			Log.d(getClass().getName(),"startPlay: the media is not exist, skip play.");
+			return false;
+		}
+
+		// It will not execute if there is the AsyncTask, maybe cause by only one UI thread.
+		Thread t=new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				try {
+					// Check duplicate load media.
+					int loadingMedia=mpController.getLoadingMediaIndex();
+					if(loadingMedia==mediaIndex){
+						Log.d(logTag,"The media index "+mediaIndex+" has loading, skip this procedure.");
+						return ;
+					}
+					
+					Log.d(logTag,"Start play index "+mediaIndex);
+					// Reset subtitle to SUBTITLE_MODE
+					bookView.clearHighlightLine();
+					setSubtitleViewMode(SUBTITLE_MODE);
+					setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
+					mpController.setDataSource(getApplicationContext(),	mediaIndex);
+				} catch (IllegalArgumentException e) {
+					setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
+					GaLogger.sendEvent("error", "player_error",	"IllegalArgumentException", null);
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					setSubtitleViewText(getString(R.string.errSEwhileSetPlayerSrc));
+					GaLogger.sendEvent("error", "player_error",	"SecurityException", null);
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					setSubtitleViewText(getString(R.string.errISEwhileSetPlayerSrc));
+					GaLogger.sendEvent("error", "player_error",	"IllegalStateException", null);
+					e.printStackTrace();
+				} catch (IOException e) {
+					setSubtitleViewText(getString(R.string.errIOEwhileSetPlayerSrc));
+					GaLogger.sendEvent("error", "player_error", "IOException",null);
+					e.printStackTrace();
+				}
+				return ;
+			}});
+		t.start();
+
+		return true;
+	}
+
+	
+	/*
+	 * Don't do this with AsyncTask, there is only one AsyncTask alive, it will cause app response slowly.
 	public boolean startPlay(final int mediaIndex) {
 		File f = FileSysManager.getLocalMediaFile(mediaIndex);
 		if (f == null || !f.exists()) {
+			Log.d(getClass().getName(),"startPlay: the media is not exist, skip play.");
 			return false;
 		}
 
@@ -1653,6 +1711,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						return null;
 					}
 					
+					Log.d(logTag,"Start play index "+mediaIndex);
 					// Reset subtitle to SUBTITLE_MODE
 					bookView.clearHighlightLine();
 					setSubtitleViewMode(SUBTITLE_MODE);
@@ -1680,9 +1739,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			}
 		};
 		runner.execute();
-
 		return true;
 	}
+*/	
 
 	private void setSubtitleViewMode(final int mode) {
 		runOnUiThread(new Runnable() {
@@ -2185,25 +2244,22 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			public void onItemClick(AdapterView<?> arg0, View v, final int position, long id) {
 				Log.d(logTag, "Region record menu: item " + RegionRecord.records.get(position).title + " clicked.");
 				RegionRecord rec=RegionRecord.records.get(position);
-				String param="";
 				int start=rec.mediaStart;
 				int end = rec.mediaEnd;
-				File media = FileSysManager.getLocalMediaFile(start);
-				File subtitle = FileSysManager.getLocalSubtitleFile(start);
-				if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){param=""+start;}
-				if(end != start){
-					media = FileSysManager.getLocalMediaFile(end);
-					subtitle = FileSysManager.getLocalSubtitleFile(end);
-					if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){
-						if(param.length()==0)param=""+end;
-						else param+=","+end;
-					}
-				}
+				int intentCmd[] = null;
 				
-				final String files=param;
-				if(param.length()!=0){
+				if(start == end){
+					File media = fsm.getLocalMediaFile(start);
+					File subtitle = fsm.getLocalSubtitleFile(start);
+					if (media == null || subtitle == null || !media.exists() || !subtitle.exists())
+						intentCmd = new int[]{start};
+				}
+				else
+					intentCmd = fsm.getUnreadyList(start, end);
+				
+				if(intentCmd != null){
 					final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
-					speechMenu.putExtra("index", files);
+					speechMenu.putExtra("index", intentCmd);
 					if (wakeLock.isHeld())
 						wakeLock.release();
 					startActivityForResult(speechMenu, SPEECH_MENU_RESULT_REGION);
@@ -2251,27 +2307,23 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	private void startRegionPlay(final int mediaStart,final int startTimeMs,final int mediaEnd,final int endTimeMs,final int theoryStartPage,final int theoryStartLine,final int theoryEndPage,final int theoryEndLine){
 		
 		setRegionSec( mediaStart, startTimeMs, mediaEnd, endTimeMs, theoryStartPage, theoryStartLine, theoryEndPage, theoryEndLine);
-		
-		String param="";
+
 		int start=mediaStart;
 		int end = mediaEnd;
-		File media = FileSysManager.getLocalMediaFile(start);
-		File subtitle = FileSysManager.getLocalSubtitleFile(start);
-		if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){param=""+start;}
-		if(end != start){
-			media = FileSysManager.getLocalMediaFile(end);
-			subtitle = FileSysManager.getLocalSubtitleFile(end);
-			if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){
-				if(param.length()==0)param=""+end;
-				else param+=","+end;
-			}
+		int intentCmd[] = null;
+		if(start == end){
+			File media = fsm.getLocalMediaFile(start);
+			File subtitle = fsm.getLocalSubtitleFile(start);
+			if (media == null || subtitle == null || !media.exists() || !subtitle.exists())
+				intentCmd = new int[]{start};
 		}
+		else
+			intentCmd = fsm.getUnreadyList(start, end);
 		
-		Log.d(getClass().getName(),"Send download param "+param+" to speechMenuActivity");
-		final String files=param;
-		if(param.length()!=0){
+		//Log.d(getClass().getName(),"Send download param "+param+" to speechMenuActivity");
+		if(intentCmd != null){
 			final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
-			speechMenu.putExtra("index", files);
+			speechMenu.putExtra("index", intentCmd);
 			if (wakeLock.isHeld())
 				wakeLock.release();
 			startActivityForResult(speechMenu, SPEECH_MENU_RESULT_REGION);
@@ -2281,16 +2333,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 			// Check file exist again, if no download, return.
 			boolean isDownloaded=true;
-			media = FileSysManager.getLocalMediaFile(start);
-			subtitle = FileSysManager.getLocalSubtitleFile(start);
-			if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){isDownloaded=false;}
-			if(end != start){
-				media = FileSysManager.getLocalMediaFile(end);
-				subtitle = FileSysManager.getLocalSubtitleFile(end);
-				if (media == null || subtitle == null || !media.exists() || !subtitle.exists()){isDownloaded=false;}
-			}
+			if(start == end)
+				isDownloaded=fsm.isFilesReady(start);
+			else
+				isDownloaded=fsm.isFilesReady(start) && fsm.isFilesReady(end);
+
 			if(!isDownloaded)return;
-//			return;
 		}
 
 		//mpController.desetPlayRegion();
@@ -2885,13 +2933,13 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		private void startLamrimSection(int index){
 			Log.d(getClass().getName(),"Switch to speech "+SpeechData.getTheoryName(index));
 			mpController.hideMediaPlayerController();
-			File media = FileSysManager.getLocalMediaFile(index);
-			File subtitle = FileSysManager.getLocalSubtitleFile(index);
+			File media = fsm.getLocalMediaFile(index);
+			File subtitle = fsm.getLocalSubtitleFile(index);
 			
 			// File not exist.
 			if (media == null || subtitle == null || !media.exists() || !subtitle.exists()) {
 				final Intent speechMenu = new Intent(LamrimReaderActivity.this,	SpeechMenuActivity.class);
-				speechMenu.putExtra("index", ""+index);
+				speechMenu.putExtra("index", new int[]{index});
 				if (wakeLock.isHeld())
 					wakeLock.release();
 				startActivityForResult(speechMenu, SPEECH_MENU_RESULT);

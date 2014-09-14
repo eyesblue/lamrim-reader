@@ -14,8 +14,11 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,7 +31,10 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.text.InputType;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -40,15 +46,19 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class SpeechMenuActivity extends Activity {
+	FileSysManager fsm=null;
 	ImageButton btnDownloadAll, btnMaintain,  btnManageStorage;
+	TextView downloadAllTextView;
 	boolean speechFlags[], subtitleFlags[]=null;
 	String[] descs, subjects, rangeDescs;
 	ArrayList<HashMap<String,Boolean>> fakeList = new ArrayList<HashMap<String,Boolean>>();
@@ -63,6 +73,10 @@ public class SpeechMenuActivity extends Activity {
 	boolean fireLockKey = false;
 	final int PLAY=0,UPDATE=1,	DELETE=2, CANCEL=3;
 	boolean isCallFromDownloadCmd=false;
+	AlertDialog netAccessWarnDialog;
+	ButtonUpdater buttonUpdater=null;
+	private DownloadAllServiceReceiver downloadAllServiceReceiver=null;
+	IntentFilter downloadAllServiceIntentFilter=null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -73,7 +87,11 @@ public class SpeechMenuActivity extends Activity {
 	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
 	btnMaintain=(ImageButton) findViewById(R.id.btnMaintain);
 	btnManageStorage=(ImageButton) findViewById(R.id.btnManageStorage);
-	 
+	downloadAllTextView=(TextView)findViewById(R.id.downloadAllTextView);
+	
+	downloadAllServiceReceiver = new DownloadAllServiceReceiver();
+	downloadAllServiceIntentFilter = new IntentFilter("eyes.blue.action.DownloadAllService");
+	
 	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
 	//wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
@@ -81,8 +99,8 @@ public class SpeechMenuActivity extends Activity {
 	fireLocker.start();
 	//if(!wakeLock.isHeld()){wakeLock.acquire();}
 	//if(wakeLock.isHeld())wakeLock.release();
-	new FileSysManager(this);
-	downloader=new FileDownloader(SpeechMenuActivity.this);
+	fsm=new FileSysManager(this);
+	downloader=new FileDownloader(SpeechMenuActivity.this,fsm);
 	
 	final QuickAction mQuickAction 	= new QuickAction(this);
 	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
@@ -103,9 +121,9 @@ public class SpeechMenuActivity extends Activity {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
-						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
-			        	if(f!=null && !FileSysManager.isFromUserSpecifyDir(f))f.delete();
-			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
+						File f=fsm.getLocalMediaFile(manageItemIndex);
+			        	if(f!=null && !fsm.isFromUserSpecifyDir(f))f.delete();
+			        	f=fsm.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	downloadSrc(manageItemIndex);
 			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "result_and_play", manageItemIndex);
@@ -118,11 +136,11 @@ public class SpeechMenuActivity extends Activity {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						final ProgressDialog pd= new ProgressDialog(SpeechMenuActivity.this);
-						File f=FileSysManager.getLocalMediaFile(manageItemIndex);
-						if(f!=null && !FileSysManager.isFromUserSpecifyDir(f))f.delete();
-			        	f=FileSysManager.getLocalSubtitleFile(manageItemIndex);
+						File f=fsm.getLocalMediaFile(manageItemIndex);
+						if(f!=null && !fsm.isFromUserSpecifyDir(f))f.delete();
+			        	f=fsm.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
-			        	updateUi(manageItemIndex);
+			        	updateUi(manageItemIndex,true);
 			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "delete", manageItemIndex);
 					}};
 
@@ -173,8 +191,18 @@ public class SpeechMenuActivity extends Activity {
 	speechList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 		@Override
 		public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
+			Log.d("SpeechMenuActivity","User click position "+position);
 			if(fireLock())return;
-			downloadSrc(position);
+			File mediaFile=fsm.getLocalMediaFile(position);
+			File subtitleFile=fsm.getLocalSubtitleFile(position);
+			if(mediaFile.exists() && subtitleFile.exists()){
+				Log.d("SpeechMenuActivity","File exist, return play.");
+				resultAndPlay(position);
+			}
+			else {
+				Log.d("SpeechMenuActivity","File not exist, start download.");
+				downloadSrc(position);
+			}
 			GaLogger.sendEvent("ui_action", "speech_list", "select_item_"+SpeechData.name[position], null);
 	}});
 
@@ -192,22 +220,18 @@ public class SpeechMenuActivity extends Activity {
 //			if(!wakeLock.isHeld()){wakeLock.acquire();}
 			return true;
 		}
-		 
+		
+		
 	});
 	
 	speechList.setAdapter( adapter );
 	 //啟用按鍵過濾功能
 	speechList.setTextFilterEnabled(true);
 
+	updateDownloadAllBtn();
+	buttonUpdater=new ButtonUpdater();
+	buttonUpdater.start();
 	
-	
-	btnDownloadAll.setOnClickListener(new View.OnClickListener (){
-		@Override
-		public void onClick(View arg0) {
-			if(fireLock())return;
-			downloadAllSrc();
-			GaLogger.sendEvent("ui_action", "botton_pressed", "download_all", null);
-		}});
 	btnMaintain.setOnClickListener(new View.OnClickListener (){
 		@Override
 		public void onClick(View arg0) {
@@ -238,10 +262,13 @@ public class SpeechMenuActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		this.registerReceiver(downloadAllServiceReceiver, downloadAllServiceIntentFilter);
+		
+		
 		final int speechMenuPage=runtime.getInt("speechMenuPage", 0);
 //		final int speechMenuPageShift=runtime.getInt("speechMenuPageShift", 0);
 		int lastPage=runtime.getInt("lastViewItem", -1);
-		
+
 		if(lastPage==-1){
 			lastPage=speechMenuPage+10;
 			if(lastPage>=SpeechData.name.length)
@@ -250,21 +277,24 @@ public class SpeechMenuActivity extends Activity {
 		refreshFlags(speechMenuPage,++lastPage,true);
 		refreshFlags(0,speechFlags.length,false);
 		
+		
+		
 		Bundle b=this.getIntent().getExtras();
 		if(b==null)return;
 		isCallFromDownloadCmd=true;
-		String downloadIndexs=b.getString("index");
-		String[] indexs=downloadIndexs.split(",");
-		int resource[]=new int[indexs.length];
-		for(int i=0;i<indexs.length;i++)
-			resource[i]=Integer.parseInt(indexs[i]);
 		
+		int resource[]=b.getIntArray("index");
+		if(resource == null || resource.length<=0){
+			Log.e(getClass().getName(),"Start SpeechMenuActivity with download command, but no media index extras, skip download.");
+			return;
+		}
 		downloadSrc(resource);
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
+		this.unregisterReceiver(downloadAllServiceReceiver);
 		SharedPreferences.Editor editor = runtime.edit();
 
 		editor.putInt("speechMenuPage",speechList.getFirstVisiblePosition());
@@ -289,6 +319,12 @@ public class SpeechMenuActivity extends Activity {
 		GaLogger.activityStop(this);
 	}
 	
+	@Override
+	protected void onDestroy(){
+		super.onDestroy();
+		buttonUpdater.cancel(false);
+	}
+	
 	private void resultAndPlay(int position){
 		Log.d(getClass().getName(),"Speech menu "+position+"th item clicked.");
 		Intent playWindow = new Intent();
@@ -299,18 +335,32 @@ public class SpeechMenuActivity extends Activity {
 		finish();
 	}
 	
-	private void updateUi(final int i){
-		File speech=FileSysManager.getLocalMediaFile(i);
-		File subtitle =FileSysManager.getLocalSubtitleFile(i);
+	private void updateUi(final int i, boolean shiftToIndex){
+		File speech=fsm.getLocalMediaFile(i);
+		File subtitle =fsm.getLocalSubtitleFile(i);
 		
 		speechFlags[i]=(speech!=null && speech.exists());
 		subtitleFlags[i]=(subtitle!=null && subtitle.exists());
-		refreshListView();
-		runOnUiThread(new Runnable(){
-			@Override
-			public void run() {
-				speechList.setSelection(i);
-		}});
+		if(shiftToIndex){
+			refreshListView();
+			speechList.post(new Runnable(){
+				@Override
+				public void run() {
+					speechList.setSelection(i);
+			}});
+		}
+		else{
+			final int serial=speechList.getFirstVisiblePosition();
+			View v = speechList.getChildAt(0);
+			final int shift = (v == null) ? 0 : v.getTop();
+
+			speechList.post(new Runnable(){
+				@Override
+				public void run() {
+					adapter.notifyDataSetChanged();
+					speechList.setSelectionFromTop(serial, shift);
+			}});
+		}
 	}
 	
 	private void refreshFlags(final int start,final int end,final boolean isRefreshView){
@@ -319,8 +369,8 @@ public class SpeechMenuActivity extends Activity {
 			@Override
 			public void run() {
 				for(int i=start;i<end;i++){
-					File speech=FileSysManager.getLocalMediaFile(i);
-					File subtitle=FileSysManager.getLocalSubtitleFile(i);
+					File speech=fsm.getLocalMediaFile(i);
+					File subtitle=fsm.getLocalSubtitleFile(i);
 					boolean me=(speech!=null && speech.exists());
 					boolean se=(subtitle!=null && subtitle.exists());
 //					Log.d(getClass().getName(), "Set flags of "+SpeechData.getNameId(i)+": is speech exist: "+me+", is subtitle exist: "+se);
@@ -345,7 +395,7 @@ public class SpeechMenuActivity extends Activity {
 				 R.layout.speech_row, new String[] { "page", "desc" },
 					new int[] { R.id.pageContentView, R.id.pageNumView });
 		
-		runOnUiThread(new Runnable(){
+		speechList.post(new Runnable(){
 			@Override
 			public void run() {
 				speechList.setAdapter( adapter );
@@ -356,8 +406,8 @@ public class SpeechMenuActivity extends Activity {
 	
 	private void downloadSrc(final int... index){
 		for(int i=0;i<index.length;i++){
-			File mediaFile=FileSysManager.getLocalMediaFile(index[i]);
-			File subtitleFile=FileSysManager.getLocalSubtitleFile(index[i]);
+			File mediaFile=fsm.getLocalMediaFile(index[i]);
+			File subtitleFile=fsm.getLocalSubtitleFile(index[i]);
 		
 			if(mediaFile==null || subtitleFile==null){
 				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView),"下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
@@ -400,13 +450,13 @@ public class SpeechMenuActivity extends Activity {
 			}
 			@Override
 			public void prepareFinish(int i, int type){
-				updateUi(i);
+				updateUi(i,true);
 			}
 			@Override
 			public void prepareFail(final int i, int type){
 				if(type==FileSysManager.MEDIA_FILE)everFail=true;
 				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
-				updateUi(i);
+				updateUi(i,true);
 			}
 			
 			@Override
@@ -425,38 +475,124 @@ public class SpeechMenuActivity extends Activity {
 			}
 		});	
 		if(!wakeLock.isHeld()){wakeLock.acquire();}
+		Log.d("SpeechMenuActivity","Start download index "+index);
 		downloader.start(index);
 	}
 	
 	private void downloadAllSrc(){
-		downloader.setDownloadListener(new DownloadListener(){
-			@Override
-			public void allPrepareFinish(int... i){
-				if(wakeLock.isHeld())wakeLock.release();
-			}
-			@Override
-			public void prepareFinish(int i, int type){
-				updateUi(i);
-			}
-			@Override
-			public void prepareFail(final int i, int type){
-				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
-				updateUi(i);
-			}
-			
-			@Override
-			public void userCancel(){
-				Log.d(getClass().getName(),"User cancel the download!");
-				if(wakeLock.isHeld())wakeLock.release();
-				return;
-			}
-		});	
-		if(!wakeLock.isHeld()){wakeLock.acquire();}
-		final int[] ia=new int[SpeechData.name.length];
-		for(int i=0;i<ia.length;i++)
-			ia[i]=i;
-		
-		downloader.start(ia);
+		boolean isShowNetAccessWarn=runtime.getBoolean(getString(R.string.isShowNetAccessWarn), true);
+		boolean isAllowAccessNet=runtime.getBoolean(getString(R.string.isAllowNetAccess), false);
+		Log.d(this.getClass().getName(),"ShowNetAccessWarn: "+isShowNetAccessWarn+", isAllowNetAccess: "+isAllowAccessNet);
+		if(isShowNetAccessWarn ||(!isShowNetAccessWarn && !isAllowAccessNet)){
+			new Handler().post(new Runnable() {
+				public void run() {
+					if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
+						if(!wakeLock.isHeld()){wakeLock.acquire();}
+						netAccessWarnDialog=getNetAccessDialog();
+						netAccessWarnDialog.setCanceledOnTouchOutside(false);
+						netAccessWarnDialog.show();
+					}
+				}
+			});
+			return ;
+		}
+		else showThreadsSelectDialog();
+	}
+	
+	private AlertDialog getNetAccessDialog(){
+		final SharedPreferences.Editor editor = runtime.edit();
+       
+		LayoutInflater adbInflater = LayoutInflater.from(this);
+		View eulaLayout = adbInflater.inflate(R.layout.net_access_warn_dialog, null);
+		final CheckBox dontShowAgain= (CheckBox) eulaLayout.findViewById(R.id.skip);
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setView(eulaLayout);
+		builder.setTitle(getString(R.string.dlgNetAccessTitle));
+		builder.setMessage(getString(R.string.dlgNetAccessMsg));
+		builder.setPositiveButton(getString(R.string.dlgAllow), new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
+               
+				editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
+				editor.putBoolean(getString(R.string.isAllowNetAccess), true);
+				editor.commit();
+				dialog.dismiss();
+				showThreadsSelectDialog();
+        }
+    });
+	builder.setNegativeButton(getString(R.string.dlgDisallow), new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int id) {
+			Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
+			editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
+			editor.putBoolean(getString(R.string.isAllowNetAccess), false);
+			editor.commit();
+			if(wakeLock.isHeld())wakeLock.release();
+			dialog.cancel();
+        }
+    });
+
+    return builder.create();
+}
+	
+	@SuppressLint("NewApi")
+	private void showThreadsSelectDialog() {
+		View selecter = null;
+
+		if (Build.VERSION.SDK_INT >= 11) {
+			NumberPicker v = new NumberPicker(this);
+			v.setMinValue(1);
+			v.setMaxValue(4);
+			v.setValue(4);
+			selecter = v;
+		} else {
+			EditText v = new EditText(this);
+			v.setText("4");
+			v.setInputType(InputType.TYPE_CLASS_NUMBER);
+			selecter = v;
+		}
+
+		final View v = selecter;
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setView(selecter);
+		builder.setTitle("請選擇同時下載連線數");
+		// builder.setMessage("下載線程數高則速度較快");
+		builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						int count = 0;
+						if (Build.VERSION.SDK_INT >= 11) {
+							NumberPicker np = (NumberPicker) v;
+							count = np.getValue();
+						} else {
+							EditText et = (EditText) v;
+							try {
+								count = Integer.parseInt(et.getText().toString());
+							} catch (Exception e) {
+								Util.showErrorPopupWindow(SpeechMenuActivity.this,findViewById(R.id.speechMenuRootView),"輸入錯誤！");
+								return;
+							}
+						}
+
+						Log.d(getClass().getName(),	"Start download all service with thread count "	+ count);
+
+						dialog.dismiss();
+						Intent intent = new Intent(SpeechMenuActivity.this,	DownloadAllService.class);
+						intent.putExtra("threadCount", count);
+						Log.d(getClass().getName(),	"Start download all service.");
+						startService(intent);
+						if (wakeLock.isHeld())
+							wakeLock.release();
+					}
+				});
+		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						if (wakeLock.isHeld())
+							wakeLock.release();
+						dialog.cancel();
+					}
+				});
+		builder.show();
 	}
 	
 	private void maintain(){
@@ -467,7 +603,7 @@ public class SpeechMenuActivity extends Activity {
 		pd.show();
 		if(!wakeLock.isHeld()){wakeLock.acquire();}
 		
-		AsyncTask<Void, Void, Void> runner=new AsyncTask<Void, Void, Void>() {
+/*		AsyncTask<Void, Void, Void> runner=new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
 				FileSysManager.maintainStorages();
@@ -478,6 +614,16 @@ public class SpeechMenuActivity extends Activity {
 		};
 		
 		runner.execute();
+*/	
+		Thread t=new Thread(new Runnable(){
+			@Override
+			public void run() {
+				fsm.maintainStorages();
+				pd.dismiss();
+				if(wakeLock.isHeld())wakeLock.release();
+				return;
+			}});
+		t.start();
 	}
 	
 	private boolean fireLock(){
@@ -511,6 +657,152 @@ public class SpeechMenuActivity extends Activity {
 			}
 		}
 	};
+	
+	private void updateDownloadAllBtn(){
+		btnDownloadAll.post(new Runnable(){
+			@Override
+			public void run() {
+				boolean isAlive=isMyServiceRunning(DownloadAllService.class);
+				if(!isAlive){
+					downloadAllTextView.setText("全部下載");
+					btnDownloadAll.setOnClickListener(new View.OnClickListener (){
+						@Override
+						public void onClick(View arg0) {
+							synchronized(btnDownloadAll){
+								if(fireLock())return;
+								downloadAllSrc();
+								GaLogger.sendEvent("ui_action", "botton_pressed", "download_all", null);
+							}
+						}});
+				}
+				else {
+					downloadAllTextView.setText("取消下載");
+					btnDownloadAll.setOnClickListener(new View.OnClickListener (){
+						@Override
+						public void onClick(View arg0) {
+							synchronized(btnDownloadAll){
+								Intent intent = new Intent(SpeechMenuActivity.this, DownloadAllService.class);
+								Log.d(getClass().getName(),"Stop download all service.");
+								stopService(intent);
+								NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+								mNotificationManager.cancel(DownloadAllService.notificationId);
+							}
+					}});
+				}
+			}
+		});
+		
+		
+	}
+	
+	private boolean isMyServiceRunning(Class<?> serviceClass) {
+	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+	        if (serviceClass.getName().equals(service.service.getClassName())) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	
+	public class DownloadAllServiceReceiver extends BroadcastReceiver {
+		public DownloadAllServiceReceiver(){}
+		@SuppressLint("NewApi")
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action=intent.getStringExtra("action");
+			if(action.equalsIgnoreCase("start") || action.equalsIgnoreCase("stop")){
+				updateDownloadAllBtn();
+			}
+			else if(action.equalsIgnoreCase("download")){
+				int index=intent.getIntExtra("index", -1);
+				if(index==-1){
+					Log.e("SpeechMenuActivity","The broadcast index should not -1 !!!");
+					return;
+				}
+				
+				boolean isSuccess=intent.getBooleanExtra("isSuccess", false);
+				Log.d("SpeechMenuActivity","broadcast receive index "+index+" download "+isSuccess);
+				
+				/* It should update the background of item of speechList, but I havn't not find a good way to do it.*/
+				if(isSuccess)updateUi(index, false);
+			}
+			else if(action.equalsIgnoreCase("terminate")){
+				buttonUpdater.cancel();
+				updateDownloadAllBtn();
+			}
+			else if(action.equalsIgnoreCase("error")){
+				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), intent.getStringExtra("desc"));
+			}
+		}
+	}
+	
+/*	public class ButtonUpdater extends AsyncTask<Void, Void, Void> {
+		JSONObject executing=null;
+		boolean cancelled = false;
+		
+		@Override
+        protected void onCancelled(){
+			cancelled = true;
+        }
+        // From API call               
+        @Override
+        protected void onCancelled(Void result) {
+        	cancelled = true;
+        }
+        
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			
+			while(!cancelled){
+				synchronized(btnDownloadAll){
+					
+					updateDownloadAllBtn();
+					
+					try {
+						btnDownloadAll.wait(1500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			return null;
+		}
+	}
+*/	
+	
+	public class ButtonUpdater extends Thread {
+		JSONObject executing=null;
+		boolean cancelled = false;
+		
+        public void cancel() {
+        	cancelled = true;
+        }
+        
+        public void cancel(boolean dontCare) {
+        	cancelled = true;
+        }
+        
+		@Override
+		public void run() {
+			
+			while(!cancelled){
+				synchronized(btnDownloadAll){
+					Log.d(getClass().getName(),"Button updater awake");
+					updateDownloadAllBtn();
+					
+					try {
+						btnDownloadAll.wait(1500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			Log.d(getClass().getName(),"Button updater terminate");
+			return;
+		}
+	}
+	
 /*	private AlertDialog.Builder getConfirmDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
