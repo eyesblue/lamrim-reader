@@ -60,6 +60,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.AsyncTask.Status;
 import android.util.Log;
@@ -136,8 +137,8 @@ public class FileDownloader {
                 //mkDlTaskProgDialog;
                 //AlertDialog netAccessDialog = null;
                
+                //checkTask=new AsyncTask<Void, Void, Void>() {
                 checkTask=new AsyncTask<Void, Void, Void>() {
-       
                         @Override
                         protected void onCancelled(){
                                 if(wakeLock.isHeld())wakeLock.release();
@@ -224,31 +225,30 @@ public class FileDownloader {
                 }
                 Log.d(getClass().getName(),"Creat a source check task and start.");
                 checkTask.execute();
-        }
-       
-        public void checkNetAccessPermission(){
-                boolean isShowNetAccessWarn=runtime.getBoolean(activity.getString(R.string.isShowNetAccessWarn), true);
-                boolean isAllowAccessNet=runtime.getBoolean(activity.getString(R.string.isAllowNetAccess), false);
-                Log.d(this.getClass().getName(),"ShowNetAccessWarn: "+isShowNetAccessWarn+", isAllowNetAccess: "+isAllowAccessNet);
-                if(isShowNetAccessWarn ||(!isShowNetAccessWarn && !isAllowAccessNet)){
-                        activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                        if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
-                                                if(!wakeLock.isHeld()){wakeLock.acquire();}
-                                                netAccessWarnDialog=getNetAccessDialog();
-                                                netAccessWarnDialog.setCanceledOnTouchOutside(false);
-                                                new Handler().post(new Runnable(){
-                                                        @Override
-                                                        public void run() {
-                                                                netAccessWarnDialog.show();
-                                                        }});
-                                        }
-                                }
-                        });
-                        return ;
-                }
-                startDownloadThread();
-        }
+	}
+		
+	public void checkNetAccessPermission(){
+		boolean isShowNetAccessWarn=runtime.getBoolean(activity.getString(R.string.isShowNetAccessWarn), true);
+		boolean isAllowAccessNet=runtime.getBoolean(activity.getString(R.string.isAllowNetAccess), false);
+		Log.d(this.getClass().getName(),"ShowNetAccessWarn: "+isShowNetAccessWarn+", isAllowNetAccess: "+isAllowAccessNet);
+		if(isShowNetAccessWarn ||(!isShowNetAccessWarn && !isAllowAccessNet)){
+			Looper.prepare();
+			new Handler().post(new Runnable() {
+				public void run() {
+					
+					if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
+						if(!wakeLock.isHeld()){wakeLock.acquire();}
+						netAccessWarnDialog=getNetAccessDialog();
+						netAccessWarnDialog.setCanceledOnTouchOutside(false);
+						netAccessWarnDialog.show();
+					}
+				}
+			});
+			Looper.loop();
+			return ;
+		}
+		startDownloadThread();
+	}
        
        private void startDownloadThread(final int... index){
         	downloader = new Downloader();
@@ -262,7 +262,12 @@ public class FileDownloader {
         			dlPrgsDialog.setMax(index.length);
         			if(!dlPrgsDialog.isShowing() && activity!=null && !activity.isFinishing() && !activity.isRestricted())dlPrgsDialog.show();
         			if(!wakeLock.isHeld()){wakeLock.acquire();}
-        			downloader.execute(downloadTasks);
+        			try{
+        				downloader.execute(downloadTasks);
+        			}catch(IllegalStateException e){
+        				GaLogger.sendException("Cannot execute task: the task is already running.", e, true);
+        				Util.showInfoPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), "下載已於背景執行中！");
+        			}
         		}});
                
                 return ;
@@ -572,55 +577,11 @@ public class FileDownloader {
                 return true;
                 }
                
-/*                public HttpClient getNewHttpClient() {
-                    try {
-                        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                        trustStore.load(null, null);
 
-                        SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
-                        sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-
-                        HttpParams params = new BasicHttpParams();
-                        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-                        HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
-
-                        SchemeRegistry registry = new SchemeRegistry();
-                        registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-                        registry.register(new Scheme("https", sf, 443));
-
-                        ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
-
-                        return new DefaultHttpClient(ccm, params);
-                    } catch (Exception e) {
-                        return new DefaultHttpClient();
-                    }
-                }
-*/
         }
        
        
-        private ProgressDialog getDlprgsDialog(){
-                ProgressDialog pd= new ProgressDialog(activity);
-                pd.setCancelable(false);
-                pd.setButton(DialogInterface.BUTTON_NEGATIVE, activity.getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if(downloader!=null && isRunning()){
-                                Log.d(getClass().getName(),"The download procedure been cancel.");
-                                activity.runOnUiThread(new Runnable() {
-                                        public void run() {
-                                                downloader.cancel(true);
-                                                downloader.cancelTask();
-                                                if(wakeLock.isHeld())wakeLock.release();
-                                        }
-                                });
-                        }
-                        dismissDlProgress();
-                    }
-                });
-                pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                return pd;
-        }
+        
        
         /*
          * Stop and release threads create by the class.
@@ -700,10 +661,8 @@ public class FileDownloader {
                         public void run() {
                                 synchronized(dlProgsKey){
                                         if(dlPrgsDialog!=null && dlPrgsDialog.isShowing()){
-                                                // Here ever happen dismiss after dismissed.
                                                 try{
                                                         dlPrgsDialog.dismiss();
-//                                                        dlPrgsDialog=null;
                                                 }catch(Exception e){
                                                         e.printStackTrace();
                                                         GaLogger.sendEvent("exception", "progress_dialog", "dismiss_after_dismissed", null);

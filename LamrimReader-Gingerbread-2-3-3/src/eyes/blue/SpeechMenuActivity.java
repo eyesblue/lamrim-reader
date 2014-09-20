@@ -1,16 +1,31 @@
 package eyes.blue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.analytics.tracking.android.MapBuilder;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -43,6 +58,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -69,20 +85,23 @@ public class SpeechMenuActivity extends Activity {
 	// The handle for close the dialog.
 	AlertDialog itemManageDialog = null;
 	int manageItemIndex=-1;
-	FileDownloader downloader = null;
+	SingleDownloadThread downloader = null;
 	boolean fireLockKey = false;
 	final int PLAY=0,UPDATE=1,	DELETE=2, CANCEL=3;
 	boolean isCallFromDownloadCmd=false;
+	ProgressDialog pd = null;
 	AlertDialog netAccessWarnDialog;
 	ButtonUpdater buttonUpdater=null;
 	private DownloadAllServiceReceiver downloadAllServiceReceiver=null;
 	IntentFilter downloadAllServiceIntentFilter=null;
+	View rootView =null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.speech_menu);
+	rootView = findViewById(R.id.speechMenuRootView);
 	speechList=(ListView) findViewById(R.id.list);
 	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
 	btnMaintain=(ImageButton) findViewById(R.id.btnMaintain);
@@ -100,7 +119,8 @@ public class SpeechMenuActivity extends Activity {
 	//if(!wakeLock.isHeld()){wakeLock.acquire();}
 	//if(wakeLock.isHeld())wakeLock.release();
 	fsm=new FileSysManager(this);
-	downloader=new FileDownloader(SpeechMenuActivity.this,fsm);
+//	downloader=new FileDownloader(SpeechMenuActivity.this,fsm);
+	pd= getDlprgsDialog();
 	
 	final QuickAction mQuickAction 	= new QuickAction(this);
 	mQuickAction.addActionItem(new ActionItem(PLAY, getString(R.string.dlgManageSrcPlay), getResources().getDrawable(R.drawable.play)));
@@ -193,9 +213,8 @@ public class SpeechMenuActivity extends Activity {
 		public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
 			Log.d("SpeechMenuActivity","User click position "+position);
 			if(fireLock())return;
-			File mediaFile=fsm.getLocalMediaFile(position);
-			File subtitleFile=fsm.getLocalSubtitleFile(position);
-			if(mediaFile.exists() && subtitleFile.exists()){
+
+			if(fsm.isFilesReady(position)){
 				Log.d("SpeechMenuActivity","File exist, return play.");
 				resultAndPlay(position);
 			}
@@ -277,8 +296,6 @@ public class SpeechMenuActivity extends Activity {
 		refreshFlags(speechMenuPage,++lastPage,true);
 		refreshFlags(0,speechFlags.length,false);
 		
-		
-		
 		Bundle b=this.getIntent().getExtras();
 		if(b==null)return;
 		isCallFromDownloadCmd=true;
@@ -322,7 +339,9 @@ public class SpeechMenuActivity extends Activity {
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
-		buttonUpdater.cancel(false);
+		try{
+			buttonUpdater.cancel(false);
+		}catch(Exception e){e.printStackTrace();};
 	}
 	
 	private void resultAndPlay(int position){
@@ -332,6 +351,7 @@ public class SpeechMenuActivity extends Activity {
 		playWindow.putExtra("index", position);
 		setResult(Activity.RESULT_OK, playWindow);
 		if(wakeLock.isHeld())wakeLock.release();
+		buttonUpdater.cancel();
 		finish();
 	}
 	
@@ -405,90 +425,45 @@ public class SpeechMenuActivity extends Activity {
 	}
 	
 	private void downloadSrc(final int... index){
+		Log.d("SpeechMenuActivity", "downloadSrc been call.");
 		for(int i=0;i<index.length;i++){
 			File mediaFile=fsm.getLocalMediaFile(index[i]);
 			File subtitleFile=fsm.getLocalSubtitleFile(index[i]);
 		
 			if(mediaFile==null || subtitleFile==null){
-				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView),"下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
+				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView),"下載失敗！請確認儲存空間是否足夠，或您的網路連線是否正常。");
 				return;
 			}
 		}
-
-		downloader.setDownloadListener(new DownloadListener(){
-			boolean everFail=false;
+		
+		checkNetAccessPermission(new Runnable(){
 			@Override
-			public void allPrepareFinish(int... i){
-				if(!everFail){
-					if (wakeLock.isHeld())wakeLock.release();
-					resultAndPlay(index[0]);
-					return;
-				}
-				
-				Log.d(getClass().getName(), "There is download fail, show download again dialog.");
-				String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index[0]));
-				final AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
-				dialog.setTitle(msg); 
-				dialog.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {  
-				    public void onClick(DialogInterface dialog, int which) {
-				    	downloadSrc(index);
-				    }
-				});
-				dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
-				    public void onClick(DialogInterface dialog, int which) {
-				    	dialog.dismiss();
-				    	if (wakeLock.isHeld())wakeLock.release();
-				    }
-				});
-				
-				runOnUiThread(new Runnable(){
-					@Override
-					public void run() {
-						if(!wakeLock.isHeld()){wakeLock.acquire();}
-						dialog.show();
-					}});
-			}
-			@Override
-			public void prepareFinish(int i, int type){
-				updateUi(i,true);
-			}
-			@Override
-			public void prepareFail(final int i, int type){
-				if(type==FileSysManager.MEDIA_FILE)everFail=true;
-				Util.showErrorPopupWindow(SpeechMenuActivity.this, findViewById(R.id.speechMenuRootView), "下載失敗！請確認檔案空間足夠，或您的網路連線是否正常。");
-				updateUi(i,true);
-			}
-			
-			@Override
-			public void userCancel(){
-				Log.d(getClass().getName(),"User cancel the download!");
-				if(wakeLock.isHeld())wakeLock.release();
-
-				// If the activity is call for download source, return immediately. 
-				if(isCallFromDownloadCmd){
-					Log.d(getClass().getName(),"The download is start by download command, return caller activity now.");
-					isCallFromDownloadCmd=false;
-					setResult(RESULT_CANCELED);
-					finish();
-				}
-				return;
-			}
-		});	
-		if(!wakeLock.isHeld()){wakeLock.acquire();}
-		Log.d("SpeechMenuActivity","Start download index "+index);
-		downloader.start(index);
+			public void run() {
+				lockScreen();
+				downloader = new SingleDownloadThread(index);
+				pd.show();
+				downloader.start();
+			}});
 	}
 	
 	private void downloadAllSrc(){
+		checkNetAccessPermission(new Runnable(){
+			@Override
+			public void run() {
+				showThreadsSelectDialog();
+			}});
+	}
+	
+	public void checkNetAccessPermission(final Runnable task){
 		boolean isShowNetAccessWarn=runtime.getBoolean(getString(R.string.isShowNetAccessWarn), true);
 		boolean isAllowAccessNet=runtime.getBoolean(getString(R.string.isAllowNetAccess), false);
 		Log.d(this.getClass().getName(),"ShowNetAccessWarn: "+isShowNetAccessWarn+", isAllowNetAccess: "+isAllowAccessNet);
 		if(isShowNetAccessWarn ||(!isShowNetAccessWarn && !isAllowAccessNet)){
-			new Handler().post(new Runnable() {
+			rootView.post(new Runnable() {
 				public void run() {
 					if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
 						if(!wakeLock.isHeld()){wakeLock.acquire();}
-						netAccessWarnDialog=getNetAccessDialog();
+						netAccessWarnDialog=getNetAccessDialog(task);
 						netAccessWarnDialog.setCanceledOnTouchOutside(false);
 						netAccessWarnDialog.show();
 					}
@@ -496,10 +471,10 @@ public class SpeechMenuActivity extends Activity {
 			});
 			return ;
 		}
-		else showThreadsSelectDialog();
+		else task.run();
 	}
 	
-	private AlertDialog getNetAccessDialog(){
+	private AlertDialog getNetAccessDialog(final Runnable task){
 		final SharedPreferences.Editor editor = runtime.edit();
        
 		LayoutInflater adbInflater = LayoutInflater.from(this);
@@ -513,27 +488,31 @@ public class SpeechMenuActivity extends Activity {
 		builder.setPositiveButton(getString(R.string.dlgAllow), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
 				Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
-               
 				editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
 				editor.putBoolean(getString(R.string.isAllowNetAccess), true);
 				editor.commit();
 				dialog.dismiss();
-				showThreadsSelectDialog();
-        }
-    });
-	builder.setNegativeButton(getString(R.string.dlgDisallow), new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int id) {
-			Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
-			editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
-			editor.putBoolean(getString(R.string.isAllowNetAccess), false);
-			editor.commit();
-			if(wakeLock.isHeld())wakeLock.release();
-			dialog.cancel();
-        }
-    });
-
-    return builder.create();
-}
+				task.run();
+			}
+		});
+		builder.setNegativeButton(getString(R.string.dlgDisallow), new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				Log.d(getClass().getName(),"Check box check status: "+dontShowAgain.isChecked());
+				editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
+				editor.putBoolean(getString(R.string.isAllowNetAccess), false);
+				editor.commit();
+				if(wakeLock.isHeld())wakeLock.release();
+				dialog.cancel();
+				if(isCallFromDownloadCmd){
+					isCallFromDownloadCmd=false;
+					setResult(RESULT_CANCELED);
+					buttonUpdater.cancel();
+					finish();
+				}
+			}
+		});
+		return builder.create();
+	}
 	
 	@SuppressLint("NewApi")
 	private void showThreadsSelectDialog() {
@@ -737,60 +716,95 @@ public class SpeechMenuActivity extends Activity {
 		}
 	}
 	
-/*	public class ButtonUpdater extends AsyncTask<Void, Void, Void> {
-		JSONObject executing=null;
-		boolean cancelled = false;
-		
-		@Override
-        protected void onCancelled(){
-			cancelled = true;
-        }
-        // From API call               
-        @Override
-        protected void onCancelled(Void result) {
-        	cancelled = true;
-        }
-        
-		@Override
-		protected Void doInBackground(Void... arg0) {
-			
-			while(!cancelled){
-				synchronized(btnDownloadAll){
-					
-					updateDownloadAllBtn();
-					
-					try {
-						btnDownloadAll.wait(1500);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+	private ProgressDialog getDlprgsDialog(){
+		pd=new ProgressDialog(this);
+		pd.setTitle("廣論資源下載");
+		pd.setMessage("");
+		pd.setCancelable(true);
+		pd.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				pd.dismiss();
+				
+				if(downloader!=null && !downloader.isCancelled()){
+					Log.d(getClass().getName(),"The download procedure been cancel.");
+					downloader.stopRun();
+					if(wakeLock.isHeld())wakeLock.release();
+				}
+				if(isCallFromDownloadCmd){
+					Log.d(getClass().getName(),"The download is start by download command, return caller activity now.");
+					isCallFromDownloadCmd=false;
+					setResult(RESULT_CANCELED);
+					buttonUpdater.cancel();
+					finish();
 				}
 			}
-			return null;
-		}
+		});
+		pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		return pd;
 	}
-*/	
+	
+	private AlertDialog getDownloadAgainDialog(final int ... index){
+		Log.d(getClass().getName(), "There is download fail, show download again dialog.");
+		String msg=String.format(getString(R.string.dlgMsgDlNotComplete), SpeechData.getNameId(index[0]));
+		final AlertDialog.Builder dialog = new AlertDialog.Builder(SpeechMenuActivity.this);
+		dialog.setTitle(msg); 
+		dialog.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener() {  
+		    public void onClick(DialogInterface dialog, int which) {
+		    	downloadSrc(index);
+		    }
+		});
+		dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
+		    public void onClick(DialogInterface dialog, int which) {
+		    	if (wakeLock.isHeld())wakeLock.release();
+		    	dialog.dismiss();
+		    	if(isCallFromDownloadCmd){
+		    		isCallFromDownloadCmd=false;
+					setResult(RESULT_CANCELED);
+					buttonUpdater.cancel();
+					finish();
+		    	}
+		    }
+		});
+		
+		return dialog.create();
+	}
+	
+	public void lockScreen(){
+		new Handler().post(new Runnable(){
+			@Override
+			public void run() {
+				getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			}});
+	}
+	public void unlockScreen(){
+		rootView.post(new Runnable(){
+			@Override
+			public void run() {
+				getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+			}});
+	}
 	
 	public class ButtonUpdater extends Thread {
-		JSONObject executing=null;
+		JSONObject executing = null;
 		boolean cancelled = false;
-		
-        public void cancel() {
-        	cancelled = true;
-        }
-        
-        public void cancel(boolean dontCare) {
-        	cancelled = true;
-        }
-        
+
+		public void cancel() {
+			cancelled = true;
+		}
+
+		public void cancel(boolean dontCare) {
+			cancelled = true;
+		}
+
 		@Override
 		public void run() {
-			
-			while(!cancelled){
-				synchronized(btnDownloadAll){
-					Log.d(getClass().getName(),"Button updater awake");
+
+			while (!cancelled) {
+				synchronized (btnDownloadAll) {
+					Log.d(getClass().getName(), "Button updater awake");
 					updateDownloadAllBtn();
-					
+
 					try {
 						btnDownloadAll.wait(1500);
 					} catch (InterruptedException e) {
@@ -798,24 +812,11 @@ public class SpeechMenuActivity extends Activity {
 					}
 				}
 			}
-			Log.d(getClass().getName(),"Button updater terminate");
+			Log.d(getClass().getName(), "Button updater terminate");
 			return;
 		}
 	}
-	
-/*	private AlertDialog.Builder getConfirmDialog(){
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
-	        public void onClick(DialogInterface dialog, int id) {
-	        	if(wakeLock.isHeld())wakeLock.release();
-	            dialog.cancel();
-	        }
-	    });
-		return builder;
-	}
-*/	// These buttons of the dialog are short term process, no wake luck need, if destroy by blank screen, no effect for our logic. 
-	
-	
+
 	class SpeechListAdapter extends SimpleAdapter {
 		float textSize = 0;
 
@@ -881,4 +882,303 @@ public class SpeechMenuActivity extends Activity {
 			return row;
 		}
 	}
+	
+	class SingleDownloadThread extends Thread {
+		boolean isCancelled = false;
+		int[] tasks=null;
+		
+		public SingleDownloadThread(int ... tasks){
+			this.tasks=tasks;
+		}
+		public void stopRun(){
+			isCancelled = true;
+		}
+		
+		public boolean isCancelled(){
+			return isCancelled;
+		}
+		
+		@Override
+		public void run(){
+			boolean hasFailure=false;
+			String locale = getResources().getConfiguration().locale.getCountry();
+	    	RemoteSource rs = null;
+			if(locale.equals("zh_CN")){
+		    	// If there exist the source download site in China.
+	    	}
+	    	else {rs = new GoogleRemoteSource(SpeechMenuActivity.this);}
+			
+			for(int i=0;i<tasks.length;i++){
+				boolean mediaExist=false, subtitleExist=false;
+				File subtitleFile=fsm.getLocalSubtitleFile(tasks[i]);
+				File mediaFile=fsm.getLocalMediaFile(tasks[i]);
+				try{
+					subtitleExist=subtitleFile.exists();
+					mediaExist=mediaFile.exists();
+				}catch(NullPointerException npe){
+					Log.d(getClass().getName(),"The storage media has not usable, skip.");
+					Util.showErrorPopupWindow(SpeechMenuActivity.this, "儲存空間不足或無法使用儲存裝置，請檢查您的儲存裝置是否正常，或磁碟已被電腦連線所獨佔！");
+					GaLogger.sendException("There is no storage usable.", npe, true);
+					unlockScreen();
+					return;
+				}
+				if(!subtitleExist){
+					Log.d("DownloadAllService","The subtitle not exist, download to "+subtitleFile.getAbsolutePath());
+					subtitleExist=download(rs.getSubtitleFileAddress(tasks[i]),subtitleFile.getAbsolutePath(),tasks[i],getResources().getInteger(R.integer.SUBTITLE_TYPE));
+				}
+				
+				if(!mediaExist){
+					mediaExist=download(rs.getMediaFileAddress(tasks[i]),mediaFile.getAbsolutePath(),tasks[i],getResources().getInteger(R.integer.MEDIA_TYPE));
+				}
+				if(!subtitleExist || !mediaExist)hasFailure=true;
+			}
+			
+			unlockScreen();
+			
+			if(!hasFailure){
+				rootView.post(new Runnable(){
+					@Override
+					public void run() {
+						pd.dismiss();
+						resultAndPlay(tasks[0]);
+						buttonUpdater.cancel();
+						finish();
+					}});
+				return;
+			}
+			
+			Log.d("SpeechMenuActivity","The download has failure, show download again dialog.");
+			if(!isCallFromDownloadCmd)
+				rootView.post(new Runnable(){
+					@Override
+					public void run() {
+						final AlertDialog dialog=getDownloadAgainDialog(tasks);
+						pd.dismiss();
+						if(!wakeLock.isHeld()){wakeLock.acquire();}
+						dialog.show();
+					}});
+		}
+		
+		private boolean download(String url, String outputPath, final int mediaIndex,	final int type) {
+			pd.setProgress(0);
+			Log.d(getClass().getName(), "Download file from " + url);
+			File tmpFile = new File(outputPath + getString(R.string.downloadTmpPostfix));
+			long startTime = System.currentTimeMillis(), respWaitStartTime;
+
+			int readLen = -1, counter = 0, bufLen = getResources().getInteger(R.integer.downloadBufferSize);
+//			Checksum checksum = new CRC32();
+			FileOutputStream fos = null;
+
+			// HttpClient httpclient = getNewHttpClient();
+			HttpClient httpclient = new DefaultHttpClient();
+			HttpGet httpget = new HttpGet(url);
+			HttpResponse response = null;
+			int respCode = -1;
+			if (isCancelled) {
+				Log.d(getClass().getName(),
+						"User canceled, download procedure skip!");
+				return false;
+			}
+			
+			runOnUiThread(new Runnable(){
+				@Override
+				public void run() {
+					try{
+						pd.setTitle(getResources().getString(R.string.dlgTitleConnecting));
+						pd.setMessage(String.format(getString(R.string.dlgDescConnecting), SpeechData.getNameId(mediaIndex),
+								(type == getResources().getInteger(R.integer.MEDIA_TYPE)) ? "音檔" : "字幕"));
+					}catch(Exception e){e.printStackTrace();}
+				}});
+			
+			try {
+				respWaitStartTime = System.currentTimeMillis();
+				response = httpclient.execute(httpget);
+				respCode = response.getStatusLine().getStatusCode();
+
+				// For debug
+				if (respCode != HttpStatus.SC_OK) {
+					httpclient.getConnectionManager().shutdown();
+					System.out.println("CheckRemoteThread: Return code not equal 200! check return "+ respCode);
+				}
+			} catch (ClientProtocolException e) {
+				httpclient.getConnectionManager().shutdown();
+				e.printStackTrace();
+				return false;
+			} catch (IOException e) {
+				httpclient.getConnectionManager().shutdown();
+				e.printStackTrace();
+				return false;
+			}
+
+			if (isCancelled) {
+				httpclient.getConnectionManager().shutdown();
+				Log.d(getClass().getName(),
+						"User canceled, download procedure skip!");
+				return false;
+			}
+			GaLogger.send(MapBuilder.createTiming("download", // Timing category
+																// (required)
+					System.currentTimeMillis() - respWaitStartTime, // Timing
+																	// interval
+																	// in
+																	// milliseconds
+																	// (required)
+					"wait resp time", // Timing name
+					null) // Timing label
+					.build());
+
+			HttpEntity httpEntity = response.getEntity();
+			InputStream is = null;
+			try {
+				is = httpEntity.getContent();
+			} catch (IllegalStateException e2) {
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				httpclient.getConnectionManager().shutdown();
+				tmpFile.delete();
+				e2.printStackTrace();
+				return false;
+			} catch (IOException e2) {
+				httpclient.getConnectionManager().shutdown();
+				tmpFile.delete();
+				e2.printStackTrace();
+				return false;
+			}
+
+			if (isCancelled) {
+				Log.d(getClass().getName(),
+						"User canceled, download procedure skip!");
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				httpclient.getConnectionManager().shutdown();
+				tmpFile.delete();
+				return false;
+			}
+
+			final long contentLength = httpEntity.getContentLength();
+
+			pd.setMax((int) contentLength);
+
+			try {
+				fos = new FileOutputStream(tmpFile);
+			} catch (FileNotFoundException e1) {
+				Log.d(getClass().getName(),
+						"File Not Found Exception happen while create output temp file ["
+								+ tmpFile.getName() + "] !");
+				httpclient.getConnectionManager().shutdown();
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				tmpFile.delete();
+				e1.printStackTrace();
+				return false;
+			}
+
+			if (isCancelled) {
+				httpclient.getConnectionManager().shutdown();
+				try {
+					is.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					fos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				tmpFile.delete();
+				Log.d(getClass().getName(),
+						"User canceled, download procedure skip!");
+				return false;
+			}
+
+			
+			runOnUiThread(new Runnable(){
+				@Override
+				public void run() {
+					try{
+						pd.setTitle(R.string.dlgTitleDownloading);
+						pd.setMessage(String.format(getString(R.string.dlgDescDownloading),	SpeechData.getNameId(mediaIndex),
+							(type == getResources().getInteger(R.integer.MEDIA_TYPE)) ? "音檔" : "字幕"));
+						pd.setMax((int) contentLength);
+					}catch(Exception e){e.printStackTrace();}
+				}});
+			
+
+			try {
+				byte[] buf = new byte[bufLen];
+				Log.d(getClass().getName(), Thread.currentThread().getName()
+						+ ": Start read stream from remote site, is="
+						+ ((is == null) ? "NULL" : "exist") + ", buf="
+						+ ((buf == null) ? "NULL" : "exist"));
+				while ((readLen = is.read(buf)) != -1) {
+
+					counter += readLen;
+					fos.write(buf, 0, readLen);
+//					checksum.update(buf, 0, readLen);
+					pd.setProgress(counter);
+
+					if (isCancelled) {
+						httpclient.getConnectionManager().shutdown();
+						try {
+							is.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						try {
+							fos.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						tmpFile.delete();
+						Log.d(getClass().getName(),
+								"User canceled, download procedure skip!");
+						return false;
+					}
+				}
+				is.close();
+				fos.flush();
+				fos.close();
+			} catch (IOException e) {
+				httpclient.getConnectionManager().shutdown();
+				try {
+					is.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+				try {
+					fos.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+				tmpFile.delete();
+				e.printStackTrace();
+				Log.d(getClass().getName(), Thread.currentThread().getName()
+						+ ": IOException happen while download media.");
+				return false;
+			}
+
+			if (counter != contentLength || isCancelled) {
+				httpclient.getConnectionManager().shutdown();
+				tmpFile.delete();
+				return false;
+			}
+
+			// rename the protected file name to correct file name
+			tmpFile.renameTo(new File(outputPath));
+			httpclient.getConnectionManager().shutdown();
+			Log.d(getClass().getName(), Thread.currentThread().getName() + ": Download finish, return true.");
+			return true;
+		}
+	};
+	
+	
 }

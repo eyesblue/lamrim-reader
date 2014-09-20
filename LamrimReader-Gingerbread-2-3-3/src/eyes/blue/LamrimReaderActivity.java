@@ -246,6 +246,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
 		educFont = Typeface.createFromAsset(this.getAssets(), "EUDC.TTF");
 		try {
 			pkgInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -374,6 +375,30 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				return false;
 			}
 		});
+		
+		final ImageButton themeSwitcher = (ImageButton) actionBarControlPanel.findViewById(R.id.themeSwitcher);
+		boolean isDarkTheme=runtime.getBoolean(getString(R.string.isDarkThemeKey), true);
+		if(!isDarkTheme){
+			if (Build.VERSION.SDK_INT >= 16) themeSwitcher.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+			else themeSwitcher.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
+		}
+		else themeSwitcher.setBackgroundColor(Color.BLACK);
+		themeSwitcher.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View arg0) {
+				boolean isDark_Theme=runtime.getBoolean(getString(R.string.isDarkThemeKey), true);
+				isDark_Theme=!isDark_Theme;
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putBoolean(getString(R.string.isDarkThemeKey), isDark_Theme);
+				editor.commit();
+				
+				Util.restartApp(LamrimReaderActivity.this);
+			}});
+		rootLayout.post(new Runnable(){
+			@Override
+			public void run() {
+				highlightView(themeSwitcher);
+			}});
 
 		final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 		int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -384,10 +409,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		volumeController.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 					@Override
 					public void onStopTrackingTouch(SeekBar arg0) {
+						volumeController.setBackgroundColor(Color.BLACK);
 					}
 
 					@Override
 					public void onStartTrackingTouch(SeekBar arg0) {
+						//volumeController.setBackgroundColor(getResources().getColor(R.color.themeLightColor));
+						if (Build.VERSION.SDK_INT >= 16) volumeController.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+						else volumeController.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
 					}
 
 					@Override
@@ -403,6 +432,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		textSize.setOnClickListener(new View.OnClickListener (){
 			@Override
 			public void onClick(View v) {
+				//textSize.setBackgroundColor(getResources().getColor(R.color.themeLightColor));
+				if (Build.VERSION.SDK_INT >= 16) textSize.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+				else textSize.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
 				showSetTextSizeDialog();
 			}});
 		
@@ -411,6 +443,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			@Override
 			public void onClick(View v) {
 				search.setEnabled(false);
+				//search.setBackgroundColor(getResources().getColor(R.color.themeLightColor));
+				if (Build.VERSION.SDK_INT >= 16) search.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+				else search.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
 				showSearchDialog();
 				search.setEnabled(true);
 			}});
@@ -494,7 +529,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									switch (subtitleViewRenderMode) {
 									case SUBTITLE_MODE:
 										//Util.showSubtitleToast(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
-										Util.showSubtitlePopupWindow(LamrimReaderActivity.this, rootLayout, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
+										Util.showSubtitlePopupWindow(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
 										break;
 									case READING_MODE:
 										SpannableString str = new SpannableString(readingModeAllSubtitle);
@@ -631,6 +666,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						public void onComplatePlay() {
 							Log.d(getClass().getName(),"Show Title bar.");
 //							showTitle();
+							if(GLamrimSectIndex==0 && GLamrimSect[1][0] != -1)Util.showInfoPopupWindow(LamrimReaderActivity.this, "本卷播放結束，請由播放面板點選下一卷繼續閱讀。");
+							else Util.showInfoPopupWindow(LamrimReaderActivity.this, "播放結束");
 							if (wakeLock.isHeld())
 								wakeLock.release();
 						}
@@ -640,6 +677,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			@Override
 			public void onClick(View v) {
 				showOnRegionOptionDialog(mediaIndex, mpController.getCurrentPosition());
+				mpController.showControllerView(LamrimReaderActivity.this);
 			}
 		});
 		
@@ -983,7 +1021,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
             }});
         */
 		// bookView.setScrollingCacheEnabled( false );
-		rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
+		
 //		rootLayout.setLongClickable(false);
 
 		
@@ -1867,6 +1905,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								+ getResources().getInteger(R.integer.textMinSize));
 				editor.commit();
 
+				textSize.setBackgroundColor(Color.BLACK);
 				Log.d(logTag,"Check size after write to db: theory size: "
 								+ runtime.getInt(getString(R.string.bookFontSizeKey), 0) + ", subtitle size: "
 								+ runtime.getInt(getString(R.string.subtitleFontSizeKey), 0));
@@ -2060,6 +2099,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				editor.commit();
 				searchLastBtn.setEnabled(true);
 				searchNextBtn.setEnabled(true);
+				search.setBackgroundColor(Color.BLACK);
 			}});
 	}
 	AlertDialog searchDialog;
@@ -2244,7 +2284,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			public void onItemClick(AdapterView<?> arg0, View v, final int position, long id) {
 				Log.d(logTag, "Region record menu: item " + RegionRecord.records.get(position).title + " clicked.");
 				RegionRecord rec=RegionRecord.records.get(position);
-				int start=rec.mediaStart;
+/*				int start=rec.mediaStart;
 				int end = rec.mediaEnd;
 				int intentCmd[] = null;
 				
@@ -2262,9 +2302,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					speechMenu.putExtra("index", intentCmd);
 					if (wakeLock.isHeld())
 						wakeLock.release();
+					Log.d(getClass().getName(),"Call SpeechMenuActivity for download.");
 					startActivityForResult(speechMenu, SPEECH_MENU_RESULT_REGION);
 					popupWindow.dismiss();
 				}
+				*/
 				startRegionPlay(rec.mediaStart, rec.startTimeMs ,rec.mediaEnd, rec.endTimeMs, rec.theoryPageStart, rec.theoryStartLine, rec.theoryPageEnd, rec.theoryEndLine);
 				actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": "+rec.title;
 				popupWindow.dismiss();
@@ -2777,7 +2819,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		*/
 	}
 	private void highlightView(View v){
-		Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.blank);
+		//Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.blank);
+		Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.rotate);
 		v.startAnimation(animation);
 	}
 	class RegionRecordAdapter extends SimpleAdapter {

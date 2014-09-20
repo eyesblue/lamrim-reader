@@ -24,6 +24,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
@@ -44,95 +45,68 @@ import android.widget.Toast;
 
 public class Util {
 //	static Toast toast = null;
+	static int ErrToastShowTime = 3000;
+	static int InfoToastShowTime = ErrToastShowTime;
+	static int subtitleShowTime = 2000;
 	static ArrayList<HashMap<String,String>> regionFakeList = new ArrayList<HashMap<String,String>>();
-	static HashMap<String,String> fakeSample = new HashMap();
-
-/*	public static void showSaveRegionDialog(final Activity activity, int mediaStart,int mediaStartPosition, int mediaEnd, int mediaEndPosition,String info, Runnable callBack){
-		File subtitleFile=FileSysManager.getLocalSubtitleFile(mediaStart);
-		SubtitleElement[] se=loadSubtitle(subtitleFile);
-		
-		int index=Util.subtitleBSearch(se, mediaStartPosition);
-	    final SubtitleElement startSubtitle=se[index];
-//	    String info=startSubtitle.text+" ~ ";
-	    int startTime=se[index].startTimeMs;
-	    if(mediaStart!=mediaEnd){
-	    	subtitleFile=FileSysManager.getLocalSubtitleFile(mediaEnd);
-	    	se=loadSubtitle(subtitleFile);
-	    }
-	    index=Util.subtitleBSearch(se, mediaEndPosition);
-	    final SubtitleElement endSubtitle=se[index];
-//	    info+=endSubtitle.text;
-	    int endTime=se[index].endTimeMs;
-
-	    Log.d("Util","Check size of region list before: "+RegionRecord.records.size());
-		Runnable callBack=new Runnable(){
-			@Override
-			public void run() {
-				activity.runOnUiThread(new Runnable(){
-				@Override
-				public void run() {
-					regionFakeList.add(fakeSample);
-					if(regionRecordAdapter!=null)Log.d(logTag,"Warring: the regionRecordAdapter = null !!!");
-					else regionRecordAdapter.notifyDataSetChanged();
-					Log.d(logTag,"Check size of region list after: "+RegionRecord.records.size());
-				}});
-			}};
-		
-			BaseDialogs.showEditRegionDialog(activity, mediaStart, startTime, mediaEnd, endTime, info, -1, callBack);
-			GaLogger.sendEvent("ui_action", "show_dialog", "save_region", null);
-	}
-*/	
-/*	public static void showSubtitleToast(final Activity activity,final String s){
-		activity.runOnUiThread(new Runnable() {
-			public void run() {
-				if(toast!=null)toast.cancel();
-				toast = new Toast(activity.getApplicationContext());
-
-				LayoutInflater inflater = activity.getLayoutInflater();
-				View toastLayout = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
-				TextView toastTextView = (TextView) toastLayout.findViewById(R.id.text);
-				Typeface educFont=Typeface.createFromAsset(activity.getAssets(), "EUDC.TTF");
-				toastTextView.setTypeface(educFont);
-				toastTextView.setText(s);
-				
-				toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-				toast.setDuration(Toast.LENGTH_LONG);
-				toast.setView(toastLayout);
-				toast.show();
-			}
-		});
-	}
-*/	
+	static HashMap<String,String> fakeSample = new HashMap<String,String>();
 	static View toastView=null;
 	static PopupWindow mPopToast=null;
 	static long subtitleLastShowTime=-1;
 	static ImageView subtitleIcon=null;
 	static ImageView infoIcon=null;
 	static ImageView errorIcon=null;
-	public static void showSubtitlePopupWindow(final Activity activity, final View rootView, final String s){
-		showToastPopupWindow(activity, rootView, s, R.drawable.ic_launcher);
-	}
-	public static void showInfoPopupWindow(final Activity activity, final View rootView, final String s){
-		showToastPopupWindow(activity, rootView, s, R.drawable.info_icon);
-	}
-	public static void showErrorPopupWindow(final Activity activity, final View rootView, final String s){
-		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon);
+	
+	
+	
+	public static void showSubtitlePopupWindow(final Activity activity, final String s){
+		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.ic_launcher, subtitleShowTime);
 	}
 	
-	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon){
+	/*
+	 * Show the information PopupWindow on the center of root view of activity.
+	 * */
+	public static void showInfoPopupWindow(final Activity activity, final String s){
+		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.info_icon, InfoToastShowTime);
+	}
+	
+	/*
+	 * Show the information PopupWindow on the center of the specified view of activity.
+	 * */
+	public static void showInfoPopupWindow(final Activity activity, final View rootView, final String s){
+		showToastPopupWindow(activity, rootView, s, R.drawable.info_icon, InfoToastShowTime);
+	}
+
+	/*
+	 * Show the error PopupWindow on the center of root view of activity.
+	 * */
+	public static void showErrorPopupWindow(final Activity activity, final String s){
+		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.error_icon, ErrToastShowTime);
+	}
+	
+	/*
+	 * Show the error PopupWindow on the center of the specified view of activity.
+	 * */
+	public static void showErrorPopupWindow(final Activity activity, final View rootView, final String s){
+		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon, ErrToastShowTime);
+	}
+	
+	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon, final int showTime){
 		rootView.post(new Runnable(){
 			public void run() {
 				
-				if(mPopToast!=null && mPopToast.isShowing()){
+//				if(mPopToast!=null && mPopToast.isShowing()){
 					try{
 						mPopToast.dismiss();
 					}catch(Exception e){
-						GaLogger.sendException("DISMISS_LAST_TOAST", e, true);
+//						GaLogger.sendException("DISMISS_LAST_TOAST", e, true);
 						e.printStackTrace();
 					}
-				}
+//				}
 				
 				initToastView(activity);
+				final PopupWindow popToastLocalRef = initToastView(activity);
+				mPopToast = popToastLocalRef;
 				ImageView image=(ImageView) toastView.findViewById(R.id.image);
 				image.setImageResource(icon);
 				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
@@ -141,7 +115,7 @@ public class Util {
 				
 				//mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
 				try{
-					mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+					popToastLocalRef.showAtLocation(rootView, Gravity.CENTER, 0, 0);
 				}catch(Exception e){
 					GaLogger.sendException("SHOW_TOAST", e, true);
 					e.printStackTrace();
@@ -152,27 +126,29 @@ public class Util {
 				rootView.postDelayed(new Runnable(){
 					@Override
 					public void run() {
-						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
+//						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
+						if(System.currentTimeMillis()-subtitleLastShowTime>=showTime)
 							try{
-								mPopToast.dismiss();
+								popToastLocalRef.dismiss();
 							}catch(Exception e){
-								GaLogger.sendException("DISMISS_TOAST", e, true);
+//								GaLogger.sendException("DISMISS_TOAST", e, true);
 								e.printStackTrace();
 							}
-				}},2000);
+				}},showTime);
 		}});
 	}
-	private static void initToastView(Activity activity){
+	private static PopupWindow initToastView(Activity activity){
 		LayoutInflater inflater = activity.getLayoutInflater();
 		toastView = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
 		TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
 		Typeface educFont=Typeface.createFromAsset(activity.getAssets(), "EUDC.TTF");
 		toastTextView.setTypeface(educFont);
 		
-		mPopToast = new PopupWindow(toastView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
-		mPopToast.setOutsideTouchable(false);// 設置觸摸外面時消失
-		mPopToast.setFocusable(false);
-		mPopToast.setAnimationStyle(android.R.style.Animation_Toast);// 設置動畫效果
+		PopupWindow popToastRef = new PopupWindow(toastView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, true);
+		popToastRef.setOutsideTouchable(false);// 設置觸摸外面時消失
+		popToastRef.setFocusable(false);
+		popToastRef.setAnimationStyle(android.R.style.Animation_Toast);// 設置動畫效果
+		return popToastRef;
 	}
 	
 
@@ -477,5 +453,13 @@ public class Util {
 			return Character.toUpperCase(first) + s.substring(1);
 	}
 	
+	public static View getRootView(Activity activity){
+		return activity.getWindow().getDecorView().findViewById(android.R.id.content);
+	}
 	
+	public static void restartApp(Activity activity){
+		Intent i = activity.getBaseContext().getPackageManager().getLaunchIntentForPackage( activity.getBaseContext().getPackageName() );
+		i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		activity.startActivity(i);
+	}
 }

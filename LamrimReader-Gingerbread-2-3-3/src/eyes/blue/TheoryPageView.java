@@ -4,12 +4,15 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -42,12 +45,15 @@ public class TheoryPageView extends TextView {
 	float orgDist = 1f;
 	float orgFontSize=0;
 	float[][] dots=new float[100][3];
-	
+	int textColor, highColorWord,highColorLine,bgColor,numTextColor,boldColor,dotTextColor;
+
+	SharedPreferences runtime ;
 	
 	public TheoryPageView(Context context) {
 		super(context);
 		this.context=context;
 //		this.setOnTouchListener(touchListener);
+		loadColor();
 	}
 
 	public TheoryPageView(Context context, AttributeSet attrs)
@@ -55,7 +61,36 @@ public class TheoryPageView extends TextView {
         super(context, attrs);
         this.context=context;
  //       this.setOnTouchListener(touchListener);
+        loadColor();
     }
+	
+	@SuppressLint("NewApi")
+	@SuppressWarnings("deprecation")
+	private void loadColor(){
+		runtime = context.getSharedPreferences(context.getString(R.string.runtimeStateFile), 0);
+		boolean isDarkTheme=runtime.getBoolean(context.getString(R.string.isDarkThemeKey), true);
+		
+		textColor = ((isDarkTheme)?context.getResources().getInteger(R.color.darkTheoryTextColor):context.getResources().getColor(R.color.lightTheoryTextColor));
+		// There is no background color for light theme.
+		//bgColor = ((isDarkTheme)?-1:context.getResources().getColor(R.color.lightTheoryBgColor));
+		numTextColor = ((isDarkTheme)?context.getResources().getColor(R.color.darkTheoryNumTextColor):context.getResources().getColor(R.color.lightTheoryNumTextColor));
+		dotTextColor = ((isDarkTheme)?context.getResources().getColor(R.color.darkTheoryDotTextColor):context.getResources().getColor(R.color.lightTheoryDotTextColor));
+		boldColor = ((isDarkTheme)?context.getResources().getColor(R.color.darkTheoryBoldColor):context.getResources().getColor(R.color.lightTheoryBoldColor));
+		highColorLine = ((isDarkTheme)?context.getResources().getColor(R.color.darkTheoryHighColorLine):context.getResources().getColor(R.color.lightTheoryHighColorLine));
+		highColorWord = ((isDarkTheme)?context.getResources().getColor(R.color.darkTheoryHighColorWord):context.getResources().getColor(R.color.lightTheoryHighColorWord));
+		
+/*		if(isDarkTheme){
+			int sdk = android.os.Build.VERSION.SDK_INT;
+			if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
+			    setBackgroundDrawable(getResources().getDrawable(R.drawable.theory_background));
+			} else {
+				setBackground(getResources().getDrawable(R.drawable.theory_background));
+			}
+		}
+		else
+			this.setBackgroundColor(context.getResources().getColor(R.color.lightTheoryBgColor));
+		*/
+	}
 	
 	public void highlightWord(int startIndex, int length){
 		SpannableStringBuilder text=new SpannableStringBuilder(getText());
@@ -67,8 +102,7 @@ public class TheoryPageView extends TextView {
 		}
 		
 		int strLen=length+invalidStrCount;
-		int color=context.getResources().getColor(R.color.theoryHighColorWord);
-		text.setSpan(new BackgroundColorSpan(color), startIndex, startIndex+strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+		text.setSpan(new BackgroundColorSpan(highColorWord), startIndex, startIndex+strLen, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		super.setText(text);
 	}
 	
@@ -86,12 +120,11 @@ public class TheoryPageView extends TextView {
 			Log.d(getClass().getName(),"highlight to end: "+endLine);
 		}
 		int wordCounter=0;
-		int color=context.getResources().getColor(R.color.theoryHighColorLine);
 		
 		for(int i=0;i<lines.length;i++){
 			if(i>=startLine && i<=endLine){
 				Log.d(getClass().getName(),"highlight: start="+wordCounter+", end="+wordCounter+lines[i].length());
-				text.setSpan(new BackgroundColorSpan(color), wordCounter, wordCounter+lines[i].length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+				text.setSpan(new BackgroundColorSpan(highColorLine), wordCounter, wordCounter+lines[i].length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 			}
 			wordCounter+=lines[i].length()+1;
 		}
@@ -102,11 +135,6 @@ public class TheoryPageView extends TextView {
 		int lineCounter=0;
 		int start=0,end=0;
 		float smallSize=(float)getContext().getResources().getInteger(R.integer.theorySmallTextSizePercent)/100;
-		int defTextColor=getContext().getResources().getColor(R.color.theoryTextDefColor);
-		int bgColor=getContext().getResources().getColor(R.color.theoryBgColor);
-        int numColor=getContext().getResources().getColor(R.color.theoryNumTextColor);
-        int boldColor=getContext().getResources().getColor(R.color.theoryBoldColor);
-        
         
 		SpannableStringBuilder  page = new SpannableStringBuilder ();
         SpannableStringBuilder  line = new SpannableStringBuilder ();
@@ -139,12 +167,12 @@ public class TheoryPageView extends TextView {
         	else if(c=='.'){
         		if(text.charAt(start)!='.'){
         			SpannableString str=new SpannableString (text.substring(start, end));
-        			//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        			str.setSpan(new ForegroundColorSpan(textColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isBold){
         				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			}
-        			if(isNum)str.setSpan(new ForegroundColorSpan(numColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        			if(isNum)str.setSpan(new ForegroundColorSpan(numTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isSmall)str.setSpan(new RelativeSizeSpan(smallSize), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			line.append(str);
         			dots[dotIndex][0]=lineCounter;
@@ -170,12 +198,12 @@ public class TheoryPageView extends TextView {
 //        		Log.d("LamrimReader","Get new line, draw text from "+start+" to "+end+",on ("+x+","+y+") text length="+text.length());
         		//canvas.drawText(text, start, end, x, y, getPaint());
         		SpannableString str=new SpannableString (text.substring(start, end)+"\n");
-        		//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        		str.setSpan(new ForegroundColorSpan(textColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         		if(isBold){
     				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			}
-        		if(isNum)str.setSpan(new ForegroundColorSpan(numColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        		if(isNum)str.setSpan(new ForegroundColorSpan(numTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			if(isSmall)str.setSpan(new RelativeSizeSpan(smallSize), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			line.append(str);
     			page.append(line);
@@ -189,19 +217,18 @@ public class TheoryPageView extends TextView {
         		if(debug)Log.d("LamrimReader","Find a command start");
         		if(end-start>0){
         			SpannableString str=new SpannableString (text.substring(start, end));
-        			//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        			str.setSpan(new ForegroundColorSpan(textColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isBold){
         				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			}
-        			if(isNum)str.setSpan(new ForegroundColorSpan(numColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        			if(isNum)str.setSpan(new ForegroundColorSpan(numTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isSmall)str.setSpan(new RelativeSizeSpan(smallSize), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			line.append(str);
         			//page.append(line);
         			//canvas.drawText(text, start, end, x, y, getPaint());
         			//x+=getPaint().measureText("中")*(end-start);
         		}
-        		
         		
         		start=i+1;
         		end=start;
@@ -210,12 +237,12 @@ public class TheoryPageView extends TextView {
         	else if(i==text.length()-1){
         		if(end-start<0)continue;
         		SpannableString str=new SpannableString (text.substring(start, end+1));
-        		//str.setSpan(new ForegroundColorSpan(defTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        		str.setSpan(new ForegroundColorSpan(textColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			if(isBold){
     				str.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     				str.setSpan(new ForegroundColorSpan(boldColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			}
-    			if(isNum)str.setSpan(new ForegroundColorSpan(numColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+    			if(isNum)str.setSpan(new ForegroundColorSpan(numTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			if(isSmall)str.setSpan(new RelativeSizeSpan(smallSize), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
     			line.append(str);
 //    			page.append(line);
@@ -247,9 +274,8 @@ public class TheoryPageView extends TextView {
 		super.onDraw(canvas);
 		int pointSize=(int) (getTextSize()/7);
 		int yShift=(int) (getTextSize()/5);
-		int dotColor=getContext().getResources().getColor(R.color.theoryDotTextColor);
 		Paint paint=getPaint();
-		paint.setColor(dotColor);
+		paint.setColor(dotTextColor);
 		
 //		StaticLayout tempLayout = new StaticLayout(boldText, paint, 10000, android.text.Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
 //		int lineCount = tempLayout.getLineCount();

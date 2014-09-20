@@ -4,9 +4,9 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:isScrollContainer="true"
-	android:background="@drawable/theory_background"
+	android:background="@drawable/theory_dark_bg"
     android:orientation="vertical" >
-
+<!-- android:background="@drawable/theory_background" -->
     <!-- android:background="#FFFFDF" #1F1F1A -->
     
     <eyes.blue.TheoryPageView

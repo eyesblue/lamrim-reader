@@ -11,11 +11,11 @@
     <string name="isShowNetAccessWarn">true</string>
     <string name="isUseThirdDir">useThirdDir</string>
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
-
+	<string name="isDarkThemeKey">isDarkTheme</string>
     <!-- Default Value -->
     
     <string name="versionCheckUrl">http://lamrimreader.eyes-blue.com/appresources/publish/notifier.json</string>
-    <integer name="textMaxSize">80</integer>
+    <integer name="textMaxSize">160</integer>
     <integer name="textMinSize">16</integer>
     <integer name="defFontSize">32</integer>
     <integer name="theorySmallTextSizePercent">90</integer>

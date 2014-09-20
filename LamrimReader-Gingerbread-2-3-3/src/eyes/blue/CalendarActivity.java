@@ -175,6 +175,8 @@ public class CalendarActivity extends SherlockActivity {
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
+		//Log.d("CalendarActivity","Get result from SpeechMenuActivity,
+		Log.d("CalendarActivity","Get result from SpeechMenuActivity, Result="+((resultCode==RESULT_OK)?"OK":"Not OK")+", SelectedGlr="+selectedGlr/*+", isFileExist="+((isFileExist(selectedGlr))?"OK":"Not OK")*/);
 		if (resultCode != RESULT_OK || selectedGlr == null || !isFileExist(selectedGlr))
 			return;
 

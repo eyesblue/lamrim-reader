@@ -62,12 +62,13 @@ import android.widget.Toast;
  * */
 public class MediaPlayerController implements MediaControllerView.MediaPlayerControl{
 	final public static int MP_IDLE = 0; // after create()
-	final public static int MP_INITED = 1; // after setDataSource()
-	final public static int MP_PREPARING = 2; // prepare()
-	final public static int MP_PREPARED = 3;
-	final public static int MP_PLAYING = 4;
-	final public static int MP_PAUSE = 5;
-	final public static int MP_COMPLETE = 6;
+	final public static int MP_INITING = 1;
+	final public static int MP_INITED = 2; // after setDataSource()
+	final public static int MP_PREPARING = 3; // prepare()
+	final public static int MP_PREPARED = 4;
+	final public static int MP_PLAYING = 5;
+	final public static int MP_PAUSE = 6;
+	final public static int MP_COMPLETE = 7;
 	int mpState = 0;
 	
 	AudioManager audioManager=null;
@@ -179,7 +180,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		subtitleTimer=null;
 		
 		synchronized(mediaPlayerKey){
-			if(mediaPlayer==null)return;
+			if(mediaPlayer==null || mpState < MP_PREPARED)return;
 			mpState=MP_PAUSE;
 			mediaPlayer.pause();
 		}
@@ -490,6 +491,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(mediaPlayerKey){
 			try{
 				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
+				mpState=MP_INITING;
 				mediaPlayer.setDataSource(context, speechFileUri);
 				mpState=MP_INITED;
 				mediaPlayer.prepare();
@@ -555,7 +557,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			updateSeekBar();
 		}*/
 		
-		activity.runOnUiThread(new Runnable() {
+		Util.getRootView(activity).post(new Runnable() {
 			public void run() {
 //				mediaController.setAnchorView(anchorView);
 //				updateSeekBar();
@@ -572,7 +574,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	}
 	
 	public void refreshSeekBar(){
-		activity.runOnUiThread(new Runnable() {
+		Util.getRootView(activity).post(new Runnable() {
 			public void run() {
 				Log.d(getClass().getName(),"==========================Refeesh control panel.======================");
 				mediaController.show(500);
@@ -967,6 +969,11 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	    	KeyEvent event = (KeyEvent)intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
 	        KeyEvent Xevent = (KeyEvent)intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
 	        
+	        if(event == null || Xevent == null){
+	        	GaLogger.sendException("MediaPlayerRemoteController get key event but event is null.", new NullPointerException(), true);
+	        	return;
+	        }
+	        
 	        // If the event is key down, record the code to key_actionDown then skip.
 		    if(Xevent.getAction() == KeyEvent.ACTION_DOWN){
 		    	Log.d(getClass().getName(),"Receive Brocast: get "+event.getKeyCode()+" key down.");
@@ -1006,7 +1013,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	            	return;
 	            }
 	            Log.d(getClass().getName(),"Unknow MEDIA_KEY: "+event.getKeyCode());
-	        
 	    }
 	}
 	

@@ -10,6 +10,7 @@ import eyes.blue.R;
 import eyes.blue.SpeechData;
 import eyes.blue.TheoryData;
 import eyes.blue.TheoryPageView;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -36,7 +37,6 @@ public class MyListView extends ListView {
 	public final static int TO_START=1;
 	public final static int TO_END=2;
 
-	
 	Context context;
 	SharedPreferences runtime = null;
 	Typeface educFont = null;
@@ -205,7 +205,7 @@ public class MyListView extends ListView {
 	public float getTextSize(){return adapter.getTextSize();}
 	public void refresh(){
 //		setAdapter(adapter);
-		((Activity)context).runOnUiThread(new Runnable(){
+		((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content).post(new Runnable(){
 			@Override
 			public void run() {
 				adapter.notifyDataSetChanged();
@@ -654,6 +654,7 @@ public class MyListView extends ListView {
 			super(context, data, resource, from, to);
 		}
 
+		@SuppressLint("NewApi")
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View row = convertView;
@@ -661,6 +662,25 @@ public class MyListView extends ListView {
 				Log.d(getClass().getName(), "row=null, construct it.");
 				LayoutInflater inflater = ((Activity)context).getLayoutInflater();
 				row = inflater.inflate(R.layout.theory_page_view, parent, false);
+				
+				boolean isDarkTheme=runtime.getBoolean(context.getString(R.string.isDarkThemeKey), true);
+				TextView pNum = (TextView) row.findViewById(R.id.pageNumView);
+				int sdk = android.os.Build.VERSION.SDK_INT;
+				int background=-1,textColor=-1;
+				if(isDarkTheme){
+					background=R.drawable.theory_dark_bg;
+					textColor=R.color.darkTheoryTextColor;
+				}
+				else {
+					background=R.drawable.theory_light_bg;
+					textColor=R.color.lightTheoryTextColor;
+				}
+
+				if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) 
+					row.setBackgroundDrawable(getResources().getDrawable(background));
+				else 
+					row.setBackground(getResources().getDrawable(background));
+				pNum.setTextColor(context.getResources().getColor(textColor));
 			}
 
 			// / Log.d(logTag, "row=" + row+", ConvertView="+convertView);

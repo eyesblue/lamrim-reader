@@ -188,7 +188,7 @@ public class DownloadAllService extends IntentService {
 		Intent bcIntent = new Intent();
 		bcIntent.setAction(NOTIFICATION);
 		bcIntent.putExtra("action", "error");
-		bcIntent.putExtra("desc", "無法使用儲存裝置，請檢查您的儲存裝置是否正常，或磁碟已被電腦連線所獨佔！");
+		bcIntent.putExtra("desc", "儲存空間不足或無法使用儲存裝置，請檢查您的儲存裝置是否正常，或磁碟已被電腦連線所獨佔！");
 		sendBroadcast(bcIntent); 
 		
 		removeNotification();
@@ -344,9 +344,6 @@ public class DownloadAllService extends IntentService {
 			}
 			return ;
 		}
-		
-
-			
 		
 		public boolean download(String url, String outputPath){
 	        Log.d(getClass().getName(),"Download file from "+url);

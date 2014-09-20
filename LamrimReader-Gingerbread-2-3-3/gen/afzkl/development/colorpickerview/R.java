@@ -16,14 +16,14 @@ public final class R {
 		public static final int showSelectedColorInList = 0x7f010008;
 	}
 	public static final class drawable {
-		public static final int icon = 0x7f02009f;
+		public static final int icon = 0x7f0200a0;
 	}
 	public static final class id {
 		public static final int color_panel_new = 0x7f080018;
 		public static final int color_panel_old = 0x7f080017;
 		public static final int color_picker_view = 0x7f080016;
 		public static final int dialog_color_picker_extra_layout_landscape = 0x7f08001a;
-		public static final int layout1 = 0x7f080067;
+		public static final int layout1 = 0x7f080068;
 		public static final int preference_preview_color_panel = 0x7f080019;
 	}
 	public static final class layout {
