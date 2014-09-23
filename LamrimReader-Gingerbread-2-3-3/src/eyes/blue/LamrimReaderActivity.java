@@ -392,7 +392,21 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				editor.putBoolean(getString(R.string.isDarkThemeKey), isDark_Theme);
 				editor.commit();
 				
-				Util.restartApp(LamrimReaderActivity.this);
+				if(!isDark_Theme){
+					if (Build.VERSION.SDK_INT >= 16) themeSwitcher.setBackground(getResources().getDrawable(R.drawable.speech_menu_item_e));
+					else themeSwitcher.setBackgroundDrawable(getResources().getDrawable(R.drawable.speech_menu_item_e));
+				}
+				else themeSwitcher.setBackgroundColor(Color.BLACK);
+				
+				// Destroy the adapter of BookView and reload parameter.
+				int bookPosition = bookView.getFirstVisiblePosition();
+				View v = bookView.getChildAt(0);
+				int bookShift = (v == null) ? 0 : v.getTop();
+				bookView.rebuildView();
+				int defTheoryTextSize = getResources().getInteger(R.integer.defFontSize);
+				final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey), defTheoryTextSize);
+				bookView.setTextSize(theoryTextSize);
+				bookView.setSelectionFromTop(bookPosition, bookShift);
 			}});
 		rootLayout.post(new Runnable(){
 			@Override

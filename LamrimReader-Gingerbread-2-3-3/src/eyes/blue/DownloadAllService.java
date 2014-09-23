@@ -72,6 +72,7 @@ public class DownloadAllService extends IntentService {
     public void onDestroy() {
 		Log.d(getClass().getName(), "Stop download all service");
 		cancelled=true;
+		removeNotification();
     }
 
 	@Override

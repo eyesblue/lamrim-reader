@@ -2,6 +2,7 @@ package eyes.blue;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,7 @@ public class DownloadAllServiceHandler extends Activity {
 				intent.putExtra("cmd", "stop");
 				Log.d(getClass().getName(),"Stop download all service.");
 		        stopService(intent);
+		        removeNotification();
 		        finish();
 			}
 		});
@@ -59,5 +61,10 @@ public class DownloadAllServiceHandler extends Activity {
 	        }
 	    }
 	    return false;
+	}
+	
+	private void removeNotification(){
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.cancel(DownloadAllService.notificationId);
 	}
 }

@@ -14,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -29,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 import android.widget.AbsListView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -72,7 +74,7 @@ public class MyListView extends ListView {
                 bookList.add(item);
         }
         
-        adapter = new TheoryListAdapter(context, bookList,	R.layout.theory_page_view, new String[] { "page", "desc" },	new int[] { R.id.pageContentView, R.id.pageNumView });
+        adapter = new TheoryListAdapter(context, R.layout.theory_page_view, R.id.aboutTextTitle, TheoryData.content);
 		setAdapter(adapter);
     	
     	setScaleGestureDetector(new ScaleGestureDetector(context,new SimpleOnScaleGestureListener() {
@@ -211,6 +213,13 @@ public class MyListView extends ListView {
 				adapter.notifyDataSetChanged();
 			}});
 	}
+	
+	public void rebuildView(){
+		adapter = new TheoryListAdapter(context, R.layout.theory_page_view, R.id.aboutTextTitle, TheoryData.content);
+		setAdapter(adapter);
+		adapter.notifyDataSetChanged();
+	}
+	
 	public void setHighlightLine(int startPage, int startLine,int endPage, int endLine){
 		int pageCount=endPage-startPage+1;
 		highlightLine=new int[pageCount][3];
@@ -647,13 +656,16 @@ public class MyListView extends ListView {
 	}
 	
 	
-	class TheoryListAdapter extends SimpleAdapter {
+	class TheoryListAdapter extends ArrayAdapter {
 		float textSize = 0;
 
-		public TheoryListAdapter(Context context,List<? extends Map<String, ?>> data, int resource,	String[] from, int[] to) {
-			super(context, data, resource, from, to);
+		public TheoryListAdapter(Context context, int resource) {
+			super(context, resource);
 		}
-
+		public <T> TheoryListAdapter (Context context, int resource, int textViewResourceId, T[] objects){
+			super(context, resource, textViewResourceId, objects);
+		}
+		
 		@SuppressLint("NewApi")
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -717,5 +729,6 @@ public class MyListView extends ListView {
 		public float getTextSize(){
 			return textSize;
 		}
+		
 	}
 }

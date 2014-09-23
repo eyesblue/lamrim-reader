@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
@@ -91,22 +93,19 @@ public class Util {
 		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon, ErrToastShowTime);
 	}
 	
+	static Timer dismissToastTimer=new Timer("dismissToastTimer");
 	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon, final int showTime){
+		
 		rootView.post(new Runnable(){
 			public void run() {
+				try{
+					dismissToastTimer.purge();
+					mPopToast.dismiss();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 				
-//				if(mPopToast!=null && mPopToast.isShowing()){
-					try{
-						mPopToast.dismiss();
-					}catch(Exception e){
-//						GaLogger.sendException("DISMISS_LAST_TOAST", e, true);
-						e.printStackTrace();
-					}
-//				}
-				
-				initToastView(activity);
-				final PopupWindow popToastLocalRef = initToastView(activity);
-				mPopToast = popToastLocalRef;
+				mPopToast = initToastView(activity);
 				ImageView image=(ImageView) toastView.findViewById(R.id.image);
 				image.setImageResource(icon);
 				TextView toastTextView = (TextView) toastView.findViewById(R.id.text);
@@ -115,28 +114,62 @@ public class Util {
 				
 				//mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
 				try{
-					popToastLocalRef.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+					mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
+					subtitleLastShowTime=System.currentTimeMillis();
 				}catch(Exception e){
 					GaLogger.sendException("SHOW_TOAST", e, true);
 					e.printStackTrace();
 					return;
 				}
 				
-				subtitleLastShowTime=System.currentTimeMillis();
-				rootView.postDelayed(new Runnable(){
+				dismissToastTimer.schedule(new DismissTask(activity, showTime), showTime);
+				
+/*				rootView.postDelayed(new Runnable(){
 					@Override
 					public void run() {
-//						if(mPopToast!=null && mPopToast.isShowing() && System.currentTimeMillis()-subtitleLastShowTime>1999)
 						if(System.currentTimeMillis()-subtitleLastShowTime>=showTime)
 							try{
-								popToastLocalRef.dismiss();
+								mPopToast.dismiss();
 							}catch(Exception e){
-//								GaLogger.sendException("DISMISS_TOAST", e, true);
 								e.printStackTrace();
 							}
 				}},showTime);
+				*/
 		}});
 	}
+	
+	static class DismissTask extends TimerTask{
+		boolean isCanceled=false;
+		Activity activity;
+		int showTime;
+		
+		public DismissTask(Activity activity, int showTime){
+			this.activity=activity;
+			this.showTime=showTime;
+		}
+		
+		@Override
+		public boolean cancel(){
+			isCanceled=true;
+			return super.cancel();
+		}
+
+		@Override
+		public void run() {
+			
+			if(System.currentTimeMillis()-subtitleLastShowTime>=showTime)
+				activity.runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						try{
+							mPopToast.dismiss();
+						}catch(Exception e){
+							e.printStackTrace();
+						}
+					}});
+		}
+	}
+	
 	private static PopupWindow initToastView(Activity activity){
 		LayoutInflater inflater = activity.getLayoutInflater();
 		toastView = inflater.inflate(R.layout.toast_text_view, (ViewGroup) activity.findViewById(R.id.toastLayout));
