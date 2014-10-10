@@ -10,6 +10,7 @@ import eyes.blue.R;
 import eyes.blue.SpeechData;
 import eyes.blue.TheoryData;
 import eyes.blue.TheoryPageView;
+import eyes.blue.Util;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -78,8 +79,11 @@ public class MyListView extends ListView {
 		setAdapter(adapter);
     	
     	setScaleGestureDetector(new ScaleGestureDetector(context,new SimpleOnScaleGestureListener() {
-    		int textSizeMax=context.getResources().getInteger(R.integer.textMaxSize);
-    		int textSizeMin=context.getResources().getInteger(R.integer.textMinSize);
+    		//int textSizeMax=context.getResources().getInteger(R.integer.textMaxSize);
+    		//int textSizeMin=context.getResources().getInteger(R.integer.textMinSize);
+    		
+    		int textSizeMax=Util.getMaxFontSize((Activity)context);
+    		int textSizeMin=Util.getMinFontSize((Activity)context);
     		@Override
     		public boolean onScaleBegin(ScaleGestureDetector detector) {
     			Log.d(getClass().getName(),"Begin scale called factor: "+detector.getScaleFactor());
@@ -215,9 +219,11 @@ public class MyListView extends ListView {
 	}
 	
 	public void rebuildView(){
+		int size=Math.round(getTextSize());
 		adapter = new TheoryListAdapter(context, R.layout.theory_page_view, R.id.aboutTextTitle, TheoryData.content);
 		setAdapter(adapter);
 		adapter.notifyDataSetChanged();
+		this.setTextSize(size);
 	}
 	
 	public void setHighlightLine(int startPage, int startLine,int endPage, int endLine){
@@ -335,6 +341,7 @@ public class MyListView extends ListView {
 		post(new Runnable(){
 			@Override
 			public void run() {
+				rebuildView();
 				setSelectionFromTop(page, (int) shift);
 			}});
 		refresh();

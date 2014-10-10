@@ -15,11 +15,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import eyes.blue.MediaControllerView.MediaPlayerControl;
+import eyes.blue.modified.RegionableSeekBar;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -71,8 +73,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	final public static int MP_COMPLETE = 7;
 	int mpState = 0;
 	
+	SharedPreferences runtime = null;
 	AudioManager audioManager=null;
 	Activity activity=null;
+	RegionableSeekBar seekBar=null;
 	String logTag=null;
 	FileSysManager fsm=null;
 	MediaPlayer mediaPlayer=new MediaPlayer();
@@ -162,6 +166,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setMediaPlayer(this);
 		mediaController.setAnchorView(this.anchorView);
 		mediaController.setEnabled(true);
+		seekBar=mediaController.getSeekBar();
 		// Use for static broadcast receiver - RemoteControlReceiver
 		mpController=this;
 		
@@ -373,10 +378,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		mediaController.setOnReportListener(listener);
     }
 	
-/*	public void setOnShareClickListener(View.OnClickListener listener){
-		mediaController.setOnShareListener(listener);
-	}
-	*/
 // =================================================================
 	
 	// sometimes large memory objects may get lost.
@@ -406,9 +407,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			try{
 				mediaPlayer.reset();
 				mpState=MP_IDLE;
-				regionStartMs = -1;
-				regionEndMs = -1;
-				
+				desetPlayRegion();
 			}catch(Exception e){
 				e.printStackTrace();
 				changedListener.onPlayerError();
@@ -491,6 +490,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(mediaPlayerKey){
 			try{
 				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
+				if(mpState != MP_IDLE)reset();
 				mpState=MP_INITING;
 				mediaPlayer.setDataSource(context, speechFileUri);
 				mpState=MP_INITED;
@@ -520,7 +520,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(mediaPlayerKey){
 			return mpState;
 		}
-		
 	}
 	
 	/*
@@ -562,7 +561,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 //				mediaController.setAnchorView(anchorView);
 //				updateSeekBar();
 				mediaController.show();
-				if(regionStartMs!=-1 && regionEndMs!=-1)updateSeekBar();
+//				if(regionStartMs!=-1 && regionEndMs!=-1)updateSeekBar();
 			}
 		});
 	}
@@ -573,7 +572,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			
 	}
 	
-	public void refreshSeekBar(){
+/*	public void refreshSeekBar(){
 		Util.getRootView(activity).post(new Runnable() {
 			public void run() {
 				Log.d(getClass().getName(),"==========================Refeesh control panel.======================");
@@ -583,6 +582,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}
 		});
 	}
+*/	
 	// ================================ Functions for region play ================================
 	
 	public void rewToLastSubtitle(){
@@ -632,7 +632,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public void reflashProgressView(){
 		mediaController.setProgress();
 	}
-	
+/*	
 	public static Bitmap getNinepatch(int id,int x, int y, Context context){
 		//id is a resource id for a valid ninepatch
 
@@ -651,7 +651,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 
 	/*
 	 * The function can't been call while mpState < MP_PREPARED, because the MediaPlayer.getDuration() will throw IllegalStateException.
-	 * */
+	 * 
 	boolean firstTimeCallUpdateSeekBar = true;
 	private void updateSeekBar(){
 		SeekBar sb=(SeekBar) mediaController.findViewById(R.id.mediacontroller_progress);
@@ -763,7 +763,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			updateSeekBar();
 		}
 	}
-	
+*/	
 	public void setPrevNextListeners(OnClickListener prev, OnClickListener next){
 		mediaController.setPrevNextListeners(prev, next);
 	}
@@ -786,7 +786,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(playingIndexKey){
 			regionStartMs=subtitle[subIndex].startTimeMs;
 		}
-		updateSeekBar();
+		
+		seekBar.setRegionStart(regionStartMs, mediaPlayer.getDuration());
+		seekBar.postInvalidate();
 	}
 	public void setPlayRegionEndMs(int endMs){
 		// Clear region start time.
@@ -806,13 +808,16 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		synchronized(playingIndexKey){
 			regionEndMs=subtitle[subIndex].endTimeMs;
 		}
-		updateSeekBar();
+
+		seekBar.setRegionEnd(regionEndMs, mediaPlayer.getDuration());
+		seekBar.postInvalidate();
 	}
 	
 	public void setPlayRegion(int startTimeMs,int endTimeMs){
 		setPlayRegionEndMs(endTimeMs);
 		setPlayRegionStartMs(startTimeMs);
-		updateSeekBar();
+
+//		seekBar.setRegionMode(startTimeMs, endTimeMs, mediaPlayer.getDuration());
 		Log.d(logTag," Set play region: isPlayRegion="+isRegionPlay()+", start="+regionStartMs+", end="+regionEndMs);
 	}
 	
@@ -820,7 +825,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		Log.d(logTag,"Deset play region");
 		regionStartMs=-1;
 		regionEndMs=-1;
-		updateSeekBar();
+		seekBar.disableRegionMode();
+		seekBar.postInvalidate();
 	}
 	
 //	public boolean isPlayRegion(){return (mpState==MP_PLAYING && canPlayRegion());}

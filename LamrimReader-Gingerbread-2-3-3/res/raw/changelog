@@ -23,6 +23,18 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$159
+  % Version 1.3.20
+  _ 2014-10-10
+ 	* 根據不同模式載回最後進度。
+ 	* 還原標點符號。
+  	* 由裝置解析度決定文字最大與最小值。
+  	* 全廣、區段播放音檔載入後不直接播放。
+  	* 修正多媒體面板初次載入區段顯示不正確問題。
+  	* 修正某些機型搜尋時無法正常換頁問題。
+  	* 修正298頁下方粗體字部分錯誤內容。
+  	* 修正關閉對話框時造成強制關閉錯誤。
+  	
 $158
   % Version 1.3.19
   _ 2014-09-23

@@ -23,10 +23,12 @@ import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import android.view.ViewGroup.LayoutParams;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
@@ -403,6 +405,43 @@ public class Util {
 		double y = Math.pow(dm.heightPixels/dm.ydpi,2);
 		double screenInches = Math.sqrt(x+y);
 		return screenInches;
+	}
+	
+	public static int getMaxFontSize(Activity activity){
+		Point p=getResolution(activity);
+		int ref=Math.min(p.x, p.y);
+		float rate=(float)activity.getResources().getInteger(R.integer.textMaxSize)/100;
+		
+		return Math.round(ref*rate);
+	}
+	
+	public static int getMinFontSize(Activity activity){
+		Point p=getResolution(activity);
+		int ref=Math.min(p.x, p.y);
+		float rate=(float)activity.getResources().getInteger(R.integer.textMinSize)/100;
+		
+		return Math.round(ref*rate);
+	}
+	
+	public static int getDefFontSize(Activity activity){
+		Point p=getResolution(activity);
+		int ref=Math.min(p.x, p.y);
+		float rate=(float)activity.getResources().getInteger(R.integer.defFontSize)/100;
+		Log.d("Util","ref="+ref+", rate="+rate);
+		return Math.round(ref*rate);
+	}
+	
+	@SuppressLint("NewApi")
+	public static Point getResolution(Activity activity){
+		Point screenDim = new Point();
+
+			if (Build.VERSION.SDK_INT >= 13)
+				activity.getWindowManager().getDefaultDisplay().getSize(screenDim);
+			else{
+				screenDim.x = activity.getWindowManager().getDefaultDisplay().getWidth();
+				screenDim.y = activity.getWindowManager().getDefaultDisplay().getHeight();
+			}
+		return screenDim;
 	}
 	
 	public static boolean unZip( String zipname , String extractTo)

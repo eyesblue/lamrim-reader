@@ -3,6 +3,7 @@
 
     <!-- Runtime options -->
     <string name="runtimeStateFile">runtime</string>
+    <string name="lastPlayStateFile">lastPlayState</string>
     <string name="filePathRoot">lamrimreader</string>
 
     <integer name="isInit">0</integer>
@@ -12,12 +13,13 @@
     <string name="isUseThirdDir">useThirdDir</string>
     <string name="userSpecifySpeechDir">userSpecifySpeechDir</string>
 	<string name="isDarkThemeKey">isDarkTheme</string>
+	<string name="playModeKey">playMode</string>
     <!-- Default Value -->
     
     <string name="versionCheckUrl">http://lamrimreader.eyes-blue.com/appresources/publish/notifier.json</string>
-    <integer name="textMaxSize">160</integer>
-    <integer name="textMinSize">16</integer>
-    <integer name="defFontSize">32</integer>
+    <integer name="textMaxSize">10</integer>
+    <integer name="textMinSize">2</integer>
+    <integer name="defFontSize">7</integer>
     <integer name="theorySmallTextSizePercent">90</integer>
 
     <!--  <color name="theoryTextDefColor">#FFFFFF</color>

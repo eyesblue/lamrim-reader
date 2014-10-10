@@ -97,7 +97,7 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <SeekBar
+        <eyes.blue.modified.RegionableSeekBar
             android:id="@+id/mediacontroller_progress"
             style="@style/SeekBarholo"
             android:layout_width="0dp"

@@ -41,6 +41,8 @@ import java.lang.ref.WeakReference;
 import java.util.Formatter;
 import java.util.Locale;
 
+import eyes.blue.modified.RegionableSeekBar;
+
 /**
  * A view containing controls for a MediaPlayer. Typically contains the
  * buttons like "Play/Pause", "Rewind", "Fast Forward" and a progress
@@ -76,7 +78,7 @@ public class MediaControllerView extends FrameLayout {
     private Context             mContext;
     private ViewGroup           mAnchor;
     private View                mRoot;
-    private SeekBar         	mProgress;
+    private RegionableSeekBar         	mProgress;
     private TextView            mEndTime, mCurrentTime;
     private boolean             mShowing;
     private boolean             mDragging;
@@ -218,7 +220,7 @@ public class MediaControllerView extends FrameLayout {
             mPrevButton.setVisibility(View.GONE);
         }
 */
-        mProgress = (SeekBar) v.findViewById(R.id.mediacontroller_progress);
+        mProgress = (RegionableSeekBar) v.findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
             mProgress.setOnSeekBarChangeListener(mSeekListener);
             mProgress.setMax(1000);
@@ -687,6 +689,10 @@ public class MediaControllerView extends FrameLayout {
 
     public ViewGroup getControllerView(){
     	return (ViewGroup)mRoot;
+    }
+    
+    public RegionableSeekBar getSeekBar(){
+    	return mProgress;
     }
     
     public interface MediaPlayerControl {

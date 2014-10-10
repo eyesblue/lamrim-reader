@@ -162,7 +162,7 @@ public class StorageManageActivity extends Activity {
 							public void run() {
 								fsm.deleteAllSpeechFiles(FileSysManager.EXTERNAL);
 								fsm.deleteAllSubtitleFiles(FileSysManager.EXTERNAL);
-								pd.dismiss();
+								if(pd.isShowing())pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
 									public void run() {
@@ -193,7 +193,7 @@ public class StorageManageActivity extends Activity {
 							public void run() {
 								fsm.deleteAllSpeechFiles(FileSysManager.INTERNAL);
 								fsm.deleteAllSubtitleFiles(FileSysManager.INTERNAL);
-								pd.dismiss();
+								if(pd.isShowing())pd.dismiss();
 								runOnUiThread(new Runnable(){
 									@Override
 									public void run() {
@@ -242,7 +242,9 @@ public class StorageManageActivity extends Activity {
 					builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 						@Override
 						public void onClick(DialogInterface dialog,	int which) {
-							dialog.dismiss();
+							try{
+								dialog.dismiss();
+							}catch(Exception e){e.printStackTrace();}
 						}});
 					builder.create().show();
 					return;
@@ -256,7 +258,9 @@ public class StorageManageActivity extends Activity {
 					builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 						@Override
 						public void onClick(DialogInterface dialog,	int which) {
-							dialog.dismiss();
+							try{
+								dialog.dismiss();
+							}catch(Exception e){e.printStackTrace();}
 						}});
 					builder.create().show();
 					return;
@@ -271,7 +275,9 @@ public class StorageManageActivity extends Activity {
 						builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 							@Override
 							public void onClick(DialogInterface dialog,	int which) {
-								dialog.dismiss();
+								try{
+									dialog.dismiss();
+								}catch(Exception e){e.printStackTrace();}
 							}});
 						builder.create().show();
 						return;
@@ -290,7 +296,9 @@ public class StorageManageActivity extends Activity {
 						builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 							@Override
 							public void onClick(DialogInterface dialog,	int which) {
-								dialog.dismiss();
+								try{
+									dialog.dismiss();
+								}catch(Exception e){e.printStackTrace();}
 							}});
 						builder.create().show();
 						return;
@@ -495,7 +503,7 @@ public class StorageManageActivity extends Activity {
 						File destFile=new File(path);
 						if(!fsm.moveAllMediaFileToUserSpecifyDir(destFile, pd) || !fsm.moveAllMediaFileToUserSpecifyDir(destFile, pd))
 							Util.showErrorPopupWindow(StorageManageActivity.this, findViewById(R.id.smRootView), "檔案搬移失敗，請確認目的地空間是否足夠。");
-						pd.dismiss();
+						if(pd.isShowing())pd.dismiss();
 						refreshUsage();
 					}});
 				t.start();

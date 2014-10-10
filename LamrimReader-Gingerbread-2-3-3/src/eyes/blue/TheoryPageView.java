@@ -44,7 +44,7 @@ public class TheoryPageView extends TextView {
 	static final int MAX_FONT_SIZE = 150;  
 	float orgDist = 1f;
 	float orgFontSize=0;
-	float[][] dots=new float[100][3];
+	Dot[] dots=new Dot[100];
 	int textColor, highColorWord,highColorLine,bgColor,numTextColor,boldColor,dotTextColor;
 
 	SharedPreferences runtime ;
@@ -164,8 +164,8 @@ public class TheoryPageView extends TextView {
            		start=i+1;
            		end=start;
         	}
-        	else if(c=='.'){
-        		if(text.charAt(start)!='.'){
+        	else if(c=='‧' || c=='。'){
+        		if(text.charAt(start)!='‧'){
         			SpannableString str=new SpannableString (text.substring(start, end));
         			str.setSpan(new ForegroundColorSpan(textColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isBold){
@@ -175,19 +175,20 @@ public class TheoryPageView extends TextView {
         			if(isNum)str.setSpan(new ForegroundColorSpan(numTextColor), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			if(isSmall)str.setSpan(new RelativeSizeSpan(smallSize), 0, str.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         			line.append(str);
-        			dots[dotIndex][0]=lineCounter;
-        			dots[dotIndex][1]=line.length();
-        			dots[dotIndex][2]= (((isSmall)?smallSize:1));
-        			//canvas.drawText(text, start, end, x, y, getPaint());
-        			//x+=getPaint().measureText("中")*(end-start);
+        			dots[dotIndex]=new Dot(lineCounter,line.length(),(((isSmall)?smallSize:1)),c);
+//        			dots[dotIndex].line=lineCounter;
+//        			dots[dotIndex].word=line.length();
+ //       			dots[dotIndex].rate= (((isSmall)?smallSize:1));
+ //       			dots[dotIndex].c=c;
+
         		}
         		if(debug)Log.d("LamrimReader","Print "+text.substring(start, end)+", start: "+start+", end: "+end+", ("+(end-start)+")");
 //        		Log.d("LamrimReader","Get point, Before:"+words);
         		//canvas.drawCircle(x, y+pointSize+2, pointSize, getPaint());
-        		dots[dotIndex][0]=lineCounter;
-    			dots[dotIndex][1]=line.length();
-    			//dots[dotIndex][2]=Math.round(((isSmall)?getPaint().measureText("中")*smallSize:getPaint().measureText("中"))*line.length());
-    			dots[dotIndex][2]= (((isSmall)?smallSize:1));
+        		dots[dotIndex]=new Dot(lineCounter,line.length(),(((isSmall)?smallSize:1)),c);
+        		//dots[dotIndex].line=lineCounter;
+    			//dots[dotIndex].word=line.length();
+    			//dots[dotIndex].rate= (((isSmall)?smallSize:1));
     			dotIndex++;
     			
         		start=i+1;
@@ -253,9 +254,10 @@ public class TheoryPageView extends TextView {
         }
 		page.append(line);
 
-		dots[dotIndex][0]=-1;
-		dots[dotIndex][1]=-1;
-		dots[dotIndex][2]=-1;
+		dots[dotIndex]=null;
+//		dots[dotIndex].line=-1;
+//		dots[dotIndex].word=-1;
+//		dots[dotIndex].rate=-1;
 		super.setText(page);
     }
 	
@@ -285,15 +287,22 @@ public class TheoryPageView extends TextView {
 		
 //WG		paint.setTextSize(orgTextSize);
 		String[] lineContent=getText().toString().split("\n");
-		for(float[] d:dots){
-			if(d[0]==-1)break;
+		for(Dot d:dots){
+			//if(d.line==-1)break;
+			if(d==null)break;
 			Rect rect=new Rect();
 			count++;
 			
-			int y=getLineBounds((int) d[0], rect);
-			float fontSize=orgTextSize*d[2];
+			int y=getLineBounds((int) d.line, rect);
+			float fontSize=orgTextSize*d.rate;
 			paint.setTextSize(fontSize);
-			canvas.drawCircle(rect.left+(paint.measureText(lineContent[(int) d[0]],0,(int) d[1])), y+yShift, pointSize, paint);
+			if(d.c=='。'){
+				paint.setStyle(Paint.Style.STROKE);
+				paint.setStrokeWidth(2);
+			}
+//			Log.d("TheoryPageView","Draw line: "+lineContent[d.line]);
+			canvas.drawCircle(rect.left+(paint.measureText(lineContent[d.line],0,(int) d.word)), y+yShift, pointSize, paint);
+			paint.setStyle(Paint.Style.FILL);
 		}
 		
 		getPaint().setTextSize(orgTextSize);
@@ -453,4 +462,17 @@ public class TheoryPageView extends TextView {
 		  }  	
 	};
 	*/
+	
+	class Dot{
+		public int line=-1, word=-1;
+		public float rate;
+		public char c;
+		
+		public Dot(int line, int word, float rate, char c){
+			this.line=line;
+			this.word=word;
+			this.rate=rate;
+			this.c=c;
+		}
+	}
 }

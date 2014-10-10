@@ -235,14 +235,18 @@ public class CalendarActivity extends SherlockActivity {
 									public void onClick(DialogInterface dialog,	int id) {
 										if (isFileExist(glr)) {
 											setResult(Activity.RESULT_OK, getResultIntent(glr));
-											dialog.dismiss();
+											try{
+												dialog.dismiss();
+											}catch(Exception e){e.printStackTrace();}	// Don't force close if problem here.
 											dialogShowing = false;
 											finish();
 										} else {
 											final Intent speechMenu = new Intent(CalendarActivity.this, SpeechMenuActivity.class);
 											int[] speechStart = GlRecord.getSpeechStrToInt(glr.speechPositionStart);// {speechIndex,min,sec}
 											int[] speechEnd = GlRecord.getSpeechStrToInt(glr.speechPositionEnd);// {speechIndex,min,sec}
-											dialog.dismiss();
+											try{
+												dialog.dismiss();
+											}catch(Exception e){e.printStackTrace();}	// Don't force close if problem here.
 											dialogShowing = false;
 											int[] intentCmd = null;
 											if(speechStart[0] == speechEnd[0])
@@ -537,7 +541,9 @@ public class CalendarActivity extends SherlockActivity {
 				httpclient.getConnectionManager().shutdown();
 				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 						getString(R.string.dlgDescDownloadFail));
-				downloadPDialog.dismiss();
+				try{
+					downloadPDialog.dismiss();
+				}catch(Exception e){e.printStackTrace();}	// Don't force close if problem here.
 				return false;
 			}
 		} catch (ClientProtocolException e) {
@@ -546,7 +552,7 @@ public class CalendarActivity extends SherlockActivity {
 			e.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
 			return false;
 		}
 
@@ -565,14 +571,14 @@ public class CalendarActivity extends SherlockActivity {
 			e2.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
 			return false;
 		} catch (IOException e2) {
 			httpclient.getConnectionManager().shutdown();
 			e2.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
 			return false;
 		}
 
@@ -623,7 +629,7 @@ public class CalendarActivity extends SherlockActivity {
 					+ ": IOException happen while download media.");
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
 			return false;
 		}
 
@@ -640,7 +646,7 @@ public class CalendarActivity extends SherlockActivity {
 		httpclient.getConnectionManager().shutdown();
 		Log.d(getClass().getName(), Thread.currentThread().getName()
 				+ ": Download finish.");
-		downloadPDialog.dismiss();
+		if(downloadPDialog.isShowing())downloadPDialog.dismiss();
 		dialogShowing = false;
 		return true;
 	}

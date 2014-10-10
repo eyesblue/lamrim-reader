@@ -491,7 +491,9 @@ public class SpeechMenuActivity extends Activity {
 				editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
 				editor.putBoolean(getString(R.string.isAllowNetAccess), true);
 				editor.commit();
-				dialog.dismiss();
+				try{
+					dialog.dismiss();
+				}catch(Exception e){e.printStackTrace();}
 				task.run();
 			}
 		});
@@ -555,7 +557,9 @@ public class SpeechMenuActivity extends Activity {
 
 						Log.d(getClass().getName(),	"Start download all service with thread count "	+ count);
 
-						dialog.dismiss();
+						try{
+							dialog.dismiss();
+						}catch(Exception e){e.printStackTrace();}
 						Intent intent = new Intent(SpeechMenuActivity.this,	DownloadAllService.class);
 						intent.putExtra("threadCount", count);
 						Log.d(getClass().getName(),	"Start download all service.");
@@ -598,7 +602,7 @@ public class SpeechMenuActivity extends Activity {
 			@Override
 			public void run() {
 				fsm.maintainStorages();
-				pd.dismiss();
+				if(pd.isShowing())pd.dismiss();
 				if(wakeLock.isHeld())wakeLock.release();
 				return;
 			}});
@@ -724,7 +728,7 @@ public class SpeechMenuActivity extends Activity {
 		pd.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				pd.dismiss();
+				if(pd.isShowing())pd.dismiss();
 				
 				if(downloader!=null && !downloader.isCancelled()){
 					Log.d(getClass().getName(),"The download procedure been cancel.");
@@ -757,7 +761,9 @@ public class SpeechMenuActivity extends Activity {
 		dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
 		    public void onClick(DialogInterface dialog, int which) {
 		    	if (wakeLock.isHeld())wakeLock.release();
-		    	dialog.dismiss();
+		    	try{
+					dialog.dismiss();
+				}catch(Exception e){e.printStackTrace();}
 		    	if(isCallFromDownloadCmd){
 		    		isCallFromDownloadCmd=false;
 					setResult(RESULT_CANCELED);
@@ -939,7 +945,7 @@ public class SpeechMenuActivity extends Activity {
 				rootView.post(new Runnable(){
 					@Override
 					public void run() {
-						pd.dismiss();
+						if(pd.isShowing())pd.dismiss();
 						resultAndPlay(tasks[0]);
 						buttonUpdater.cancel();
 						finish();
@@ -953,7 +959,7 @@ public class SpeechMenuActivity extends Activity {
 					@Override
 					public void run() {
 						final AlertDialog dialog=getDownloadAgainDialog(tasks);
-						pd.dismiss();
+						if(pd.isShowing())pd.dismiss();
 						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						dialog.show();
 					}});
