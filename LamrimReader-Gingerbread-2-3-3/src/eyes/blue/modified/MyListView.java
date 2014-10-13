@@ -576,7 +576,7 @@ public class MyListView extends ListView {
 	 * */
 	public static String getContentStr(int startPage, int fromIndex, int direct){
 		System.out.println("Get content string page: "+startPage+", startWord: "+fromIndex);
-		String page=TheoryData.content[startPage].replace(".", "");
+		String page=TheoryData.content[startPage].replace("‧", "").replace("。", "");
 		page=page.replace("<b>", "");
 		page=page.replace("</b>", "");
 		page=page.replace("<n>", "");

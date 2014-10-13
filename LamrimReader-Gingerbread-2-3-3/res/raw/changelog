@@ -23,6 +23,13 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$160
+  % Version 1.3.21
+  _ 2014-10-13
+	* 修正1.3.20版更新後搜尋功能錯誤問題。
+	* 解決少數系統偵測記憶卡功能不正常而導致安裝後無法啟動App問題。
+	* 取消主頁亮/暗風格切換鍵的醒目動畫。
+
 $159
   % Version 1.3.20
   _ 2014-10-10

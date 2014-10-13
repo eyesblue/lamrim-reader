@@ -128,7 +128,7 @@ public class FileSysManager {
         	File appRoot=null;
         	
         	// Make file structure of external storage.
-        	if(extWritable){
+        	if(extWritable && srcRoot[EXTERNAL] != null){
         		appRoot=new File(srcRoot[EXTERNAL]);
         		if(appRoot.isFile()){
             		appRoot.delete();
@@ -141,18 +141,6 @@ public class FileSysManager {
             		if(subDir.isFile())subDir.delete();
             		if(!subDir.exists())subDir.mkdirs();
             	}
-            	
-/*            	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
-            	File oldDirRoot=new File(srcRoot[EXTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
-            	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
-            	oldDirRoot=new File(oldDirRoot.getAbsolutePath()+File.separator+"LamrimReader");
-            	for(String s:dirs){
-            		File oldSubDir=new File(oldDirRoot+File.separator+s);
-            		File subDir=new File(srcRoot[EXTERNAL]+File.separator+s);
-            		subDir.delete();
-            		oldSubDir.renameTo(subDir);
-            	}
-*/
         	}
         	
         	// Make file structure of internal storage
@@ -203,7 +191,7 @@ public class FileSysManager {
         		}
         	}
         	
-        	if(isExtMemWritable()){
+        	if(isExtMemWritable() && srcRoot[EXTERNAL] != null){
         		extF=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
 //        		Log.d(logTag,"Check exist: "+extF.getAbsolutePath());
         		if(extF.exists())return extF;
@@ -239,7 +227,7 @@ public class FileSysManager {
         	if(useThirdDir && userSpecDir!=null)
         		return new File(userSpecDir+File.separator+SpeechData.name[i]);
         	
-        	if(isExtMemWritable())
+        	if(isExtMemWritable() && srcRoot[EXTERNAL] != null)
         		return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
         	
         	return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
@@ -252,15 +240,16 @@ public class FileSysManager {
          * */
         public File getLocalSubtitleFile(int i){
         	File extF=null, intF=null;
-        	if(isExtMemWritable()){
+        	if(isExtMemWritable() && srcRoot[EXTERNAL] != null){
         		extF= new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         		if(extF.exists())return extF;
-        		intF=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
-        		if(intF.exists())return intF;
         	}
+        	intF=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
+        	if(intF.exists())return intF;
+        	
         	
         	int reserv=context.getResources().getInteger(R.integer.subtitleReservSizeK);
-        	if(getFreeMemory(EXTERNAL)>reserv)
+        	if(srcRoot[EXTERNAL] != null && getFreeMemory(EXTERNAL)>reserv)
         		return extF;
         	if(getFreeMemory(INTERNAL)>reserv)
         		return intF;
@@ -269,7 +258,7 @@ public class FileSysManager {
         }
         
         public File getLocalSubtitleFileSavePath(int i){
-        	if(isExtMemWritable())
+        	if(isExtMemWritable() && srcRoot[EXTERNAL] != null)
         		return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         	
         	return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
@@ -351,9 +340,11 @@ public class FileSysManager {
         
         public boolean moveAllMediaFileToUserSpecifyDir(File destDir, ProgressDialog pd){
         	File intDir=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName));
-        	File extDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
         	if(!moveContentsOfDir(intDir,destDir,pd))return false;
-        	if(!moveContentsOfDir(extDir,destDir,pd))return false;
+        	if(srcRoot[EXTERNAL] != null){
+        		File extDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
+        		if(!moveContentsOfDir(extDir,destDir,pd))return false;
+        	}
         	return true;
         }
         
@@ -439,30 +430,35 @@ public class FileSysManager {
         		if(userSpecDir!=null)meu=new File(userSpecDir.getAbsolutePath()+File.separator+SpeechData.name[i]);
         		
         		File mei=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
-        		File mex=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
         		File sbi=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
-        		File sbx=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
-        		
+        		File mex=null, sbx=null;
+        		if(srcRoot[EXTERNAL] != null){
+        			mex=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
+        			sbx=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
+        		}
         		if(meu!=null && meu.exists()){
         			Log.d(logTag,SpeechData.getNameId(i)+" Media file exist in USER SPECIFY DIR, delete external and internal.");
-        			mex.delete();
+        			if(srcRoot[EXTERNAL] != null)mex.delete();
         			mei.delete();
         		}
-        		else if(mex.exists()){
+        		else if(srcRoot[EXTERNAL] != null && mex.exists()){
         			Log.d(logTag,SpeechData.getNameId(i)+" Media file exist in EXTERNAL DIR, delete internal.");
         			mei.delete();
         		}
         		
-        		if(sbx.exists()){
+        		if(srcRoot[EXTERNAL] != null && sbx.exists()){
         			Log.d(logTag,SpeechData.getNameId(i)+" Subtitle file exist in EXTERNAL DIR, delete internal.");
         			sbi.delete();
         		}
         	}
         	
         	File miDir=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName));
-        	File meDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
         	File siDir=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.subtitleDirName));
-        	File seDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName));
+        	File meDir=null, seDir=null;
+        	if(srcRoot[EXTERNAL] != null){
+        		meDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
+        		seDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName));
+        	}
         	FilenameFilter filter= new FilenameFilter (){
 				@Override
 				public boolean accept(File dir, String filename) {
@@ -474,15 +470,15 @@ public class FileSysManager {
 			// Delete temp files.
 			File[] files=null;
 			if((files=miDir.listFiles(filter))!=null)for(File f:files)f.delete();
-			if((files=meDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if(srcRoot[EXTERNAL] != null && (files=meDir.listFiles(filter))!=null)for(File f:files)f.delete();
 			if((files=siDir.listFiles(filter))!=null)for(File f:files)f.delete();
-			if((files=seDir.listFiles(filter))!=null)for(File f:files)f.delete();
+			if(srcRoot[EXTERNAL] != null && (files=seDir.listFiles(filter))!=null)for(File f:files)f.delete();
 			if(userSpecDir!=null)if((files=userSpecDir.listFiles(filter))!=null)for(File f:files)f.delete();
         }
         
         // NOT test yet
         public File getLocalTheoryFile(int i){
-        	if(isExtMemWritable())return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.theoryDirName)+File.separator+SpeechData.getTheoryName(i)+"."+context.getString(R.string.defTheoryType));
+        	if(srcRoot[EXTERNAL] != null && isExtMemWritable())return new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.theoryDirName)+File.separator+SpeechData.getTheoryName(i)+"."+context.getString(R.string.defTheoryType));
         	else return new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.theoryDirName)+File.separator+SpeechData.getTheoryName(i)+"."+context.getString(R.string.defTheoryType));
         }
 
@@ -546,7 +542,7 @@ public class FileSysManager {
         public boolean isFromUserSpecifyDir(File speechFile){
         	boolean extWritable=(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()));
         	if(speechFile.getAbsolutePath().startsWith(srcRoot[INTERNAL]))return false;
-        	if(extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return false;
+        	if(srcRoot[EXTERNAL] != null && extWritable && speechFile.getAbsolutePath().startsWith(srcRoot[EXTERNAL]))return false;
         	return true;
         }
         

@@ -418,13 +418,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				final int theoryTextSize = runtime.getInt(getString(R.string.bookFontSizeKey), textDefSize);
 				bookView.setTextSize(theoryTextSize);
 				bookView.setSelectionFromTop(bookPosition, bookShift);
+				GaLogger.sendEvent("statistics", "THEME", "SWITCH", 1);
 			}});
-		rootLayout.post(new Runnable(){
-			@Override
-			public void run() {
-				highlightView(themeSwitcher);
-			}});
-
+		
 		final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 		int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
@@ -1122,6 +1118,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
+		GaLogger.sendEvent("statistics", "SHARE_REGION", "SHARE", 1);
 		shareSegment(lamrimCmdUri+queryStr);
 	}
 	private void shareSegment(String msg){
@@ -1422,6 +1419,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			SharedPreferences.Editor editor = runtime.edit();
 			editor.putInt("playPosition", cmdIntent.getIntExtra("startTimeMs",0));
 			editor.commit();
+			GaLogger.sendEvent("statistics", "SHARE_REGION", "OPEN", 1);
 			return;
 		}
 		
@@ -2029,157 +2027,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		searchLastBtn= (ImageButton) searchView.findViewById(R.id.searchLastBtn);
 		searchNextBtn= (ImageButton) searchView.findViewById(R.id.searchNextBtn);
 		searchInput=(EditText) searchView.findViewById(R.id.searchInput);
-//		searchListener.setSearchListener(searchInput, searchNextBtn);
-//		searchNextBtn.setOnClickListener(searchListener);
-/*		OnClickListener onClickListener=new OnClickListener(){
-			int index[]={-1,-1,-1};
-			@Override
-			public void onClick(View v) {
-				searchLastBtn.setEnabled(false);
-				searchNextBtn.setEnabled(false);
-				if(searchInput.getText().toString().length() == 0){
-					Log.d(getClass().getName(),"User input length = 0, skip search");
-					searchLastBtn.setEnabled(true);
-					searchNextBtn.setEnabled(true);
-					return;
-				}
-				
-				final String str=searchInput.getText().toString();
-				String lastSearchInView=bookView.getHighlightWord();
-				
-				// There is not continue searching.
-				if(lastSearchInView == null || !lastSearchInView.equals(str)){
-					index[0]=bookView.getFirstVisiblePosition();index[1]=0;index[2]=0;
-				}
-				// There is continue searching.
-				else{
-					if(bookView.getFirstVisiblePosition() != index[0]){index[0]=bookView.getFirstVisiblePosition();}
-				}
-				
-				
-				
-				try{
-					int result[] = null;
-					if(v.equals(searchNextBtn))result=bookView.searchNext(index[0], index[1], ++index[2], str);
-					else result=bookView.searchLast(index[0], index[1], --index[2], str); // It will set -1 to index[2] on first time search.
-					
-					if(result==null){
-						Log.d(getClass().getName(),"Not found.");
-						searchLastBtn.setEnabled(true);
-						searchNextBtn.setEnabled(true);
-						return;
-					}
-					else{
-						index=result;
-						bookView.setViewToPosition(index[0],index[1]);
-						bookView.setHighlightWord(index[0], index[1], index[2],str.length());
-						//index[2]++;
 
-						Log.d(getClass().getName(),"Change start word from "+index[2]);
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-					GaLogger.sendException("Error happen while SEARCH "+str, e, true);
-				}
-				searchLastBtn.setEnabled(true);
-				searchNextBtn.setEnabled(true);
-			}};
-			*/
 		SearchListener onSearchListener=new SearchListener();
 		searchNextBtn.setOnClickListener(onSearchListener);
 		searchLastBtn.setOnClickListener(onSearchListener);
-/*		searchNextBtn.setOnClickListener(new OnClickListener(){
-			int index[]={-1,-1,-1};
-			@Override
-			public void onClick(View v) {
-				searchNextBtn.setEnabled(false);
-				if(searchInput.getText().toString().length() == 0){
-					Log.d(getClass().getName(),"User input length = 0, skip search");
-					searchNextBtn.setEnabled(true);
-					return;
-				}
-				
-				final String str=searchInput.getText().toString();
-				String lastSearchInView=bookView.getHighlightWord();
-				
-				// There is not continue searching.
-				if(lastSearchInView == null || !lastSearchInView.equals(str)){
-					index[0]=bookView.getFirstVisiblePosition();index[1]=0;index[2]=0;
-				}
-				// There is continue searching.
-				else{
-					
-				}
-				
-				try{
-					int result[] = bookView.searchNext(index[0], index[1], index[2], str);
 
-					if(result==null){
-						Log.d(getClass().getName(),"Not found.");
-						searchNextBtn.setEnabled(true);
-						return;
-					}
-					else{
-						index=result;
-						bookView.setViewToPosition(index[0],index[1]);
-						bookView.setHighlightWord(index[0], index[1], index[2],str.length());
-						index[2]++;
-
-						Log.d(getClass().getName(),"Change start word from "+index[2]);
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-					GaLogger.sendException("Error happen while SEARCH "+str, e, true);
-				}
-				searchNextBtn.setEnabled(true);
-			}});
-		
-		searchLastBtn.setOnClickListener(new OnClickListener(){
-			int index[]={-1,-1,-1};
-			@Override
-			public void onClick(View v) {
-				searchLastBtn.setEnabled(false);
-				if(searchInput.getText().toString().length() == 0){
-					Log.d(getClass().getName(),"User input length = 0, skip search");
-					searchLastBtn.setEnabled(true);
-					return;
-				}
-				
-				final String str=searchInput.getText().toString();
-				String lastSearchInView=bookView.getHighlightWord();
-				
-				// There is not continue searching.
-				if(lastSearchInView == null || !lastSearchInView.equals(str)){
-					index[0]=bookView.getFirstVisiblePosition();index[1]=0;index[2]=0;
-				}
-				// There is continue searching.
-				else{
-					
-				}
-				
-				try{
-					int result[] = bookView.searchNext(index[0], index[1], index[2], str);
-
-					if(result==null){
-						Log.d(getClass().getName(),"Not found.");
-						searchLastBtn.setEnabled(true);
-						return;
-					}
-					else{
-						index=result;
-						bookView.setViewToPosition(index[0],index[1]);
-						bookView.setHighlightWord(index[0], index[1], index[2],str.length());
-						index[2]++;
-
-						Log.d(getClass().getName(),"Change start word from "+index[2]);
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-					GaLogger.sendException("Error happen while SEARCH "+str, e, true);
-				}
-				searchLastBtn.setEnabled(true);
-			}});
-*/		
 		String lastSearch=runtime.getString(getString(R.string.lastSearchLamrimKey), "");
 		searchInput.setText(lastSearch);
 		
@@ -2270,6 +2122,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			}
 			searchLastBtn.setEnabled(true);
 			searchNextBtn.setEnabled(true);
+			GaLogger.sendEvent("statistics", "SEARCH", "SEARCH", 1);
 		}
 	};
 	
@@ -2949,11 +2802,14 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		else ((ImageButton)mpController.getControllerView().findViewById(R.id.shareBtn)).setEnabled(false);
 		*/
 	}
+	
+	
 	private void highlightView(View v){
 		//Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.blank);
 		Animation animation = (Animation) AnimationUtils.loadAnimation(this, R.anim.rotate);
 		v.startAnimation(animation);
 	}
+	
 	class RegionRecordAdapter extends SimpleAdapter {
 		public RegionRecordAdapter(Context context,	List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
 			super(context, data, resource, from, to);
