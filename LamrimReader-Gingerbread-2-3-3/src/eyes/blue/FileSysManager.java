@@ -32,6 +32,7 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -81,7 +82,7 @@ public class FileSysManager {
 		grs=new GoogleRemoteSource(context);
 	}
 	
-	public FileSysManager(DownloadAllService downloadAllService) {
+	public FileSysManager(Service downloadAllService) {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -345,6 +346,7 @@ public class FileSysManager {
         		File extDir=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName));
         		if(!moveContentsOfDir(extDir,destDir,pd))return false;
         	}
+        	
         	return true;
         }
         
@@ -370,8 +372,10 @@ public class FileSysManager {
     			}
 
     			/* Copy To */
-    			if(!moveFile(src, dist))
-    				return false;
+    			pd.setMessage("移動"+src.getAbsolutePath()+" 到 "+dist.getAbsolutePath());
+    			if(!src.renameTo(dist))
+    				if(!moveFile(src, dist))
+    					return false;
  
     			pd.setProgress(pd.getProgress()+1);
     		}
@@ -582,6 +586,10 @@ public class FileSysManager {
         			total+=f.length();
         	}
         	return total;
+        }
+        
+        public String getSrcRootPath(int dir){
+        	return srcRoot[dir];
         }
         
         public void setDiskSpaceFullListener(DiskSpaceFullListener dsfl){

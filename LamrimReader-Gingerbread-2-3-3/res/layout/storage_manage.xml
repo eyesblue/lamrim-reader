@@ -335,6 +335,13 @@
                 android:src="@drawable/folder" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/moveToUserSpyDirBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/move_here"
+            android:text="移動[外部空間]與[內部空間]的音檔到此指定目錄" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -370,7 +377,7 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="預設檔案存放位置"
+                android:text="預設檔案存放位置(長按選取複製)"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <LinearLayout

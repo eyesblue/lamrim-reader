@@ -62,6 +62,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 public class CalendarActivity extends SherlockActivity {
@@ -99,7 +100,6 @@ public class CalendarActivity extends SherlockActivity {
 	protected void onStart() {
 		super.onStart();
 		GaLogger.activityStart(this);
-		GaLogger.sendEvent("activity", "CalendarActivity", "into_onStart", null);
 
 		new Thread(new Runnable() {
 			@Override
@@ -145,6 +145,17 @@ public class CalendarActivity extends SherlockActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		SharedPreferences playRecord = getSharedPreferences(getString(R.string.GLModeRecordFile), 0);
+		String title=playRecord.getString("title", null);
+		int mediaIndex=playRecord.getInt("mediaIndex",-1);
+		int position=playRecord.getInt("playPosition",-1);
+		if(title != null){
+			menu.add(getString(R.string.reloadLastState)+": "+title+": "+SpeechData.getSubtitleName(mediaIndex)+": "+Util.getMsToHMS(position, "\"", "\'", false))
+			.setIcon(R.drawable.reload_last_state)
+			.setShowAsAction(
+					MenuItem.SHOW_AS_ACTION_IF_ROOM
+					| MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+		}
 		menu.add(getString(R.string.downloadSchedule))
 				.setIcon(R.drawable.update)
 				.setShowAsAction(
@@ -155,22 +166,33 @@ public class CalendarActivity extends SherlockActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (dialogShowing)
-			return true;
-		dialogShowing = true;
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if (!downloadSchedule())
-					return;
+		String menuStr=item.getTitle().toString();
+		if(menuStr.startsWith(getString(R.string.downloadSchedule))){
+			if (dialogShowing)return true;
+			dialogShowing = true;
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					if (!downloadSchedule())
+						return;
 
-				File schedule = getLocalScheduleFile();
-				if (schedule == null)
-					return;
-				reloadSchedule(schedule);
-			}
-		}).start();
-		return true;
+					File schedule = getLocalScheduleFile();
+					if (schedule == null)
+						return;
+					reloadSchedule(schedule);
+				}
+			}).start();
+			return true;
+		}
+		else if(menuStr.startsWith(getString(R.string.reloadLastState))){
+			Intent intent = new Intent();
+			intent.putExtra("reloadLastState", true);
+			setResult(Activity.RESULT_OK, intent);
+			GaLogger.sendEvent("ui_action", "CalendarActivity", "ReloadLastState", null);
+			finish();
+			return true;
+		}
+		return false;
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -234,11 +256,13 @@ public class CalendarActivity extends SherlockActivity {
 								new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog,	int id) {
 										if (isFileExist(glr)) {
-											setResult(Activity.RESULT_OK, getResultIntent(glr));
+											Intent intent=getResultIntent(glr);
+											setResult(Activity.RESULT_OK, intent);
 											try{
 												dialog.dismiss();
 											}catch(Exception e){e.printStackTrace();}	// Don't force close if problem here.
 											dialogShowing = false;
+											GaLogger.sendEvent("ui_action", "CalendarActivity", "ShowInfoDialog_"+intent.getStringExtra("selectedDay"), null);
 											finish();
 										} else {
 											final Intent speechMenu = new Intent(CalendarActivity.this, SpeechMenuActivity.class);

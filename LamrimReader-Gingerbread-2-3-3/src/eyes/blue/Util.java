@@ -63,42 +63,56 @@ public class Util {
 	
 	
 	
-	public static void showSubtitlePopupWindow(final Activity activity, final String s){
-		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.ic_launcher, subtitleShowTime);
+	public static void showSubtitlePopupWindow(final Context context, final String s){
+		showToastPopupWindow((Activity)context, ((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.ic_launcher, subtitleShowTime, 0);
 	}
 	
 	/*
 	 * Show the information PopupWindow on the center of root view of activity.
 	 * */
-	public static void showInfoPopupWindow(final Activity activity, final String s){
-		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.info_icon, InfoToastShowTime);
+	public static void showInfoPopupWindow(final Context context, final String s){
+		showToastPopupWindow((Activity)context, ((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.info_icon, InfoToastShowTime, 0);
+	}
+	
+	/*
+	 * Show the information PopupWindow on the center of root view of activity with delay time.
+	 * */
+	public static void showInfoPopupWindow(final Context context, final String s, int delayTime){
+		showToastPopupWindow((Activity)context, ((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.info_icon, InfoToastShowTime, delayTime);
 	}
 	
 	/*
 	 * Show the information PopupWindow on the center of the specified view of activity.
 	 * */
-	public static void showInfoPopupWindow(final Activity activity, final View rootView, final String s){
-		showToastPopupWindow(activity, rootView, s, R.drawable.info_icon, InfoToastShowTime);
+	public static void showInfoPopupWindow(final Context context, final View rootView, final String s){
+		showToastPopupWindow((Activity)context, rootView, s, R.drawable.info_icon, InfoToastShowTime, 0);
 	}
 
 	/*
 	 * Show the error PopupWindow on the center of root view of activity.
 	 * */
-	public static void showErrorPopupWindow(final Activity activity, final String s){
-		showToastPopupWindow(activity, activity.getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.error_icon, ErrToastShowTime);
+	public static void showErrorPopupWindow(final Context context, final String s){
+		showToastPopupWindow((Activity)context, ((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.error_icon, ErrToastShowTime, 0);
+	}
+	
+	/*
+	 * Show the error PopupWindow on the center of root view of activity with delay time.
+	 * */
+	public static void showErrorPopupWindow(final Context context, final String s, int delayTime){
+		showToastPopupWindow((Activity)context, ((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), s, R.drawable.error_icon, ErrToastShowTime, delayTime);
 	}
 	
 	/*
 	 * Show the error PopupWindow on the center of the specified view of activity.
 	 * */
-	public static void showErrorPopupWindow(final Activity activity, final View rootView, final String s){
-		showToastPopupWindow(activity, rootView, s, R.drawable.error_icon, ErrToastShowTime);
+	public static void showErrorPopupWindow(final Context context, final View rootView, final String s){
+		showToastPopupWindow((Activity)context, rootView, s, R.drawable.error_icon, ErrToastShowTime, 0);
 	}
 	
 	static Timer dismissToastTimer=new Timer("dismissToastTimer");
-	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon, final int showTime){
+	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon, final int showTime, final int delayTime){
 		
-		rootView.post(new Runnable(){
+		rootView.postDelayed(new Runnable(){
 			public void run() {
 				try{
 					dismissToastTimer.purge();
@@ -137,7 +151,7 @@ public class Util {
 							}
 				}},showTime);
 				*/
-		}});
+		}}, delayTime);
 	}
 	
 	static class DismissTask extends TimerTask{

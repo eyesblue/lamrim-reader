@@ -82,7 +82,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	MediaPlayer mediaPlayer=new MediaPlayer();
 	MediaControllerView mediaController=null;
 	SubtitleTimer subtitleTimer=null;
-	private PowerManager powerManager=null;
+//	private PowerManager powerManager=null;
 	private PowerManager.WakeLock wakeLock = null;
 	MediaPlayerControllerListener changedListener=null;
 	ComponentName remoteControlReceiver=null;
@@ -114,12 +114,12 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		this.activity=activity;
 		this.anchorView=(ViewGroup) anchorView;
 		logTag=activity.getResources().getString(R.string.app_name);
-		powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
+		PowerManager powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
 		//wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
-		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, logTag);
+		wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "mpController@LamrimReader");
 		
 		
-		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
+//		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
 //		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
 		mediaPlayer.setOnPreparedListener(onPreparedListener);
 		mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
@@ -198,7 +198,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer.
 	 * */
 	public synchronized void seekTo(int pos) {
-//		Log.d(logTag,Thread.currentThread().getName()+" SeekTo function: seek to position: "+pos+", duration="+mediaPlayer.getDuration());
+		Log.d(logTag,Thread.currentThread().getName()+" SeekTo function: seek to position: "+pos+", duration="+mediaPlayer.getDuration());
 		if(mediaPlayer==null)return;
 		if(mpState<MP_PREPARED)return;
 		
@@ -244,7 +244,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public void start() {
 		// It will play mp3 in Android 4.1 while screen blank. this line solve the problem
 		// Not tested.
-		if(!powerManager.isScreenOn())return;
+//		if(!powerManager.isScreenOn())return;
 		if(mediaPlayer==null)return;
 		
 		changedListener.onStartPlay();
@@ -472,7 +472,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 
 		// indicate that the media loading now.
-		loadingMedia=index;
+		synchronized(loadingMedia){
+			loadingMedia=index;
+		}
 		
 		if( subtitleFile==null || !subtitleFile.exists()){
 			Log.d(getClass().getName(),"setDataSource: The speech or subtitle file not exist, skip!!!");
@@ -497,6 +499,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				mediaPlayer.prepare();
 			}catch(IOException ioe){
 				Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀或儲存空間已滿: "+speechFile);
+				ioe.printStackTrace();
 			}catch(Exception e){
 				changedListener.onPlayerError();
 				e.printStackTrace();
@@ -924,7 +927,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Log.d("onAudioFocusChange",	"Loss of audio focus of unknown duration.");
 				try {
-					release();
+					pause();
+					//release();
 				} catch (IllegalStateException e) {
 					GaLogger.sendException("AudioFocusChangeListener.AUDIOFOCUS_LOSS", e, false);
 					e.printStackTrace();
@@ -1146,6 +1150,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 							return;
 						}
 
+						//Log.d(logTag,"Current position: "+Util.getMsToHMS(playPoint)+", subtitle: "+subtitle[playArrayIndex].text);
 						if (playingIndex != playArrayIndex) {
 							playingIndex = playArrayIndex;
 							if (playArrayIndex != -1)

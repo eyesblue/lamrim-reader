@@ -25,6 +25,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.google.analytics.tracking.android.MapBuilder;
 
 import android.annotation.SuppressLint;
@@ -53,9 +56,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -71,7 +72,7 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class SpeechMenuActivity extends Activity {
+public class SpeechMenuActivity extends SherlockActivity {
 	FileSysManager fsm=null;
 	ImageButton btnDownloadAll, btnMaintain,  btnManageStorage;
 	TextView downloadAllTextView;
@@ -80,7 +81,7 @@ public class SpeechMenuActivity extends Activity {
 	ArrayList<HashMap<String,Boolean>> fakeList = new ArrayList<HashMap<String,Boolean>>();
 	SimpleAdapter adapter=null;
 	ListView speechList=null;
-	private PowerManager.WakeLock wakeLock = null;
+//	private PowerManager.WakeLock wakeLock = null;
 	SharedPreferences runtime = null;
 	// The handle for close the dialog.
 	AlertDialog itemManageDialog = null;
@@ -101,6 +102,7 @@ public class SpeechMenuActivity extends Activity {
 		
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.speech_menu);
+	getSupportActionBar();
 	rootView = findViewById(R.id.speechMenuRootView);
 	speechList=(ListView) findViewById(R.id.list);
 	btnDownloadAll=(ImageButton) findViewById(R.id.btnDownloadAll);
@@ -111,8 +113,8 @@ public class SpeechMenuActivity extends Activity {
 	downloadAllServiceReceiver = new DownloadAllServiceReceiver();
 	downloadAllServiceIntentFilter = new IntentFilter("eyes.blue.action.DownloadAllService");
 	
-	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
-	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+//	PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
+//	wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
 	//wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
 	runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 	fireLocker.start();
@@ -134,7 +136,7 @@ public class SpeechMenuActivity extends Activity {
 			switch(actionId){
 			case PLAY:
 				resultAndPlay(manageItemIndex);
-				GaLogger.sendEvent("dialog_action", "quick_action_menu", "play", manageItemIndex);
+				GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "QuickActionMenu_Play", null);
 				break;
 			case UPDATE:
 				DialogInterface.OnClickListener updateListener=new DialogInterface.OnClickListener(){
@@ -146,7 +148,7 @@ public class SpeechMenuActivity extends Activity {
 			        	f=fsm.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	downloadSrc(manageItemIndex);
-			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "result_and_play", manageItemIndex);
+			        	GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "QuickActionMenu_Update", null);
 					}};
 	        	
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, updateListener, null, null);
@@ -161,13 +163,13 @@ public class SpeechMenuActivity extends Activity {
 			        	f=fsm.getLocalSubtitleFile(manageItemIndex);
 			        	if(f!=null)f.delete();
 			        	updateUi(manageItemIndex,true);
-			        	GaLogger.sendEvent("dialog_action", "quick_action_menu", "delete", manageItemIndex);
+			        	GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "QuickActionMenu_Delete", null);
 					}};
 
 				BaseDialogs.showDelWarnDialog(SpeechMenuActivity.this, "檔案", null, deleteListener, null, null);
 	        	break;
 			case CANCEL:
-				GaLogger.sendEvent("dialog_action", "quick_action_menu", "cancel", manageItemIndex);
+				GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "QuickActionMenu_Cancel", null);
 				break;
 			};
 		}
@@ -195,7 +197,6 @@ public class SpeechMenuActivity extends Activity {
 	speechFlags=new boolean[SpeechData.name.length];
 	subtitleFlags=new boolean[SpeechData.name.length];
 	
-	
 	// Initial fakeList
 	HashMap<String,Boolean> fakeItem = new HashMap<String,Boolean>();
 	fakeItem.put("title", false);
@@ -222,7 +223,7 @@ public class SpeechMenuActivity extends Activity {
 				Log.d("SpeechMenuActivity","File not exist, start download.");
 				downloadSrc(position);
 			}
-			GaLogger.sendEvent("ui_action", "speech_list", "select_item_"+SpeechData.name[position], null);
+			GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "select_item_"+SpeechData.getSubtitleName(position), null);
 	}});
 
 	speechList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
@@ -233,7 +234,7 @@ public class SpeechMenuActivity extends Activity {
 				return false;
 			manageItemIndex=position;
 			mQuickAction.show(v);
-			GaLogger.sendEvent("ui_action", "show_dialog", "quick_action_menu", null);
+			GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "ShowMenu", null);
 			//itemManageDialog=getItemManageDialog(position);
 			//itemManageDialog.show();
 //			if(!wakeLock.isHeld()){wakeLock.acquire();}
@@ -246,7 +247,7 @@ public class SpeechMenuActivity extends Activity {
 	speechList.setAdapter( adapter );
 	 //啟用按鍵過濾功能
 	speechList.setTextFilterEnabled(true);
-
+	
 	updateDownloadAllBtn();
 	buttonUpdater=new ButtonUpdater();
 	buttonUpdater.start();
@@ -256,7 +257,7 @@ public class SpeechMenuActivity extends Activity {
 		public void onClick(View arg0) {
 			if(fireLock())return;
 			maintain();
-			GaLogger.sendEvent("ui_action", "botton_pressed", "maintain_files", null);
+			GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "MaintainFiles", null);
 		}});
 	
 	btnManageStorage.setOnClickListener(new View.OnClickListener (){
@@ -265,7 +266,8 @@ public class SpeechMenuActivity extends Activity {
 			if(fireLock())return;
 			final Intent storageManage = new Intent(SpeechMenuActivity.this, StorageManageActivity.class);
 			startActivity(storageManage);
-			GaLogger.sendEvent("ui_action", "botton_pressed", "manage_storage", null);
+			buttonUpdater.cancel();
+			GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "ManageStorage", null);
 		}});
 
 	 }
@@ -344,14 +346,40 @@ public class SpeechMenuActivity extends Activity {
 		}catch(Exception e){e.printStackTrace();};
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		SharedPreferences playRecord = getSharedPreferences(getString(R.string.speechModeRecordFile), 0);
+		int mediaIndex=playRecord.getInt("mediaIndex",-1);
+		int position=playRecord.getInt("playPosition",-1);
+		if(mediaIndex != -1){
+			menu.add(getString(R.string.reloadLastState)+": "+SpeechData.getSubtitleName(mediaIndex)+": "+Util.getMsToHMS(position, "\"", "\'", false))
+			.setIcon(R.drawable.reload_last_state)
+			.setShowAsAction(
+					MenuItem.SHOW_AS_ACTION_IF_ROOM
+					| MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		String menuStr=item.getTitle().toString();
+		if(menuStr.startsWith(getString(R.string.reloadLastState))){
+			Log.d(getClass().getName(),"User click reload last state button.");
+			Intent playWindow = new Intent();
+			playWindow.putExtra("reloadLastState", true);
+			setResult(Activity.RESULT_OK, playWindow);
+			GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "ReloadLastState", null);
+			finish();
+		}
+		return true;
+	}
+	
 	private void resultAndPlay(int position){
 		Log.d(getClass().getName(),"Speech menu "+position+"th item clicked.");
 		Intent playWindow = new Intent();
-		
 		playWindow.putExtra("index", position);
 		setResult(Activity.RESULT_OK, playWindow);
-		if(wakeLock.isHeld())wakeLock.release();
-		buttonUpdater.cancel();
 		finish();
 	}
 	
@@ -462,7 +490,7 @@ public class SpeechMenuActivity extends Activity {
 			rootView.post(new Runnable() {
 				public void run() {
 					if(netAccessWarnDialog==null || !netAccessWarnDialog.isShowing()){
-						if(!wakeLock.isHeld()){wakeLock.acquire();}
+//						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						netAccessWarnDialog=getNetAccessDialog(task);
 						netAccessWarnDialog.setCanceledOnTouchOutside(false);
 						netAccessWarnDialog.show();
@@ -503,7 +531,7 @@ public class SpeechMenuActivity extends Activity {
 				editor.putBoolean(getString(R.string.isShowNetAccessWarn), !dontShowAgain.isChecked());
 				editor.putBoolean(getString(R.string.isAllowNetAccess), false);
 				editor.commit();
-				if(wakeLock.isHeld())wakeLock.release();
+//				if(wakeLock.isHeld())wakeLock.release();
 				dialog.cancel();
 				if(isCallFromDownloadCmd){
 					isCallFromDownloadCmd=false;
@@ -564,14 +592,12 @@ public class SpeechMenuActivity extends Activity {
 						intent.putExtra("threadCount", count);
 						Log.d(getClass().getName(),	"Start download all service.");
 						startService(intent);
-						if (wakeLock.isHeld())
-							wakeLock.release();
+//						if (wakeLock.isHeld())wakeLock.release();
 					}
 				});
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						if (wakeLock.isHeld())
-							wakeLock.release();
+//						if (wakeLock.isHeld())wakeLock.release();
 						dialog.cancel();
 					}
 				});
@@ -584,7 +610,7 @@ public class SpeechMenuActivity extends Activity {
 		pd.setTitle(getString(R.string.dlgTitleMaintaining));
 		pd.setMessage(getString(R.string.dlgMsgMaintaining));
 		pd.show();
-		if(!wakeLock.isHeld()){wakeLock.acquire();}
+//		if(!wakeLock.isHeld()){wakeLock.acquire();}
 		
 /*		AsyncTask<Void, Void, Void> runner=new AsyncTask<Void, Void, Void>() {
 			@Override
@@ -603,7 +629,7 @@ public class SpeechMenuActivity extends Activity {
 			public void run() {
 				fsm.maintainStorages();
 				if(pd.isShowing())pd.dismiss();
-				if(wakeLock.isHeld())wakeLock.release();
+//				if(wakeLock.isHeld())wakeLock.release();
 				return;
 			}});
 		t.start();
@@ -654,7 +680,7 @@ public class SpeechMenuActivity extends Activity {
 							synchronized(btnDownloadAll){
 								if(fireLock())return;
 								downloadAllSrc();
-								GaLogger.sendEvent("ui_action", "botton_pressed", "download_all", null);
+								GaLogger.sendEvent("ui_action", "SpeechMenuActivity", "DownloadAll", null);
 							}
 						}});
 				}
@@ -733,7 +759,7 @@ public class SpeechMenuActivity extends Activity {
 				if(downloader!=null && !downloader.isCancelled()){
 					Log.d(getClass().getName(),"The download procedure been cancel.");
 					downloader.stopRun();
-					if(wakeLock.isHeld())wakeLock.release();
+//					if(wakeLock.isHeld())wakeLock.release();
 				}
 				if(isCallFromDownloadCmd){
 					Log.d(getClass().getName(),"The download is start by download command, return caller activity now.");
@@ -760,7 +786,7 @@ public class SpeechMenuActivity extends Activity {
 		});
 		dialog.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {  
 		    public void onClick(DialogInterface dialog, int which) {
-		    	if (wakeLock.isHeld())wakeLock.release();
+//		    	if (wakeLock.isHeld())wakeLock.release();
 		    	try{
 					dialog.dismiss();
 				}catch(Exception e){e.printStackTrace();}
@@ -960,7 +986,7 @@ public class SpeechMenuActivity extends Activity {
 					public void run() {
 						final AlertDialog dialog=getDownloadAgainDialog(tasks);
 						if(pd.isShowing())pd.dismiss();
-						if(!wakeLock.isHeld()){wakeLock.acquire();}
+//						if(!wakeLock.isHeld()){wakeLock.acquire();}
 						dialog.show();
 					}});
 		}

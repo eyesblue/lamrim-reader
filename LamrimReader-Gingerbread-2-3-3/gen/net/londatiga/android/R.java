@@ -42,7 +42,7 @@ public final class R {
 		public static final int quickaction_slider_grip_right = 0x7f0200bb;
 		public static final int quickaction_top_frame = 0x7f0200bc;
 		public static final int quickcontact_drop_shadow = 0x7f0200bd;
-		public static final int textfield_default = 0x7f0200e9;
+		public static final int textfield_default = 0x7f0200ea;
 	}
 	public static final class id {
 		public static final int arrow_down = 0x7f080097;

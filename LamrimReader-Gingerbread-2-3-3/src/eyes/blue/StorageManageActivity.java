@@ -2,16 +2,21 @@ package eyes.blue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StatFs;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +24,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,20 +34,18 @@ import android.widget.ScrollView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class StorageManageActivity extends Activity {
 	FileSysManager fsm=null;
 	TextView extSpeechPathInfo, extSubtitlePathInfo, intSpeechPathInfo, intSubtitlePathInfo, extFreePercent, intFreePercent, extAppUsagePercent, intAppUsagePercent, intFree, extFree, extAppUseage, intAppUseage, labelChoicePath;
-	Button btnMoveAllToExt, btnMoveAllToInt, btnDelExtFiles, btnDelIntFiles, btnOk;
+	Button btnMoveAllToExt, btnMoveAllToInt, btnMoveToUserSpy, btnDelExtFiles, btnDelIntFiles, btnOk;
 	ImageButton btnChoicePath;
 	RadioGroup radioMgnType =null;
 	EditText filePathInput;
 	boolean isUseThirdDir=false;
 	
-	private PowerManager.WakeLock wakeLock = null;
+//	private PowerManager.WakeLock wakeLock = null;
 	SharedPreferences runtime = null;
-	Toast toast = null;
 	
 	long intFreeB, extFreeB, intTotal, extTotal, intUsed, extUsed;
 	String userSpecDir;
@@ -52,11 +56,10 @@ public class StorageManageActivity extends Activity {
 		setContentView(R.layout.storage_manage);
 		Log.d(getClass().getName(),"Into onCreate");
 		this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
-		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
+//		PowerManager powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
+//		wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, getClass().getName());
 		runtime = getSharedPreferences(getString(R.string.runtimeStateFile), 0);
 		fsm=new FileSysManager(this);
-		toast = Toast.makeText(this, "", Toast.LENGTH_LONG);
 		//if(!wakeLock.isHeld()){wakeLock.acquire();}
 		
 		extFreePercent = (TextView)findViewById(R.id.extFreePercent);
@@ -73,6 +76,7 @@ public class StorageManageActivity extends Activity {
 		btnDelExtFiles = (Button) findViewById(R.id.btnDelExtFiles);
 		btnDelIntFiles = (Button) findViewById(R.id.btnDelIntFiles);
 		btnChoicePath = (ImageButton) findViewById(R.id.btnChoicePath);
+		btnMoveToUserSpy = (Button) findViewById(R.id.moveToUserSpyDirBtn);
 		btnOk = (Button) findViewById(R.id.btnOk);
 		radioMgnType = (RadioGroup) findViewById(R.id.radioMgnType);
 		filePathInput = (EditText) findViewById(R.id.fieldPathInput);
@@ -84,6 +88,7 @@ public class StorageManageActivity extends Activity {
 		// The ImageButton can't disable from xml.
 		btnChoicePath.setClickable(false);
 		btnChoicePath.setEnabled(false);
+		btnMoveToUserSpy.setEnabled(false);
 		
 		isUseThirdDir=runtime.getBoolean(getString(R.string.isUseThirdDir),false);
 		if(isUseThirdDir){
@@ -92,6 +97,7 @@ public class StorageManageActivity extends Activity {
 			btnChoicePath.setClickable(true);
 			btnChoicePath.setEnabled(true);
 			labelChoicePath.setEnabled(true);
+			btnMoveToUserSpy.setEnabled(true);
 		}
 		
 		String thirdDir=runtime.getString(getString(R.string.userSpecifySpeechDir),null);
@@ -143,6 +149,61 @@ public class StorageManageActivity extends Activity {
 					}});
 				builder.create().show();
 			}});
+		
+		btnMoveToUserSpy.setOnClickListener(new View.OnClickListener (){
+			@Override
+			public void onClick(View arg0) {
+				btnMoveToUserSpy.setEnabled(false);
+
+				GaLogger.sendEvent("statistics", "MOVE_FILE_TO_SPECIFY_FOLDER", "CLICK", 1);
+				
+				Log.d(getClass().getName(),"thread started");
+				String path=filePathInput.getText().toString();
+				if(path==null||path.length() == 0){
+					Util.showErrorPopupWindow(StorageManageActivity.this, "使用者指定路徑錯誤，無法移動檔案。");
+					btnMoveToUserSpy.setEnabled(true);
+					return;
+				}
+				File filePath=new File(path);
+				if(filePath.isFile()){
+					Util.showErrorPopupWindow(StorageManageActivity.this, "使用者指定目錄所指定的位置為已存在的檔案，請重新選擇！");
+					btnMoveToUserSpy.setEnabled(true);
+					return;
+				}
+				Log.d(getClass().getName(),"Create folder: "+path);
+				filePath.mkdir();
+				if(!filePath.exists() || !filePath.isDirectory() || !filePath.canWrite()){
+					Util.showErrorPopupWindow(StorageManageActivity.this, "使用者指定目錄錯誤或無寫入權限，無法移動檔案。");
+					btnMoveToUserSpy.setEnabled(true);
+					return;
+				}
+				
+				// Check the path is not external/internal default storage path.
+				ArrayList<String> srcList=new ArrayList<String>();
+				srcList.add(fsm.getSrcRootPath(FileSysManager.INTERNAL)+File.separator+getString(R.string.audioDirName));
+				String ext=fsm.getSrcRootPath(FileSysManager.EXTERNAL);
+				if(ext!=null)srcList.add(ext+File.separator+getString(R.string.audioDirName));
+		    	
+				Log.d(getClass().getName(),	"There are "+srcList.size()+" src folder for move file.");
+				Intent intent = new Intent(StorageManageActivity.this,	MoveFileService.class);
+				intent.putStringArrayListExtra("srcDirs", srcList);
+				intent.putExtra("destDir",path);
+				Log.d(getClass().getName(),	"Start move file service.");
+				
+				// While user press the move button that mean the path is specified.
+				SharedPreferences.Editor editor = runtime.edit();
+				editor.putBoolean(getString(R.string.isUseThirdDir), true);
+				editor.putString(getString(R.string.userSpecifySpeechDir), filePathInput.getText().toString());
+				editor.commit();
+				
+				Util.showInfoPopupWindow(StorageManageActivity.this, "背景移動中，請檢視通知列以瞭解進度，移動過程中請勿執行其他操作。");
+				startService(intent);
+				GaLogger.sendEvent("ui_action", "botton_pressed", "reloadLastState_MoveFileToUserSpecify", null);
+				
+				refreshUsage();
+				btnMoveToUserSpy.setEnabled(true);
+		}});
+		
 		btnDelExtFiles.setOnClickListener(new View.OnClickListener (){
 			@Override
 			public void onClick(View v) {
@@ -268,10 +329,11 @@ public class StorageManageActivity extends Activity {
 				
 				// Write file test
 				if(!f.exists()){
-					if(!f.mkdirs()){
+					f.mkdir();
+					if(!f.exists() || !f.canWrite()){
 						AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 						builder.setTitle("權限錯誤");
-						builder.setMessage("您所指定的儲存目錄無法建立！請重新選擇。");
+						builder.setMessage("您所指定的儲存目錄無法建立或無寫入權限！請重新選擇。");
 						builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 							@Override
 							public void onClick(DialogInterface dialog,	int which) {
@@ -323,6 +385,7 @@ public class StorageManageActivity extends Activity {
 					btnChoicePath.setEnabled(false);
 					btnChoicePath.setClickable(false);
 					labelChoicePath.setEnabled(false);
+					btnMoveToUserSpy.setEnabled(false);
 					break;
 				case R.id.radioUserMgnStorage:
 					isUseThirdDir=true;
@@ -330,6 +393,7 @@ public class StorageManageActivity extends Activity {
 					btnChoicePath.setEnabled(true);
 					btnChoicePath.setClickable(true);
 					labelChoicePath.setEnabled(true);
+					btnMoveToUserSpy.setEnabled(true);
 					break;
 				}
 			}});
@@ -486,7 +550,7 @@ public class StorageManageActivity extends Activity {
     }
 	
 	private void showAskMoveToSpecifyDialog(final String path) {
-		AlertDialog.Builder builder=getConfirmDialog();
+		final AlertDialog.Builder builder=getConfirmDialog();
 		builder.setTitle("移動檔案");
 		builder.setMessage("您要將所有的音檔移動到您所指定的位置嗎？");
 		builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
@@ -507,21 +571,36 @@ public class StorageManageActivity extends Activity {
 						refreshUsage();
 					}});
 				t.start();
-				pd.show();
+				
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						pd.show();
+					}});
+				
 			}});
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener(){
 			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.cancel();
+			public void onClick(final DialogInterface dialog, int which) {
+				runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						dialog.cancel();
+					}});
 			}});
-		builder.show();
+		
+		runOnUiThread(new Runnable(){
+			@Override
+			public void run() {
+				builder.create().show();
+			}});
 	}
 
 	private AlertDialog.Builder getConfirmDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setNegativeButton(getString(R.string.dlgCancel), new DialogInterface.OnClickListener() {
 	        public void onClick(DialogInterface dialog, int id) {
-	        	if(wakeLock.isHeld())wakeLock.release();
+//	        	if(wakeLock.isHeld())wakeLock.release();
 	            dialog.cancel();
 	        }
 	    });
