@@ -55,6 +55,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.support.v4.view.GestureDetectorCompat;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
@@ -827,7 +828,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		 * MediaPlayerController.MP_PREPARED)
 		 * mpController.showMediaPlayerController(); } });
 		 */
-		final GestureDetector subtitleViewGestureListener = new GestureDetector(
+		final GestureDetectorCompat subtitleViewGestureListener = new GestureDetectorCompat(
 				getApplicationContext(), new SimpleOnGestureListener() {
 					@Override
 					public boolean onDown(MotionEvent e) {
@@ -848,6 +849,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 					@Override
 					public boolean onDoubleTapEvent(MotionEvent e) {
+						Log.d(logTag, "SubtitleView been double clicked.");
 						// If it stay in subtitle mode, do nothing.
 						if (subtitleViewRenderMode == SUBTITLE_MODE)
 							return false;
@@ -912,6 +914,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				});
 
 		final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(this.getApplicationContext(), new SimpleOnScaleGestureListener() {
+//		class MyGestureDetector implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, GestureDetector.{
 //			int textSizeMax=getResources().getInteger(R.integer.textMaxSize);
 //    		int textSizeMin=getResources().getInteger(R.integer.textMinSize);
 					@Override
@@ -950,6 +953,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					if (event.getPointerCount() == 2) {
 						return stScaleGestureDetector.onTouchEvent(event);
 					}
+					
+					Log.d(logTag, "Call subtitleViewGestureListener");
 					boolean res = subtitleViewGestureListener.onTouchEvent(event);
 					return res;
 					// Log.d(logTag, "Subtitle OnTouchListener return "+res);
@@ -1108,8 +1113,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 //		Log.d(logTag,"Into dispatchTouchEvent() of activity.");
-		if(wakeLock.isHeld())wakeLock.release();
-		if(!wakeLock.isHeld()){wakeLock.acquire(screenOnTime);}
+		if(Build.VERSION.SDK_INT >= 14){
+			if(wakeLock.isHeld())wakeLock.release();
+			if(!wakeLock.isHeld()){wakeLock.acquire(screenOnTime);}
+		}
 	    return super.dispatchTouchEvent(ev);
 	}
 	
@@ -1535,14 +1542,16 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	@Override
 	protected void onPause() {
 		super.onPause();
+		// Avoid memory leak
+		mpController.hideMediaPlayerController();
 		saveRuntime();
+
 		try {
 			if (mpController.getMediaPlayerState() == MediaPlayerController.MP_PLAYING)
 				mpController.pause();
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		}
-//		if (wakeLock.isHeld())wakeLock.release();
 	}
 
 	@Override
@@ -1557,7 +1566,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		Log.d(funcInto, "**** onDestroy ****");
 		// fileDownloader.finish();
 		mpController.finish();
-		if (wakeLock.isHeld())wakeLock.release();
+		if(Build.VERSION.SDK_INT >= 14)
+			if(wakeLock.isHeld())wakeLock.release();
 		Log.d(funcLeave, "**** onDestroy ****");
 	}
 

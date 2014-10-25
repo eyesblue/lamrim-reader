@@ -55,7 +55,7 @@ public class FileSysManager {
         
 	static SharedPreferences runtime = null;
 	static StatFs[] statFs=null;
-	static Activity context=null;
+	Activity context=null;
 //        static String[] remoteSite=null;
 	static ArrayList<RemoteSource> remoteResources=new ArrayList<RemoteSource>();
 	static DiskSpaceFullListener diskFullListener=null;
@@ -78,7 +78,7 @@ public class FileSysManager {
 			srcRoot[EXTERNAL]=context.getExternalFilesDir(context.getString(R.string.filePathRoot)).getAbsolutePath();
 
 		FileSysManager.logTag=getClass().getName();
-		FileSysManager.context=context;
+		this.context=context;
 		grs=new GoogleRemoteSource(context);
 	}
 	
@@ -361,8 +361,8 @@ public class FileSysManager {
     			}
     		});
         	// Check is the destination has the same file, delete source one.
-    		for(File src: files){
-    			File dist=new File(destDir.getAbsolutePath()+File.separator+src.getName());
+    		for(final File src: files){
+    			final File dist=new File(destDir.getAbsolutePath()+File.separator+src.getName());
     			if(dist.exists()){
     				if(src.length()==dist.length()){
     					src.delete();
@@ -372,12 +372,20 @@ public class FileSysManager {
     			}
 
     			/* Copy To */
-    			pd.setMessage("移動"+src.getAbsolutePath()+" 到 "+dist.getAbsolutePath());
+    			context.runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						pd.setMessage("移動"+src.getAbsolutePath()+" 到 "+dist.getAbsolutePath());
+					}});
     			if(!src.renameTo(dist))
     				if(!moveFile(src, dist))
     					return false;
  
-    			pd.setProgress(pd.getProgress()+1);
+    			context.runOnUiThread(new Runnable(){
+					@Override
+					public void run() {
+						pd.setProgress(pd.getProgress()+1);
+					}});
     		}
     		return true;
         }

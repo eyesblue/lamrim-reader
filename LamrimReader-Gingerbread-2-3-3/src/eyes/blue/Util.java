@@ -32,6 +32,7 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
+import android.os.PowerManager.WakeLock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -133,7 +134,7 @@ public class Util {
 					mPopToast.showAtLocation(rootView, Gravity.CENTER, 0, 0);
 					subtitleLastShowTime=System.currentTimeMillis();
 				}catch(Exception e){
-					GaLogger.sendException("SHOW_TOAST", e, true);
+//					GaLogger.sendException("SHOW_TOAST", e, true);
 					e.printStackTrace();
 					return;
 				}

@@ -113,6 +113,7 @@ public class StorageManageActivity extends Activity {
 				builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener(){
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
+						dialog.dismiss();
 						fsm.moveAllFilesTo(FileSysManager.INTERNAL,FileSysManager.EXTERNAL,new CopyListener(){
 							@Override
 							public void copyFinish(){

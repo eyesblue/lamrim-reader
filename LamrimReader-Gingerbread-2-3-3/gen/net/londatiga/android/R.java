@@ -45,19 +45,19 @@ public final class R {
 		public static final int textfield_default = 0x7f0200ea;
 	}
 	public static final class id {
-		public static final int arrow_down = 0x7f080097;
-		public static final int arrow_up = 0x7f080093;
-		public static final int btn1 = 0x7f08006c;
-		public static final int btn2 = 0x7f08006d;
-		public static final int footer = 0x7f080096;
-		public static final int header2 = 0x7f080092;
-		public static final int i_more = 0x7f08006f;
-		public static final int iv_icon = 0x7f080056;
-		public static final int l_list = 0x7f08006e;
-		public static final int scroll = 0x7f080094;
-		public static final int t_name = 0x7f080070;
-		public static final int tracks = 0x7f080095;
-		public static final int tv_title = 0x7f080057;
+		public static final int arrow_down = 0x7f0a0097;
+		public static final int arrow_up = 0x7f0a0093;
+		public static final int btn1 = 0x7f0a006c;
+		public static final int btn2 = 0x7f0a006d;
+		public static final int footer = 0x7f0a0096;
+		public static final int header2 = 0x7f0a0092;
+		public static final int i_more = 0x7f0a006f;
+		public static final int iv_icon = 0x7f0a0056;
+		public static final int l_list = 0x7f0a006e;
+		public static final int scroll = 0x7f0a0094;
+		public static final int t_name = 0x7f0a0070;
+		public static final int tracks = 0x7f0a0095;
+		public static final int tv_title = 0x7f0a0057;
 	}
 	public static final class layout {
 		public static final int action_item = 0x7f030017;

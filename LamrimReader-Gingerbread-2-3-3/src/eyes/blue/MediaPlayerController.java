@@ -118,7 +118,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		//wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
 		wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "mpController@LamrimReader");
 		
-		
 //		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
 //		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
 		mediaPlayer.setOnPreparedListener(onPreparedListener);
@@ -160,7 +159,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		});
 
 		// Fix the player bug of Android 4.4
-		mediaPlayer.setWakeMode(activity, PowerManager.PARTIAL_WAKE_LOCK);
+//		mediaPlayer.setWakeMode(activity, PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE);
+		
+		mediaPlayer.setScreenOnWhilePlaying(true);
 		
 		mediaController = new MediaControllerView(activity);
 		mediaController.setMediaPlayer(this);
@@ -488,13 +489,16 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		Log.d(getClass().getName(),"MediaPlayer: Set data source to index: "+index);
-		Uri speechFileUri=Uri.fromFile(speechFile);
+		//Uri speechFileUri=Uri.fromFile(speechFile);
+		
 		synchronized(mediaPlayerKey){
 			try{
 				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
 				if(mpState != MP_IDLE)reset();
 				mpState=MP_INITING;
-				mediaPlayer.setDataSource(context, speechFileUri);
+				//mediaPlayer.setDataSource(context, speechFileUri);
+				FileInputStream fis = new FileInputStream(speechFile);
+				mediaPlayer.setDataSource(fis.getFD());
 				mpState=MP_INITED;
 				mediaPlayer.prepare();
 			}catch(IOException ioe){
@@ -503,7 +507,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}catch(Exception e){
 				changedListener.onPlayerError();
 				e.printStackTrace();
-				GaLogger.sendException("mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFileUri, e, true);
+				GaLogger.sendException("mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), e, true);
 				return;
 			}
 		}
