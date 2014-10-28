@@ -55,7 +55,7 @@ public class FileSysManager {
         
 	static SharedPreferences runtime = null;
 	static StatFs[] statFs=null;
-	Activity context=null;
+	Context context=null;
 //        static String[] remoteSite=null;
 	static ArrayList<RemoteSource> remoteResources=new ArrayList<RemoteSource>();
 	static DiskSpaceFullListener diskFullListener=null;
@@ -66,7 +66,7 @@ public class FileSysManager {
 
 //        static int bufLen=16384;
 	
-	public FileSysManager(Activity context){
+	public FileSysManager(Context context){
 		runtime = context.getSharedPreferences(context.getString(R.string.runtimeStateFile), 0);
 		
 		statFs=new StatFs[2];
@@ -242,6 +242,12 @@ public class FileSysManager {
         public File getLocalSubtitleFile(int i){
         	File extF=null, intF=null;
         	if(isExtMemWritable() && srcRoot[EXTERNAL] != null){
+        		Log.d(getClass().getName(),"srcRoot[external]="+srcRoot[EXTERNAL]);
+        		Log.d(getClass().getName(),"context="+context);
+        		Log.d(getClass().getName(),"subtitleDirName="+context.getString(R.string.subtitleDirName));
+        		Log.d(getClass().getName(),"SpeechData.getSubtitleName(i)="+SpeechData.getSubtitleName(i));
+        		Log.d(getClass().getName(),"context.getString(R.string.defSubtitleType)="+context.getString(R.string.defSubtitleType));
+        		
         		extF= new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         		if(extF.exists())return extF;
         	}
@@ -353,7 +359,7 @@ public class FileSysManager {
         private boolean moveContentsOfDir(File srcDir, File destDir, final ProgressDialog pd){
         	final File[] files=srcDir.listFiles();
         	Log.d(logTag,"There are "+files.length+" files wait for move.");
-    		context.runOnUiThread(new Runnable(){
+    		((Activity)context).runOnUiThread(new Runnable(){
     			@Override
     			public void run(){
     				if(pd!=null)pd.setMax(files.length);
@@ -372,7 +378,7 @@ public class FileSysManager {
     			}
 
     			/* Copy To */
-    			context.runOnUiThread(new Runnable(){
+    			((Activity)context).runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
 						pd.setMessage("移動"+src.getAbsolutePath()+" 到 "+dist.getAbsolutePath());
@@ -381,7 +387,7 @@ public class FileSysManager {
     				if(!moveFile(src, dist))
     					return false;
  
-    			context.runOnUiThread(new Runnable(){
+    			((Activity)context).runOnUiThread(new Runnable(){
 					@Override
 					public void run() {
 						pd.setProgress(pd.getProgress()+1);

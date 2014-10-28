@@ -53,7 +53,7 @@ public class DownloadAllService extends IntentService {
 	Integer downloadIndex = 0;
 	Integer successCount=0;
 	Integer failureCount=0;
-	FileSysManager fsm=new FileSysManager(DownloadAllService.this);
+	FileSysManager fsm= null;
 	boolean cancelled=false, hasFailure=false;
 	PowerManager powerManager=null;
 	WakeLock wakeLock = null;
@@ -79,6 +79,7 @@ public class DownloadAllService extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		Log.d(getClass().getName(), "Into onHandleIntent of download all service");
 		
+		fsm=new FileSysManager(getBaseContext());
 		defaultThreads=intent.getIntExtra("threadCount", 4);
 		if(defaultThreads<1){
 			Log.d(getClass().getName(), "DownloadAllService receive uncurrect thread count "+defaultThreads+", skip service.");

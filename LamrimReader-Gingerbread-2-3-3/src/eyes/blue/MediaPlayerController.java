@@ -438,7 +438,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			synchronized(mediaPlayerKey){
 				if(mediaPlayer==null)return;
 				Log.d("","============ Release MediaPlayer ===============");
+				mediaPlayer.reset();
 				mediaPlayer.release();
+				mediaPlayer=null;
 				mpState=MP_IDLE;
 			}
 		if(audioManager != null && remoteControlReceiver != null)audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver);
@@ -449,7 +451,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	
 	public void finish(){
 		release();
-		mediaPlayer=null;
+		
 	}
 	
 	/*

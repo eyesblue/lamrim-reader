@@ -157,6 +157,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	final static int REGION_PLAY_MODE=1;
 	final static int GL_PLAY_MODE=2;
 	
+	boolean loadFromCreate = false;
 	static int textDefSize, textMinSize, textMaxSize;
 	int subtitleViewRenderMode = SUBTITLE_MODE;
 	int playMode=-1;
@@ -229,6 +230,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 ///		requestWindowFeature(Window.FEATURE_NO_TITLE);
 //		requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_ACTION_BAR_OVERLAY);
 
+		loadFromCreate = true;
 		setContentView(R.layout.main);
 		getSupportActionBar();
 
@@ -1404,7 +1406,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.d(getClass().getName(), "**** Into onResume() ****");
+		
+		Log.d(getClass().getName(), "**** Into onResume() loadFromCreate = "+loadFromCreate+" ****");
 		/*
 		 * While in the sleep mode, the life cycle into onPause, when user
 		 * active the application the life cycle become onResume -> onPause ->
@@ -1467,57 +1470,74 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		}
 		
 		// Check is mediaPlayer loaded.
-		Log.d(getClass().getName(), "playRecord="+playRecord);
-		if (playRecord!=null && !mpController.isPlayerReady() && mediaIndex != -1){
-			Log.d(getClass().getName(), "onResume: call startPlay media "+mediaIndex);
-			mediaIndex = playRecord.getInt("mediaIndex", -1);
-			Log.d(getClass().getName(), "Media index = "+mediaIndex);
-			// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
-			if(!fsm.isFilesReady(mediaIndex)){
-				Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載回最後狀態", 1000);
-				return;
-			}
-			
-			playMode=runtime.getInt("playMode", -1);
-			if(playMode == -1)	// Never played.
-				return;
-			Log.d(logTag,"Reload playMode "+ playMode);
-			if(playMode == SPEECH_PLAY_MODE){
-				Log.d(logTag,"play index "+mediaIndex);
-				Log.d(logTag,"Call startPlay from onResume.");
-				playRecord=getSharedPreferences(getString(R.string.speechModeRecordFile), 0);
-				startPlay(mediaIndex);
-			}
-			else if(playMode == REGION_PLAY_MODE || playMode == GL_PLAY_MODE){
-				Log.d(logTag,"play region mode, load media index "+mediaIndex);
-				
-				if(playMode==REGION_PLAY_MODE)
-					playRecord = getSharedPreferences(getString(R.string.regionPlayModeRecordFile), 0);
-				else 
-					playRecord = getSharedPreferences(getString(R.string.GLModeRecordFile), 0);
-				
-				// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
-				int mStart=playRecord.getInt("startMediaIndex", -1);
-				int mEnd=playRecord.getInt("endMediaIndex", -1);
-				Log.d(getClass().getName(), "Check is file exist : "+mStart+", "+mEnd);
-				if(!fsm.isFilesReady(mStart) || !fsm.isFilesReady(mEnd)){
-					Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載入媒體！", 1000);
-					return;
-				}
-				
-				startRegionPlay(playRecord.getInt("startMediaIndex", -1),
-						playRecord.getInt("startMediaTime", -1),
-						playRecord.getInt("endMediaIndex", -1),
-						playRecord.getInt("endMediaTime", -1),
-						playRecord.getInt("theoryStartPage", -1),
-						playRecord.getInt("theoryStartLine", -1),
-						playRecord.getInt("theoryEndPage", -1),
-						playRecord.getInt("thtoryEndLine", -1),
-						playRecord.getInt("regionIndex", -1),
-						playRecord.getString("title", "---")
-						);
-			}
+		Log.d(getClass().getName(), "onResume: Check is the MediaPlayer has ready");
+		if (mpController.isPlayerReady() && mediaIndex != -1){
+			Log.d(getClass().getName(), "onResume: The MediaPlayer has ready, skip reload.");
+			return;
 		}
+		
+		Log.d(getClass().getName(), "onResume: Into reload last state procedure.");
+		playMode=runtime.getInt("playMode", -1);
+		if(playMode == -1){	// Never played.
+			Log.d(getClass().getName(), "onResume: This is new install, never played, skip reload MediaPlayer.");
+			return;
+		}
+		
+		mediaIndex = playRecord.getInt("mediaIndex", -1);
+		Log.d(getClass().getName(), "Media index = "+mediaIndex);
+		// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
+		if(!fsm.isFilesReady(mediaIndex)){
+			Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載回最後狀態", 1000);
+			loadFromCreate = false;
+			return;
+		}
+		
+		Log.d(logTag,"Reload playMode "+ playMode);
+		if(playMode == SPEECH_PLAY_MODE){
+			Log.d(logTag,"Reload SPEECH_PLAY_MODE");
+			playRecord=getSharedPreferences(getString(R.string.speechModeRecordFile), 0);
+			mediaIndex=playRecord.getInt("mediaIndex", -1);
+			Log.d(logTag,"play index "+mediaIndex);
+			if(mediaIndex==-1)return;
+			Log.d(logTag,"Call startPlay from onResume.");
+			startPlay(mediaIndex);
+		}
+		else if(playMode == REGION_PLAY_MODE || playMode == GL_PLAY_MODE){
+			Log.d(logTag,"play region mode, load media index "+mediaIndex);
+			
+			if(playMode==REGION_PLAY_MODE){
+				Log.d(logTag,"Reload REGION_PLAY_MODE");
+				playRecord = getSharedPreferences(getString(R.string.regionPlayModeRecordFile), 0);
+			}
+			else {
+				Log.d(logTag,"Reload GL_PLAY_MODE");
+				playRecord = getSharedPreferences(getString(R.string.GLModeRecordFile), 0);
+			}
+				
+			// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
+			int mStart=playRecord.getInt("startMediaIndex", -1);
+			int mEnd=playRecord.getInt("endMediaIndex", -1);
+			Log.d(getClass().getName(), "Check is file exist : "+mStart+", "+mEnd);
+			if(!fsm.isFilesReady(mStart) || !fsm.isFilesReady(mEnd)){
+				Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載入媒體！", 1000);
+				loadFromCreate = false;
+				return;
+			}
+				
+			startRegionPlay(playRecord.getInt("startMediaIndex", -1),
+					playRecord.getInt("startMediaTime", -1),
+					playRecord.getInt("endMediaIndex", -1),
+					playRecord.getInt("endMediaTime", -1),
+					playRecord.getInt("theoryStartPage", -1),
+					playRecord.getInt("theoryStartLine", -1),
+					playRecord.getInt("theoryEndPage", -1),
+					playRecord.getInt("thtoryEndLine", -1),
+					playRecord.getInt("regionIndex", -1),
+					playRecord.getString("title", "---")
+					);
+		}
+		
+		loadFromCreate = false;
 		Log.d(getClass().getName(), "**** Leave onResume() ****");
 	}
 	
@@ -1562,12 +1582,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 	@Override
 	protected void onDestroy() {
-		super.onDestroy();
+		
 		Log.d(funcInto, "**** onDestroy ****");
 		// fileDownloader.finish();
 		mpController.finish();
+		mpController = null;
 		if(Build.VERSION.SDK_INT >= 14)
 			if(wakeLock.isHeld())wakeLock.release();
+		
+		super.onDestroy();
 		Log.d(funcLeave, "**** onDestroy ****");
 	}
 
@@ -1628,6 +1651,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					public void onClick(DialogInterface dialog, int id) {
 						dialog.cancel();
 						saveRuntime();
+						if(wakeLock.isHeld())wakeLock.release();
 						finish();
 					}
 				});
@@ -1788,6 +1812,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			editor.commit();
 			
 			Log.d(logTag, "Call reset player in onActivityResult.");
+			mpController.reset();
 //			GaLogger.sendEvent("activity", "SpeechMenu_result", "select_index_"	+ selected, null);
 			// After onActivityResult, the life-cycle will return to onStart,
 			// do start downloader in OnResume.
@@ -1905,6 +1930,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		}
 
 		synchronized(startPlayKey){
+			
 			if(startPlayThread != null && startPlayThread.isAlive()){
 				Log.d(logTag,"The startPlay has a task running, skip the thread.");
 				return false;
@@ -1929,6 +1955,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						bookView.clearHighlightLine();
 						setSubtitleViewMode(SUBTITLE_MODE);
 						setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
+						Log.d(logTag,Thread.currentThread().getName()+" setDataSource.");
 						mpController.setDataSource(getApplicationContext(),	mediaIndex);
 					} catch (IllegalArgumentException e) {
 						setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
@@ -2398,12 +2425,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					popupWindow.dismiss();
 				}
 				*/
+				playMode=REGION_PLAY_MODE;
+				playRecord = getSharedPreferences(getString(R.string.regionPlayModeRecordFile), 0);
 				actionBarTitle=getString(R.string.menuStrPlayRegionRecShortName)+": "+rec.title;
 				startRegionPlay(rec.mediaStart, rec.startTimeMs ,rec.mediaEnd, rec.endTimeMs, rec.theoryPageStart, rec.theoryStartLine, rec.theoryPageEnd, rec.theoryEndLine, 0, actionBarTitle);
-				playMode=REGION_PLAY_MODE;
-
+				
 				// Set play from start of region record.
-				playRecord = getSharedPreferences(getString(R.string.regionPlayModeRecordFile), 0);
 				SharedPreferences.Editor record = playRecord.edit();
 				record.putInt("playPosition", rec.startTimeMs);
 				record.commit();
