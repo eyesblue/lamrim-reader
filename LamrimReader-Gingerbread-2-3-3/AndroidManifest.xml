@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="eyes.blue"
-    android:versionCode="163"
-    android:versionName="1.3.24" >
+    android:versionCode="164"
+    android:versionName="1.3.25" >
 
     <uses-sdk android:targetSdkVersion="20" android:minSdkVersion="8" />
 

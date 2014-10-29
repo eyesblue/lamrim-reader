@@ -1484,6 +1484,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		}
 		
 		mediaIndex = playRecord.getInt("mediaIndex", -1);
+		if(mediaIndex == -1){
+			Log.d(getClass().getName(), "Media index = -1 skip load.");
+			return;
+		}
+		
 		Log.d(getClass().getName(), "Media index = "+mediaIndex);
 		// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
 		if(!fsm.isFilesReady(mediaIndex)){
@@ -1517,6 +1522,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
 			int mStart=playRecord.getInt("startMediaIndex", -1);
 			int mEnd=playRecord.getInt("endMediaIndex", -1);
+			if(mStart == -1 || mEnd == -1){
+				Log.d(getClass().getName(), "region start media="+mStart+", region end media="+mEnd+", skip load.");
+				return;
+			}
 			Log.d(getClass().getName(), "Check is file exist : "+mStart+", "+mEnd);
 			if(!fsm.isFilesReady(mStart) || !fsm.isFilesReady(mEnd)){
 				Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載入媒體！", 1000);
