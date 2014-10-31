@@ -25,6 +25,8 @@ import java.util.zip.ZipInputStream;
 import android.view.ViewGroup.LayoutParams;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -548,5 +550,13 @@ public class Util {
 		Intent i = activity.getBaseContext().getPackageManager().getLaunchIntentForPackage( activity.getBaseContext().getPackageName() );
 		i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		activity.startActivity(i);
+	}
+	
+	public static long getMemInfo(Activity activity){
+		MemoryInfo mi = new MemoryInfo();
+		ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+		activityManager.getMemoryInfo(mi);
+		long availableMegs = mi.availMem / 1048576L;
+		return availableMegs;
 	}
 }

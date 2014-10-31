@@ -1,20 +1,9 @@
 package eyes.blue;
 
-import java.io.BufferedReader;
-
 import android.net.Uri;
-import android.os.SystemClock;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import eyes.blue.MediaControllerView.MediaPlayerControl;
 import eyes.blue.modified.RegionableSeekBar;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -22,22 +11,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ClipDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.GradientDrawable.Orientation;
-import android.graphics.drawable.InsetDrawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.NinePatchDrawable;
-import android.graphics.drawable.PaintDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.AudioManager.OnAudioFocusChangeListener;
@@ -47,17 +20,11 @@ import android.os.AsyncTask.Status;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.SeekBar;
-import android.widget.ProgressBar;
-//import android.widget.MediaController;
-import android.widget.Toast;
-//import android.widget.MediaController.MediaPlayerControl;
+
 /*
  * The class maintain the MediaPlayer, MediaPlayController and subtitle. There are many stage of MediaPlayer while play media, all stage maintain in the class, call functions of this function Instead of the functions of MediaPlayer,
  * Then you will get the better controller of MediaPlayer.
@@ -79,11 +46,11 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	RegionableSeekBar seekBar=null;
 	String logTag=null;
 	FileSysManager fsm=null;
-	MediaPlayer mediaPlayer=new MediaPlayer();
+	MediaPlayer mediaPlayer=null;
 	MediaControllerView mediaController=null;
 	SubtitleTimer subtitleTimer=null;
 //	private PowerManager powerManager=null;
-	private PowerManager.WakeLock wakeLock = null;
+//	private PowerManager.WakeLock wakeLock = null;
 	MediaPlayerControllerListener changedListener=null;
 	ComponentName remoteControlReceiver=null;
 	private SubtitleElement[] subtitle = null;
@@ -93,7 +60,6 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	int playingIndex=-2, playPosition=0;
 	Integer loadingMedia=-1;
 //	long monInterval=100;
-	Toast toast = null;
 	int regionStartMs = -1;
 	int regionEndMs = -1;
 	ViewGroup anchorView=null;
@@ -113,64 +79,89 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	public MediaPlayerController(LamrimReaderActivity activity, View anchorView){
 		this.activity=activity;
 		this.anchorView=(ViewGroup) anchorView;
-		logTag=activity.getResources().getString(R.string.app_name);
-		PowerManager powerManager=(PowerManager) activity.getSystemService(Context.POWER_SERVICE);
-		//wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, logTag);
-		wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "mpController@LamrimReader");
-		
-//		toast = Toast.makeText(activity, "", Toast.LENGTH_SHORT);
-//		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
-		mediaPlayer.setOnPreparedListener(onPreparedListener);
-		mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
-			@Override
-			public void onCompletion(MediaPlayer mp) {
-				Log.d(logTag,"Media player play completion! release WakeLock.");
-				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
-				synchronized(playingIndexKey){
-					Log.d(logTag,"Set mpState to MP_COMPLETE.");
-					mpState=MP_COMPLETE;
-					if(subtitleTimer!=null){
-						subtitleTimer.cancel(false);
-						subtitleTimer=null;
+		logTag=getClass().getName();
+		createMediaPlayer();
+		// Use for static broadcast receiver - RemoteControlReceiver
+		mpController=this;
+	}
+	
+	private void createMediaPlayer(){
+		synchronized(mediaPlayerKey){
+			mediaPlayer=new MediaPlayer();
+			mediaPlayer.setOnPreparedListener(onPreparedListener);
+			mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
+				@Override
+				public void onCompletion(MediaPlayer mp) {
+					Log.d(logTag,"Media player play completion! release WakeLock.");
+//				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+					synchronized(playingIndexKey){
+						Log.d(logTag,"Set mpState to MP_COMPLETE.");
+						mpState=MP_COMPLETE;
+						if(subtitleTimer!=null){
+							subtitleTimer.cancel(false);
+							subtitleTimer=null;
 					/*
 					 * While user drag the seek bar indicator over end of media control view, there are 2 situation we don't want:
 					 * 1. The MediaPlayer will stop play and reset the MediaPlay.currentPosition() to 0, then play media from 0ms in next play.
 					 * 2. While many seek event fired shortly, The SeekBar don't flash UI to last seek point, it cause the indicator look like jump back to random position, this is the bug of SeekBar. 
 					 * */
-						int subIndex=subtitle[subtitle.length-1].startTimeMs;
-						if(isRegionPlay())subIndex=regionEndMs;
-						seekTo(subIndex);
+							int subIndex=subtitle[subtitle.length-1].startTimeMs;
+							if(isRegionPlay())subIndex=regionEndMs;
+							seekTo(subIndex);
+						}
+						Log.d(getClass().getName(),"Call changedListener.onComplatePlay()");
+						changedListener.onComplatePlay();
 					}
-					Log.d(getClass().getName(),"Call changedListener.onComplatePlay()");
-					changedListener.onComplatePlay();
+				}});
+			mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+				@Override
+				public boolean onError(MediaPlayer arg0, int what, int extra) {
+					Log.d(logTag, "Error happen while play media");
+					changedListener.onPlayerError();
+					
+					String whatStr = "", extraStr = "";
+				    switch(what){
+				    case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+				    	whatStr="MEDIA_ERROR_UNKNOWN";
+				    	break;
+				    case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+				    	whatStr="MEDIA_ERROR_SERVER_DIED";
+				    	break;
+				    }
+				    
+				    switch(extra){
+				    case MediaPlayer.MEDIA_ERROR_IO:
+				    	extraStr="MEDIA_ERROR_IO";
+				    	break;
+				    case MediaPlayer.MEDIA_ERROR_MALFORMED:
+				    	extraStr="MEDIA_ERROR_MALFORMED";
+				    	break;
+				    case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+				    	extraStr="MEDIA_ERROR_UNSUPPORTED";
+				    	break;
+				    case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
+				    	extraStr="MEDIA_ERROR_TIMED_OUT";
+				    	break;
+				    }
+				     
+					GaLogger.sendException("MediaPlayer_Error: mpState="+mpState+", what="+whatStr+", extra="+extraStr, new Exception(), true);
+					return false;
 				}
-			}});
-		mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-			@Override
-			public boolean onError(MediaPlayer arg0, int arg1, int arg2) {
-				Log.d(logTag, "Error happen while play media");
-					// 发生错误时也解除资源与MediaPlayer的赋值*
-					// mp.release();
-					// tv.setText("播放发生异常!");
-				changedListener.onPlayerError();
-				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
-				return false;
-			}
-		});
+			});
 
 		// Fix the player bug of Android 4.4
 //		mediaPlayer.setWakeMode(activity, PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE);
 		
-		mediaPlayer.setScreenOnWhilePlaying(true);
-		
-		mediaController = new MediaControllerView(activity);
-		mediaController.setMediaPlayer(this);
-		mediaController.setAnchorView(this.anchorView);
-		mediaController.setEnabled(true);
-		seekBar=mediaController.getSeekBar();
-		// Use for static broadcast receiver - RemoteControlReceiver
-		mpController=this;
-		
+		//mediaPlayer.setScreenOnWhilePlaying(true); // use it if we use surface view.
+			mediaPlayer.setWakeMode(activity, PowerManager.FULL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE);
+			mediaController = new MediaControllerView(activity);
+			mediaController.setMediaPlayer(this);
+			mediaController.setAnchorView(this.anchorView);
+			mediaController.setEnabled(true);
+			seekBar=mediaController.getSeekBar();
+			
+			mpState=MP_IDLE;
+		}
 	}
 
 /*	public void setAnchorView(View view){
@@ -191,7 +182,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			mediaPlayer.pause();
 		}
 		
-		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+//		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 		changedListener.onPause();
 	}
 	
@@ -278,7 +269,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 					mediaPlayer.seekTo(regionStartMs);
 //					changedListener.startRegionPlay();
 				}
-				if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
+//				if(!wakeLock.isHeld()){Log.d(logTag,"Play media and Lock screen.");wakeLock.acquire();}
 			}catch(Exception e){
 				// Stop the subtitle timer if start failure.
 				if(subtitleTimer!=null){
@@ -427,7 +418,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 */
 		// Can't update seekbar on this stage, because there is no information of duration, seekbar can't be create. put in onPrepared.
 		//updateSeekBar();
-		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+//		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	/*
 	 * Same as function of MediaPlayer and maintain the state of MediaPlayer and release the subtitleTimer.
@@ -446,7 +437,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		if(audioManager != null && remoteControlReceiver != null)audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver);
 		if(audioManager != null && audioFocusChangeListener != null)audioManager.abandonAudioFocus(audioFocusChangeListener);
 		
-		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+//		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
 	}
 	
 	public void finish(){
@@ -464,7 +455,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Set data source of MediaPlayer, and parse the file of subtitle if exist.
 	 * */
 	public void setDataSource(Context context,int index) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException{
-		if(mediaPlayer==null)mediaPlayer=new MediaPlayer();
+		if(mediaPlayer==null){
+			GaLogger.sendException("MediaPlayerController.setDataSource(): The MediaPlayer become null, memory free = "+Util.getMemInfo(activity)+"M", new Exception(), false);
+			createMediaPlayer();
+		}
 		final File subtitleFile=fsm.getLocalSubtitleFile(index);
 		File speechFile=fsm.getLocalMediaFile(index);
 		
@@ -547,7 +541,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			Log.d(logTag,"The activity not prepare yet, skip show media controller.");
 			return;
 		}
-		if (mediaController == null) {
+		if (mediaPlayer == null) {
 			Log.d(logTag,"The media player is null, skip show controller.");
 			return;
 		}

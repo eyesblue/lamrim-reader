@@ -350,7 +350,6 @@ public class MediaControllerView extends FrameLayout {
         if (mPlayer == null || mDragging) {
             return 0;
         }
-
     	
         int position = mPlayer.getCurrentPosition();
         int duration = mPlayer.getDuration();

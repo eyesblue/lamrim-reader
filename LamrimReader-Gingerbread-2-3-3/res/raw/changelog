@@ -23,6 +23,11 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$165
+  % Version 1.3.26
+  _ 2014-10-31
+	* 解決當系統記憶體不足時，播放器元件被系統回收，造成App無法正常運作問題。
+	
 $164
   % Version 1.3.25
   _ 2014-10-29
