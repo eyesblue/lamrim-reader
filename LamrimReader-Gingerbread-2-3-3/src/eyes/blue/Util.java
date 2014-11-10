@@ -115,7 +115,8 @@ public class Util {
 	static Timer dismissToastTimer=new Timer("dismissToastTimer");
 	public synchronized static void showToastPopupWindow(final Activity activity, final View rootView, final String s, final int icon, final int showTime, final int delayTime){
 		
-		rootView.postDelayed(new Runnable(){
+		//rootView.postDelayed(new Runnable(){
+		activity.runOnUiThread(new Runnable(){
 			public void run() {
 				try{
 					dismissToastTimer.purge();
@@ -154,7 +155,8 @@ public class Util {
 							}
 				}},showTime);
 				*/
-		}}, delayTime);
+		//}}, delayTime);
+			}});
 	}
 	
 	static class DismissTask extends TimerTask{

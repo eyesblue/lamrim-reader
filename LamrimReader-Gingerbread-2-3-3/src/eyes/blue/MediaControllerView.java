@@ -291,6 +291,11 @@ public class MediaControllerView extends FrameLayout {
             	mAnchor.addView(this, tlp);
             	mShowing = true;
         	}
+    		
+    		mProgress.postInvalidate();
+    		int value=mProgress.getProgress();
+    		mProgress.setProgress(0);
+    		mProgress.setProgress(value);
         }
         updatePausePlay();
         updateFullScreen();

@@ -265,8 +265,10 @@ public class MyListView extends ListView {
 		
 	}
 	
-	int[][] highlightWord=null;
+	int[][] highlightWord=null; // this is real used for mark region.
+	int[] highlightWordCallArg=null; // This is use for return to user query last call record.
 	public void setHighlightWord(int startPage, int line, int startIndex, int length){
+		highlightWordCallArg=new int[]{startPage, line, startIndex, length};
 		Log.d(getClass().getName(),"Set highlight word at page "+startPage+", Line "+line+", index "+startIndex+", length "+length);
 		int index=lineWordToIndex(startPage, line, startIndex);
 		Log.d(getClass().getName(),"Set highlight word at page "+startPage+", index "+index+", length "+length);
@@ -295,6 +297,9 @@ public class MyListView extends ListView {
 		refresh();
 	}
 
+	public int[] getHighlightWord(){
+		return highlightWordCallArg;
+	}
 /*	The function has bug that '\n' will into the result.	
 	public String getHighlightWord(){
 		if(highlightWord == null)return null;
@@ -424,6 +429,9 @@ public class MyListView extends ListView {
 	}
 	
 	public int[] searchNext(int startPage, int startLine, int startWord, String str){
+		return searchNext(startPage, TheoryData.content.length-1, startLine, startWord, str);
+	}
+	public int[] searchNext(int startPage, int endPage, int startLine, int startWord, String str){
 		Log.d(getClass().getName(),"search next"+str+" from page "+startPage+", line "+startLine+", word "+startWord);
 		int rangePageStart=startPage;
 		int rangePageEnd=startPage;
@@ -434,7 +442,7 @@ public class MyListView extends ListView {
 		String sample=getContentStr(startPage, startIndex, TO_END);
 		pageLen[0][0]=startPage;
 		pageLen[0][1]=sample.length();
-		while(rangePageEnd<TheoryData.content.length-1){
+		while(rangePageEnd<endPage){
 			while(sample.length()<str.length()){
 				Log.d(getClass().getName(),"Sample="+sample+"sample length="+sample.length()+", str length="+str.length());
 				++pageIndex;
@@ -647,7 +655,7 @@ public class MyListView extends ListView {
 					break;
 				}
 				
-				System.out.print("Compare: "+sample.charAt(i+j+shift)+" and "+str.charAt(j));
+				//System.out.print("Compare: "+sample.charAt(i+j+shift)+" and "+str.charAt(j));
 				
 				if(sample.charAt(i+j+shift) != str.charAt(j)){
 					System.out.println();

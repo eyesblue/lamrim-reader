@@ -526,9 +526,14 @@ public class CalendarActivity extends SherlockActivity {
 		}
 
 		for (int i = 0; i < length; i++) {
-			startDate.setTime(startDate.getTime() + (i * 86400000));
-			key = dateFormater.format(startDate);
-			glSchedule.put(key, glr);
+			try{
+				startDate.setTime(startDate.getTime() + (i * 86400000));
+				key = dateFormater.format(startDate);
+				glSchedule.put(key, glr);
+			}catch(ArrayIndexOutOfBoundsException aiobe){
+				GaLogger.sendException("Locale="+Locale.getDefault().getDisplayCountry()+", Language="+Locale.getDefault().getDisplayLanguage()+", Date data=" + startDate.toString(), aiobe, true);
+			}
+			
 		}
 		Log.d(getClass().getName(), "Add record: key=" + key + ", data=" + glr);
 		return true;

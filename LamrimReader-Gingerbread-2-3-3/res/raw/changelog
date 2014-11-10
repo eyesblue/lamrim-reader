@@ -23,6 +23,14 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$166
+  % Version 1.3.27
+  _ 2014-11-10
+  	* 加入論文與字幕對應表，此對應表為末學撰寫程式比對論文與字幕所產生的對應表，未完全盡如人意，但足以作為播放時論文位置的參考依據。
+  	* 修改App開啟時的載入程序，降低載入時的錯誤機率。
+  	* 修正論文區域多餘的全型空白。
+	* 修正重開App時無法正常開啟問題。
+	
 $165
   % Version 1.3.26
   _ 2014-10-31

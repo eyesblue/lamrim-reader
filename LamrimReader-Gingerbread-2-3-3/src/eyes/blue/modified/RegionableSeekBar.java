@@ -145,9 +145,15 @@ public class RegionableSeekBar extends SeekBar {
         //layer.setDrawableByLayerId(android.R.id.background, background);
         //layer.setDrawableByLayerId(android.R.id.progress, progress);
 //      postInvalidate();
-        int value=getProgress();
-        setProgress(0);
-        setProgress(value);
+   /*     this.postDelayed(new Runnable(){
+
+			@Override
+			public void run() {
+				int value=getProgress();
+		        setProgress(0);
+		        setProgress(value);
+			}}, 100);
+  */      
 
 	}
 	
@@ -175,10 +181,16 @@ public class RegionableSeekBar extends SeekBar {
         background.setBounds(bgBound);
         layer.setDrawableByLayerId(android.R.id.background, background);
        
-      postInvalidate();
-        int value=getProgress();
-        setProgress(0);
-        setProgress(value);
+/*        this.postDelayed(new Runnable(){
+
+			@Override
+			public void run() {
+				postInvalidate();
+		        int value=getProgress();
+		        setProgress(0);
+		        setProgress(value);
+			}}, 100);
+ */     
 
 	}
 	

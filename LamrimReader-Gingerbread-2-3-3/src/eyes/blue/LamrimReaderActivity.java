@@ -206,6 +206,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	static Point screenDim = new Point();
 	Button modeSwBtn = null;
 	GlRecord glRecord=null;
+	Object bookViewMountPointKey=new Object();
 	int[] bookViewMountPoint={0,0};
 	
 	int theoryHighlightRegion[]=new int[4];//{startPage, startLine, endPage, endLine}
@@ -219,6 +220,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	
 	final ImageView.ScaleType scaleType[]={ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE, ImageView.ScaleType.FIT_XY, ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,  ImageView.ScaleType.MATRIX};
 	WVersionManager versionManager=null;
+	
+	int bookMap[][]=null;
 	
 	public Boolean isActivityLoaded = Boolean.valueOf(false);
 //	boolean repeatPlay=false;
@@ -511,14 +514,26 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					LamrimReaderActivity.this.findViewById(R.id.mediaControllerMountPoint), fsm,
 					new MediaPlayerControllerListener() {
 						@Override
-						public void onSubtitleChanged(final int index,
-								final SubtitleElement subtitle) {
+						public void onSubtitleChanged(final int index, final SubtitleElement subtitle) {
 							// Log.d(getClass().getName(), "Set subtitle: "+
 							// subtitle.text);
 							runOnUiThread(new Runnable() {
 								@Override
 								public void run() {
-									// synchronized (mpController){
+									
+									int[] highlightWord=bookView.getHighlightWord();
+									
+									if(bookMap[index]!=null)
+										if(highlightWord == null || !(bookMap[index][0]==highlightWord[0] && bookMap[index][1]==highlightWord[1] && bookMap[index][2]==highlightWord[2] && bookMap[index][3]==highlightWord[3])){
+											Log.d(getClass().getName(),"Set highlight at Page: "+bookMap[index][0]+", Line: "+bookMap[index][1]+", Word: "+bookMap[index][2]+", Length: "+bookMap[index][3]);
+											bookView.setHighlightWord(bookMap[index][0], bookMap[index][1], bookMap[index][2], bookMap[index][3]);
+											synchronized(bookViewMountPointKey){
+												bookViewMountPoint[0]=bookMap[index][0];
+												bookViewMountPoint[1]=bookMap[index][1];
+											}
+										}
+									
+									
 									switch (subtitleViewRenderMode) {
 									case SUBTITLE_MODE:
 										subtitleView.setText(subtitle.text);
@@ -526,6 +541,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 										if (lineCount < 1)
 											lineCount = 1;
 										subtitleView.setHeight(subtitleView.getLineHeight() * lineCount);
+										
 										break;
 									case READING_MODE:
 										// SpannableString str=new
@@ -550,7 +566,6 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 										}
 										break;
 									}
-									;
 								}
 							});
 						}
@@ -570,7 +585,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									switch (subtitleViewRenderMode) {
 									case SUBTITLE_MODE:
 										//Util.showSubtitleToast(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
-										Util.showSubtitlePopupWindow(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ')');
+										Util.showSubtitlePopupWindow(LamrimReaderActivity.this, subtitle.text+ " - (" + Util.getMsToHMS(subtitle.startTimeMs, "\"", "'", false) + " - "	+ Util.getMsToHMS(subtitle.endTimeMs, "\"", "'", false) + ") #"+index);
+								//		if(bookMap[index]!=null){
+								//			//Log.d(getClass().getName(),"Highlight page"+(bookMap[index][0]+1)+", line "+(bookMap[index][1]+1)+", word "+(bookMap[index][2]+1)+", length="+subtitle.text.length());
+								//			bookView.setHighlightWord(bookMap[index][0], bookMap[index][1], bookMap[index][2], bookMap[index][3]);
+								//		}
 										break;
 									case READING_MODE:
 										SpannableString str = new SpannableString(readingModeAllSubtitle);
@@ -592,6 +611,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 						// @Override
 						// public void startMoment(){setSubtitleViewText("");}
+						
+						
 						@Override
 						public void onMediaPrepared() {
 							
@@ -604,19 +625,57 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								readingModeSEindex = new int[se.length][2];
 								readingModeAllSubtitle = new String();
 								int wordCounter = 0;
+								int pageStart = SpeechData.refPage[mediaIndex], pageEnd=-1;
+								if(mediaIndex!=SpeechData.name.length-1)
+									pageEnd=SpeechData.refPage[mediaIndex+1];
+								else 
+									pageEnd=SpeechData.refPage[mediaIndex];
+								
+								
+								bookMap=new int[se.length][]; // For setHighlightWord(int startPage, int line, int startIndex, int length)
+								int[][] mediaBookMaps=BookMap.getMediaIndex(mediaIndex);
+								for(int i=0;i<mediaBookMaps.length;i++){
+									int index=mediaBookMaps[i][1];
+									bookMap[index]=new int[4];
+									bookMap[index][0]=mediaBookMaps[i][2];
+									bookMap[index][1]=mediaBookMaps[i][3];
+									bookMap[index][2]=mediaBookMaps[i][4];
+									bookMap[index][3]=mediaBookMaps[i][5];
+								}
+								
+								int last[]=null;
+								for(int i=0;i<bookMap.length;i++){
+									if(bookMap[i]!=null){
+										last=bookMap[i];
+									}
+									if(last==null)continue;
+									bookMap[i]=last;
+								}
+								
+								//for(int i=0;i<bookMap.length;i++){
+								//	Log.d(getClass().getName(),"bookmap["+i+"] = "+bookMap[i][0]+","+bookMap[i][1]+","+bookMap[i][2]+","+bookMap[i][3]);
+								//}
+								
 								for (int i = 0; i < se.length; i++) {
 									readingModeSEindex[i][0] = wordCounter;
 									wordCounter += se[i].text.length();
 									readingModeSEindex[i][1] = wordCounter;
-									String str = se[i].text
-											.replaceAll(",", "，");
-									str = str.replaceAll("\\.", "。");
-									str = str.replaceAll("!", "！");
-									str = str.replaceAll(";", "；");
-									str = str.replaceAll("\\?", "？");
-									str = str.replaceAll(":", "：");
-									readingModeAllSubtitle += str;
+									readingModeAllSubtitle += se[i].text;
+
+						//			String str=se[i].text.replace("，", "").replace("。", "").replace("：", "").replace("？", "").replace("《", "").replace("》", "");
+									
+								/*	bookMap[i]=bookView.searchNext(pageStart, pageEnd, 0, 0, str);
+									if(bookMap[i]!=null){
+										last=new int[]{bookMap[i][0],bookMap[i][1],bookMap[i][2],str.length()};
+										bookMap[i]=last;
+									}
+									
+									else
+										bookMap[i]=last;
+								*/
 								}
+								
+								//bookMap=BookMap.getMediaIndex(mediaIndex);
 							}
 							else {
 								setSubtitleViewText(getString(R.string.dlgHintMpControllerNoSubtitle));
@@ -674,8 +733,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								final int pageNum = SpeechData.refPage[mediaIndex] - 1;
 								Log.d(getClass().getName(),"The speech reference theory page "+pageNum);
 								if (pageNum >= 0){
-									bookViewMountPoint[0]=pageNum;
-									bookViewMountPoint[1]=0;
+									synchronized(bookViewMountPointKey){
+										bookViewMountPoint[0]=pageNum;
+										bookViewMountPoint[1]=0;
+									}
 								}
 								
 								int seekPosition = playRecord.getInt("playPosition", 0);
@@ -1015,7 +1076,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			@Override
 			public boolean onDoubleTap(MotionEvent e) {
 				if(bookViewMountPoint[0]==-1)return true;
-				bookView.setSelectionFromTop(bookViewMountPoint[0], bookViewMountPoint[1]);
+				synchronized(bookViewMountPointKey){
+					//bookView.rebuildView();
+					bookView.setViewToPosition(bookViewMountPoint[0], bookViewMountPoint[1]);
+					//bookView.setSelectionFromTop(bookViewMountPoint[0], bookViewMountPoint[1]);
+				}
 				Log.d(getClass().getName(), "Jump to theory page index " + bookViewMountPoint[0]+" shift "+bookViewMountPoint[1]);
 				GaLogger.sendEvent("ui_action", "LamrimReaderActivity", "Bookview_DoubleClick", null);
 				return true;
@@ -1483,27 +1548,22 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			return;
 		}
 		
-		mediaIndex = playRecord.getInt("mediaIndex", -1);
-		if(mediaIndex == -1){
-			Log.d(getClass().getName(), "Media index = -1 skip load.");
-			return;
-		}
-		
 		Log.d(getClass().getName(), "Media index = "+mediaIndex);
-		// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
-		if(!fsm.isFilesReady(mediaIndex)){
-			Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載回最後狀態", 1000);
-			loadFromCreate = false;
-			return;
-		}
-		
 		Log.d(logTag,"Reload playMode "+ playMode);
 		if(playMode == SPEECH_PLAY_MODE){
 			Log.d(logTag,"Reload SPEECH_PLAY_MODE");
 			playRecord=getSharedPreferences(getString(R.string.speechModeRecordFile), 0);
+			if(playRecord == null)return;
 			mediaIndex=playRecord.getInt("mediaIndex", -1);
 			Log.d(logTag,"play index "+mediaIndex);
 			if(mediaIndex==-1)return;
+			
+			// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
+			if(!fsm.isFilesReady(mediaIndex)){
+				Util.showErrorPopupWindow(LamrimReaderActivity.this, "音檔或字幕檔案不存在，無法載回最後狀態", 1000);
+				loadFromCreate = false;
+				return;
+			}
 			Log.d(logTag,"Call startPlay from onResume.");
 			startPlay(mediaIndex);
 		}
@@ -1513,10 +1573,12 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			if(playMode==REGION_PLAY_MODE){
 				Log.d(logTag,"Reload REGION_PLAY_MODE");
 				playRecord = getSharedPreferences(getString(R.string.regionPlayModeRecordFile), 0);
+				if(playRecord == null)return;
 			}
 			else {
 				Log.d(logTag,"Reload GL_PLAY_MODE");
 				playRecord = getSharedPreferences(getString(R.string.GLModeRecordFile), 0);
+				if(playRecord == null)return;
 			}
 				
 			// Here must check is the file exist, or unlimited loop happen [file not exist] -> [switch to SpeechMenuActivity] -> show network access dialog -> disallow -> [here] and so on.
@@ -1945,9 +2007,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				return false;
 			}
 			
+			
 			// It will not execute if there is the AsyncTask, maybe cause by only one UI thread.
-			startPlayThread=new Thread(new Runnable(){
-
+/*			startPlayThread=new Thread(new Runnable(){
+*/
+			Util.getRootView(this).postDelayed(new Runnable(){
 				@Override
 				public void run() {
 					try {
@@ -1984,8 +2048,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						e.printStackTrace();
 					}
 					return ;
-				}});
-			startPlayThread.start();
+				}},50);
+//			startPlayThread.start();
 		}// synchronized
 		return true;
 	}
@@ -2583,9 +2647,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		theoryHighlightRegion[3]=thtoryEndLine;
 
 		// Set theory mount point.
-		bookViewMountPoint[0]=theoryStartPage;
-		bookViewMountPoint[1]=(int) bookView.setViewToPosition(theoryStartPage, theoryStartLine);
-		
+		synchronized(bookViewMountPointKey){
+			bookViewMountPoint[0]=theoryStartPage;
+			bookViewMountPoint[1]=(int) bookView.setViewToPosition(theoryStartPage, theoryStartLine);
+		}
 		SharedPreferences.Editor editor = runtime.edit();
 		editor.putInt("playMode", playMode);
 		editor.commit();
@@ -3166,8 +3231,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			
 			final int pageNum = SpeechData.refPage[index] - 1;
 			if (pageNum < 0){
-				bookViewMountPoint[0]=pageNum;
-				bookViewMountPoint[1]=0;
+				synchronized(bookViewMountPointKey){
+					bookViewMountPoint[0]=pageNum;
+					bookViewMountPoint[1]=0;
+				}
 			}
 
 			Log.d(logTag, "Call reset player.");
