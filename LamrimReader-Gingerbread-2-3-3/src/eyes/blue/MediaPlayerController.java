@@ -92,26 +92,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
 				@Override
 				public void onCompletion(MediaPlayer mp) {
-					Log.d(logTag,"Media player play completion! release WakeLock.");
-//				if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
-					synchronized(playingIndexKey){
-						Log.d(logTag,"Set mpState to MP_COMPLETE.");
-						mpState=MP_COMPLETE;
-						if(subtitleTimer!=null){
-							subtitleTimer.cancel(false);
-							subtitleTimer=null;
-					/*
-					 * While user drag the seek bar indicator over end of media control view, there are 2 situation we don't want:
-					 * 1. The MediaPlayer will stop play and reset the MediaPlay.currentPosition() to 0, then play media from 0ms in next play.
-					 * 2. While many seek event fired shortly, The SeekBar don't flash UI to last seek point, it cause the indicator look like jump back to random position, this is the bug of SeekBar. 
-					 * */
-							int subIndex=subtitle[subtitle.length-1].startTimeMs;
-							if(isRegionPlay())subIndex=regionEndMs;
-							seekTo(subIndex);
-						}
-						Log.d(getClass().getName(),"Call changedListener.onComplatePlay()");
-						changedListener.onComplatePlay();
-					}
+					onPlayComplete(mp);
 				}});
 			mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 				@Override
@@ -164,6 +145,29 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 	}
 
+	private void onPlayComplete(MediaPlayer mp){
+		Log.d(logTag,"Media player play completion! release WakeLock.");
+//		if(wakeLock.isHeld()){Log.d(logTag,"Player paused, release wakeLock.");wakeLock.release();}
+			synchronized(playingIndexKey){
+				Log.d(logTag,"Set mpState to MP_COMPLETE.");
+				mpState=MP_COMPLETE;
+				//pause();
+				if(subtitleTimer!=null){
+					subtitleTimer.cancel(false);
+					subtitleTimer=null;
+			/*
+			 * While user drag the seek bar indicator over end of media control view, there are 2 situation we don't want:
+			 * 1. The MediaPlayer will stop play and reset the MediaPlay.currentPosition() to 0, then play media from 0ms in next play.
+			 * 2. While many seek event fired shortly, The SeekBar don't flash UI to last seek point, it cause the indicator look like jump back to random position, this is the bug of SeekBar. 
+			 * */
+					int subIndex=subtitle[subtitle.length-1].startTimeMs;
+					if(isRegionPlay())subIndex=regionEndMs;
+					seekTo(subIndex);
+				}
+				Log.d(getClass().getName(),"Call changedListener.onComplatePlay()");
+				changedListener.onComplatePlay();
+			}
+	}
 /*	public void setAnchorView(View view){
 		mediaController.setAnchorView(view);
 	}
@@ -239,6 +243,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 //		if(!powerManager.isScreenOn())return;
 		if(mediaPlayer==null)return;
 		
+		if(mediaPlayer.getCurrentPosition() == mediaPlayer.getDuration()){
+			onPlayComplete(mediaPlayer);
+			return;
+		}
 		changedListener.onStartPlay();
 
 		// Avoid some problem.

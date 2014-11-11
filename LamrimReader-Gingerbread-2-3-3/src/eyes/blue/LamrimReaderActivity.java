@@ -523,7 +523,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									
 									int[] highlightWord=bookView.getHighlightWord();
 									
-									if(bookMap[index]!=null)
+									if(bookMap != null && bookMap[index]!=null)
 										if(highlightWord == null || !(bookMap[index][0]==highlightWord[0] && bookMap[index][1]==highlightWord[1] && bookMap[index][2]==highlightWord[2] && bookMap[index][3]==highlightWord[3])){
 											Log.d(getClass().getName(),"Set highlight at Page: "+bookMap[index][0]+", Line: "+bookMap[index][1]+", Word: "+bookMap[index][2]+", Length: "+bookMap[index][3]);
 											bookView.setHighlightWord(bookMap[index][0], bookMap[index][1], bookMap[index][2], bookMap[index][3]);
@@ -631,26 +631,29 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								else 
 									pageEnd=SpeechData.refPage[mediaIndex];
 								
-								
-								bookMap=new int[se.length][]; // For setHighlightWord(int startPage, int line, int startIndex, int length)
 								int[][] mediaBookMaps=BookMap.getMediaIndex(mediaIndex);
-								for(int i=0;i<mediaBookMaps.length;i++){
-									int index=mediaBookMaps[i][1];
-									bookMap[index]=new int[4];
-									bookMap[index][0]=mediaBookMaps[i][2];
-									bookMap[index][1]=mediaBookMaps[i][3];
-									bookMap[index][2]=mediaBookMaps[i][4];
-									bookMap[index][3]=mediaBookMaps[i][5];
-								}
+								if(mediaBookMaps != null){
+									bookMap=new int[se.length][]; // For setHighlightWord(int startPage, int line, int startIndex, int length)
 								
-								int last[]=null;
-								for(int i=0;i<bookMap.length;i++){
-									if(bookMap[i]!=null){
-										last=bookMap[i];
+									for(int i=0;i<mediaBookMaps.length;i++){
+										int index=mediaBookMaps[i][1];
+										bookMap[index]=new int[4];
+										bookMap[index][0]=mediaBookMaps[i][2];
+										bookMap[index][1]=mediaBookMaps[i][3];
+										bookMap[index][2]=mediaBookMaps[i][4];
+										bookMap[index][3]=mediaBookMaps[i][5];
 									}
-									if(last==null)continue;
-									bookMap[i]=last;
+								
+									int last[]=null;
+									for(int i=0;i<bookMap.length;i++){
+										if(bookMap[i]!=null){
+											last=bookMap[i];
+										}
+										if(last==null)continue;
+										bookMap[i]=last;
+									}
 								}
+								else bookMap=null;
 								
 								//for(int i=0;i<bookMap.length;i++){
 								//	Log.d(getClass().getName(),"bookmap["+i+"] = "+bookMap[i][0]+","+bookMap[i][1]+","+bookMap[i][2]+","+bookMap[i][3]);

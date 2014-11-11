@@ -149,7 +149,7 @@ public class CalendarActivity extends SherlockActivity {
 		String title=playRecord.getString("title", null);
 		int mediaIndex=playRecord.getInt("mediaIndex",-1);
 		int position=playRecord.getInt("playPosition",-1);
-		if(title != null){
+		if(title != null && mediaIndex != -1 && position != -1){
 			menu.add(getString(R.string.reloadLastState)+": "+title+": "+SpeechData.getSubtitleName(mediaIndex)+": "+Util.getMsToHMS(position, "\"", "\'", false))
 			.setIcon(R.drawable.reload_last_state)
 			.setShowAsAction(
