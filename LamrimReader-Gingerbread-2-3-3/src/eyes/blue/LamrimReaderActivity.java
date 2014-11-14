@@ -637,6 +637,11 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 								
 									for(int i=0;i<mediaBookMaps.length;i++){
 										int index=mediaBookMaps[i][1];
+										if(index>=se.length){
+											GaLogger.sendException("Theory index over subtitle index at "+SpeechData.getSubtitleName(mediaIndex)+" read index="+index+", array length="+se.length, new ArrayIndexOutOfBoundsException(), true);
+											continue;
+										}
+										
 										bookMap[index]=new int[4];
 										bookMap[index][0]=mediaBookMaps[i][2];
 										bookMap[index][1]=mediaBookMaps[i][3];
@@ -2012,9 +2017,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			
 			
 			// It will not execute if there is the AsyncTask, maybe cause by only one UI thread.
-/*			startPlayThread=new Thread(new Runnable(){
-*/
-			Util.getRootView(this).postDelayed(new Runnable(){
+			startPlayThread=new Thread(new Runnable(){
+
+//			Util.getRootView(this).postDelayed(new Runnable(){
 				@Override
 				public void run() {
 					try {
@@ -2051,8 +2056,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						e.printStackTrace();
 					}
 					return ;
-				}},50);
-//			startPlayThread.start();
+				}});
+			startPlayThread.start();
 		}// synchronized
 		return true;
 	}

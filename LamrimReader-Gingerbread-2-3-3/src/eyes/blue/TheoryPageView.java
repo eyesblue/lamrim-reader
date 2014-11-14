@@ -306,7 +306,6 @@ public class TheoryPageView extends TextView {
 		}
 		
 		getPaint().setTextSize(orgTextSize);
-/////		super.onDraw(canvas);
     }
 /*
 	@Override

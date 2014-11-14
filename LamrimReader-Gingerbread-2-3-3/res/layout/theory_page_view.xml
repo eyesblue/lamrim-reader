@@ -24,6 +24,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/defSubtitleFGcolor"
         android:textSize="18sp" />
+<!-- android:textIsSelectable="true" -->
 
     <TextView
         android:id="@+id/pageNumView"

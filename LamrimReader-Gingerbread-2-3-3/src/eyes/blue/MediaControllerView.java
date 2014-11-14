@@ -292,11 +292,19 @@ public class MediaControllerView extends FrameLayout {
             	mShowing = true;
         	}
     		
-/*    		mProgress.postInvalidate();
-    		int value=mProgress.getProgress();
-    		mProgress.setProgress(0);
-    		mProgress.setProgress(value);
-*/        }
+//    		if(!mPlayer.isRegionPlay()){
+    			mProgress.postInvalidate();
+    			mProgress.postDelayed(new Runnable(){
+
+					@Override
+					public void run() {
+						int value=mProgress.getProgress();
+		    			mProgress.setProgress(0);
+		    			mProgress.setProgress(value);
+					}}, 100);
+    			
+//    		}
+        }
         updatePausePlay();
         updateFullScreen();
        
@@ -714,6 +722,7 @@ public class MediaControllerView extends FrameLayout {
         void    toggleFullScreen();
         void	rewToLastSubtitle();
         void	fwToNextSubtitle();
+        boolean isRegionPlay();
     }
    
     private static class MessageHandler extends Handler {

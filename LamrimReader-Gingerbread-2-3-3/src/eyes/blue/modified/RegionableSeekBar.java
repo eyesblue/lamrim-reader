@@ -58,6 +58,7 @@ public class RegionableSeekBar extends SeekBar {
 	public void disableRegionMode(){
 		this.start=-1;
 		this.end=-1;
+		drawRegionTimes=0;
 	}
 	
 	public int[] getRegionValue(){
@@ -65,19 +66,36 @@ public class RegionableSeekBar extends SeekBar {
 	}
 
 	@Override
+	public void invalidate(){
+		drawRegionTimes=0;
+		super.invalidate();
+	}
+	@Override
 	protected void onDraw (Canvas canvas){
-		super.onDraw(canvas);
-		if(start == -1 && end ==-1)
-			drawNormalMode();
-		else drawRegionMode();
+		
+		if(start == -1 && end ==-1){
+			super.onDraw(canvas);
+			drawNormalMode(canvas);
+		}			
+		else {
+			super.onDraw(canvas);
+			drawRegionMode(canvas);
+		}
 	}
 	
-	protected void drawRegionMode(){
+	int drawRegionTimes=0;
+	protected void drawRegionMode(Canvas canvas){
+		if(drawRegionTimes==1){
+			drawRegionTimes=0;
+			return;
+		}
 		Log.d(logTag,"Draw Region mode: start = "+start+", region end = "+end);
         LayerDrawable layer = (LayerDrawable) getProgressDrawable();
         Drawable drawableFg = (Drawable)layer.findDrawableByLayerId(android.R.id.progress);
         Drawable drawableBg = (Drawable)layer.findDrawableByLayerId(android.R.id.background);
 
+
+        
         Log.d(logTag,"There are "+layer.getNumberOfLayers()+" layer in SeekBar object, forground: "+drawableFg+", background: "+drawableBg);
        
         Rect fgBound=drawableFg.copyBounds();
@@ -106,6 +124,9 @@ public class RegionableSeekBar extends SeekBar {
         Log.d(logTag,"Create background rec: width="+bgBound.right+", height="+bgBound.bottom);
         Bitmap bgBmap=getNinepatch(R.drawable.scrubber_track_holo_dark, bgBound.width(), bgBound.height(), context);
        
+        
+        
+        
         //fgBmap.setDensity()
 //      Canvas fgCanvas=new Canvas(fgBmap);
         Canvas bgCanvas=new Canvas(bgBmap);
@@ -123,11 +144,17 @@ public class RegionableSeekBar extends SeekBar {
         Rect src = new Rect(seekBarStartPosition, 0, seekBarEndPosition, fgBound.bottom);
         Rect dst = new Rect(seekBarStartPosition, 0, seekBarEndPosition, fgBound.bottom);
 
+//        canvas.drawBitmap(fgBmap, dst, dst, null);
+//        canvas.drawBitmap(bgBmap, dst, dst, null);
+         
+        
         //bgCanvas.drawBitmap(fgBmap, src, dst, new Paint());
 //      bgCanvas.setDensity(Bitmap.DENSITY_NONE);
 //      fgBmap.setDensity(Bitmap.DENSITY_NONE);
         bgCanvas.drawBitmap(fgBmap, dst, dst, null);
-       
+        
+        
+        
         Drawable drawable = new BitmapDrawable(context.getResources(), bgBmap);
         ClipDrawable progress = new ClipDrawable(drawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
         InsetDrawable background=  new InsetDrawable(drawable,0);
@@ -135,11 +162,21 @@ public class RegionableSeekBar extends SeekBar {
         progress.setBounds(fgBound);
         background.setBounds(bgBound);
        
+ /*       layer.setId(0, android.R.id.background);
+        layer.setId(1, android.R.id.progress);
+        
+        layer.setDrawableByLayerId(0, drawable);
+        layer.setDrawableByLayerId(1, drawable);
+       invalidate();
+       */
+        
         LayerDrawable mylayer = new LayerDrawable(new Drawable[]{background,progress});
         mylayer.setId(0, android.R.id.background);
         mylayer.setId(1, android.R.id.progress);
         setProgressDrawable(mylayer);
-
+        drawRegionTimes++;
+        
+        
         //progress.setBounds(fgBound);
         //background.setBounds(bgBound);
         //layer.setDrawableByLayerId(android.R.id.background, background);
@@ -157,19 +194,26 @@ public class RegionableSeekBar extends SeekBar {
 
 	}
 	
-	protected void drawNormalMode(){
+	protected void drawNormalMode(Canvas canvas){
 		Log.d(logTag,"Release the region select mode.");
         Log.d(logTag,"Region start = "+start+", region end = "+end);
         LayerDrawable layer = (LayerDrawable) getProgressDrawable();
         Drawable drawableFg = (Drawable)layer.findDrawableByLayerId(android.R.id.progress);
         Drawable drawableBg = (Drawable)layer.findDrawableByLayerId(android.R.id.background);
        
+//        drawableBg.draw(canvas);
+ //       drawableFg.draw(canvas);
+
         Log.d(logTag,"There are "+layer.getNumberOfLayers()+" layer in SeekBar object, forground: "+drawableFg+", background: "+drawableBg);
        
         Rect fgBound=drawableFg.copyBounds();
         Rect bgBound=drawableBg.copyBounds();
        
+        
         Bitmap seekBarFgBmap = getNinepatch(R.drawable.scrubber_primary_holo, fgBound.width(), fgBound.height(), context);
+        
+       
+        
         BitmapDrawable fgDrawable = new BitmapDrawable(context.getResources(), seekBarFgBmap);
         ClipDrawable progress = new ClipDrawable(fgDrawable, Gravity.AXIS_PULL_BEFORE, ClipDrawable.HORIZONTAL);
         progress.setBounds(fgBound);
@@ -181,6 +225,11 @@ public class RegionableSeekBar extends SeekBar {
         background.setBounds(bgBound);
         layer.setDrawableByLayerId(android.R.id.background, background);
        
+ /*       postInvalidate();
+        int value=getProgress();
+        setProgress(0);
+        setProgress(value);
+ */       
 /*        this.postDelayed(new Runnable(){
 
 			@Override
