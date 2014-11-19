@@ -984,10 +984,14 @@ public class SpeechMenuActivity extends SherlockActivity {
 				rootView.post(new Runnable(){
 					@Override
 					public void run() {
-						final AlertDialog dialog=getDownloadAgainDialog(tasks);
-						if(pd.isShowing())pd.dismiss();
+						try{
+							final AlertDialog dialog=getDownloadAgainDialog(tasks);
+							if(pd.isShowing())pd.dismiss();
 //						if(!wakeLock.isHeld()){wakeLock.acquire();}
-						dialog.show();
+							dialog.show();
+						}catch(Exception e){
+							GaLogger.sendException("Error happen while show download progress dialog.", e, true);
+						}
 					}});
 		}
 		

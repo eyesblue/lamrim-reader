@@ -12,6 +12,11 @@ public class MyHorizontalScrollView extends HorizontalScrollView {
 		super(context, attrs);
 		this.context=context;
 	}
+	public MyHorizontalScrollView(Context context, AttributeSet attrs, int defStyle) 
+	{
+	    super(context, attrs, defStyle);
+	    this.context=context;
+	}
 	
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev){

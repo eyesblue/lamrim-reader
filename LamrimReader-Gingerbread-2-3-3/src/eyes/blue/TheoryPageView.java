@@ -64,6 +64,13 @@ public class TheoryPageView extends TextView {
         loadColor();
     }
 	
+	public TheoryPageView(Context context, AttributeSet attrs, int defStyle) 
+	{
+	    super(context, attrs, defStyle);
+	    this.context=context;
+	    loadColor();
+	}
+	
 	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
 	private void loadColor(){

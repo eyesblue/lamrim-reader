@@ -638,6 +638,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									for(int i=0;i<mediaBookMaps.length;i++){
 										int index=mediaBookMaps[i][1];
 										if(index>=se.length){
+											Util.showErrorPopupWindow(getApplicationContext(), "此音檔字幕似乎不完整，請嘗試重新下載此字幕(選擇音檔 -> 長按"+SpeechData.getSubtitleName(mediaIndex)+" -> 更新)。");
 											GaLogger.sendException("Theory index over subtitle index at "+SpeechData.getSubtitleName(mediaIndex)+" read index="+index+", array length="+se.length, new ArrayIndexOutOfBoundsException(), true);
 											continue;
 										}

@@ -194,10 +194,12 @@ public class FileSysManager {
         	
         	if(isExtMemWritable() && srcRoot[EXTERNAL] != null){
         		extF=new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
+        		//extF=context.getExternalFilesDir(context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
 //        		Log.d(logTag,"Check exist: "+extF.getAbsolutePath());
         		if(extF.exists())return extF;
         	}
         	intF=new File(srcRoot[INTERNAL]+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
+        	//intF=new File(context.getFilesDir()+File.separator+context.getString(R.string.audioDirName)+File.separator+SpeechData.name[i]);
 //    		Log.d(logTag,"Check exist: "+intF.getAbsolutePath());
     		if(intF.exists())return intF;
 

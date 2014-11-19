@@ -62,6 +62,13 @@ public class MyListView extends ListView {
 		init();
 	}
 	
+	public MyListView(Context context, AttributeSet attrs, int defStyle) 
+	{
+	    super(context, attrs, defStyle);
+	    this.context=context;
+	    init();
+	}
+	
 	private void init(){
 		runtime = context.getSharedPreferences(context.getString(R.string.runtimeStateFile), 0);
 		educFont=Typeface.createFromAsset(context.getAssets(), "EUDC.TTF");

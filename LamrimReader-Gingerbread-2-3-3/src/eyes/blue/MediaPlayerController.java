@@ -407,6 +407,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			try{
 				mediaPlayer.reset();
 				mpState=MP_IDLE;
+				loadingMedia=-1;
 				desetPlayRegion();
 			}catch(Exception e){
 				e.printStackTrace();
@@ -496,27 +497,52 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		//Uri speechFileUri=Uri.fromFile(speechFile);
 		
 		synchronized(mediaPlayerKey){
+			Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
+			if(mpState != MP_IDLE)reset();
+			mpState=MP_INITING;
 			try{
-				Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
-				if(mpState != MP_IDLE)reset();
-				mpState=MP_INITING;
-				//mediaPlayer.setDataSource(context, speechFileUri);
-				FileInputStream fis = new FileInputStream(speechFile);
-				mediaPlayer.setDataSource(fis.getFD());
-				mpState=MP_INITED;
-				mediaPlayer.prepare();
-			}catch(IOException ioe){
-				Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀或儲存空間已滿: "+speechFile);
-				ioe.printStackTrace();
-			}catch(Exception e){
-				changedListener.onPlayerError();
-				e.printStackTrace();
-				GaLogger.sendException("mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), e, true);
-				return;
+				if(android.os.Build.VERSION.SDK_INT >= 16){
+					Log.d(logTag,"Build version ("+android.os.Build.VERSION.SDK_INT+") over 16, set media with "+speechFile.getAbsolutePath());
+					mediaPlayer.setDataSource(speechFile.getAbsolutePath());
+				}
+				else {
+					Log.d(logTag,"Build version ("+android.os.Build.VERSION.SDK_INT+") under 16, set media with "+Uri.fromFile(speechFile));
+					mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
+				}
 			}
+			catch(IllegalArgumentException iae){
+				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), iae, true);
+				if(!setDataSrcByFD(context, speechFile))return;
+			}
+			catch(IOException ioe){
+				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), ioe, true);
+				if(!setDataSrcByFD(context, speechFile))return;
+			}
+			mpState=MP_INITED;
+			mediaPlayer.prepare();
 		}
 	}
 	
+	private boolean setDataSrcByFD(Context context, File speechFile)throws IllegalArgumentException, IOException{
+		FileInputStream fis = new FileInputStream(speechFile);
+		boolean hasErr=false;
+		Exception e=null;
+		try{
+			mediaPlayer.setDataSource(fis.getFD());
+		}catch(IllegalArgumentException iae){
+			hasErr=true;
+			e=iae;
+		}
+		catch(IOException ioe){
+			hasErr=true;
+			e=ioe;
+		}
+		
+		if(!hasErr)return true;
+		Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀或儲存空間已滿，若確定非上述問題，請回報開發者您的機型無法正常播放音檔。");
+		GaLogger.sendException("Can't setDataSource by FileDescriptor way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), e, true);
+		return false;
+	}
 
 	public synchronized int getLoadingMediaIndex(){
 		synchronized(loadingMedia){

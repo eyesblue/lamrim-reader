@@ -23,6 +23,13 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$169
+  % Version 1.3.30
+  _ 2014-11-19
+	* 修正多款機型Android4.0.4版之後的裝置無法正常播放問題(Xperia Z3, HTC New One, Note2 ...)。
+	* 修正少數機型閃退問題(by fill all constructor)。
+	* 修正單檔下載對話框顯示時造成強制關閉錯誤問題。
+	
 $168
   % Version 1.3.29
   _ 2014-11-14
