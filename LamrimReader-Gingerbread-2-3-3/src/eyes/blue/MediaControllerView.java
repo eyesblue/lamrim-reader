@@ -82,7 +82,8 @@ public class MediaControllerView extends FrameLayout {
     private TextView            mEndTime, mCurrentTime;
     private boolean             mShowing;
     private boolean             mDragging;
-    private static final int    sDefaultTimeout = 3000;
+    //private static final int    sDefaultTimeout = 3000;
+    private static final int    sDefaultTimeout = 4000;
     private static final int    FADE_OUT = 1;
     private static final int    SHOW_PROGRESS = 2;
     private boolean             mUseFastForward;

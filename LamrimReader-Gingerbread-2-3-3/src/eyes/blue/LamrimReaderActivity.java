@@ -632,13 +632,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 									pageEnd=SpeechData.refPage[mediaIndex];
 								
 								int[][] mediaBookMaps=BookMap.getMediaIndex(mediaIndex);
+								Log.d(logTag,"載入論文音檔對應表: "+SpeechData.getSubtitleName(mediaIndex));
 								if(mediaBookMaps != null){
 									bookMap=new int[se.length][]; // For setHighlightWord(int startPage, int line, int startIndex, int length)
 								
 									for(int i=0;i<mediaBookMaps.length;i++){
 										int index=mediaBookMaps[i][1];
 										if(index>=se.length){
-											Util.showErrorPopupWindow(getApplicationContext(), "此音檔字幕似乎不完整，請嘗試重新下載此字幕(選擇音檔 -> 長按"+SpeechData.getSubtitleName(mediaIndex)+" -> 更新)。");
+											//Util.showErrorPopupWindow(getApplicationContext(), "此音檔字幕似乎不完整，請嘗試重新下載此字幕(選擇音檔 -> 長按"+SpeechData.getSubtitleName(mediaIndex)+" -> 更新)。");
+											Util.showErrorPopupWindow(LamrimReaderActivity.this, "此音檔字幕似乎不完整，請嘗試重新下載此字幕(選擇音檔 -> 長按"+SpeechData.getSubtitleName(mediaIndex)+" -> 更新)。");
 											GaLogger.sendException("Theory index over subtitle index at "+SpeechData.getSubtitleName(mediaIndex)+" read index="+index+", array length="+se.length, new ArrayIndexOutOfBoundsException(), true);
 											continue;
 										}
@@ -901,7 +903,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		 * mpController.showMediaPlayerController(); } });
 		 */
 		final GestureDetectorCompat subtitleViewGestureListener = new GestureDetectorCompat(
-				getApplicationContext(), new SimpleOnGestureListener() {
+				//getApplicationContext(), new SimpleOnGestureListener() {
+				LamrimReaderActivity.this, new SimpleOnGestureListener() {
 					@Override
 					public boolean onDown(MotionEvent e) {
 						return true;
@@ -985,7 +988,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					}
 				});
 
-		final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(this.getApplicationContext(), new SimpleOnScaleGestureListener() {
+		//final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(this.getApplicationContext(), new SimpleOnScaleGestureListener() {
+		final ScaleGestureDetector stScaleGestureDetector = new ScaleGestureDetector(LamrimReaderActivity.this, new SimpleOnScaleGestureListener() {
 //		class MyGestureDetector implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, GestureDetector.{
 //			int textSizeMax=getResources().getInteger(R.integer.textMaxSize);
 //    		int textSizeMin=getResources().getInteger(R.integer.textMinSize);
@@ -1919,64 +1923,64 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			break;
 		case GLOBAL_LAMRIM_RESULT:
 			if(intent == null)return;
-			
+
 			playMode=GL_PLAY_MODE;
 			playRecord = getSharedPreferences(getString(R.string.GLModeRecordFile), 0);
 			record=playRecord.edit();
 			if(glRecord==null)glRecord=new GlRecord();
 			int playPosition=-1;
-			
+
 			if(intent.getBooleanExtra("reloadLastState", false)){
-				int speechStartIndex = playRecord.getInt("startMediaIndex", -1);
-				int speechStartMs = playRecord.getInt("startMediaTime", -1);
-				int speechEndIndex = playRecord.getInt("endMediaIndex", -1);
-				int speechEndMs = playRecord.getInt("endMediaTime", -1);
-				int theoryStartPage = playRecord.getInt("theoryStartPage", -1);
-				int theoryStartLine = playRecord.getInt("theoryStartLine", -1);
-				int theoryEndPage = playRecord.getInt("theoryEndPage", -1);
-				int thtoryEndLine = playRecord.getInt("thtoryEndLine", -1);
-//				int  = playRecord.getInt("regionIndex", -1);
-				actionBarTitle = playRecord.getString("title", "---");
-				playPosition=playRecord.getInt("playPosition", -1);
-				setRegionSec(speechStartIndex, speechStartMs, speechEndIndex, speechEndMs, theoryStartPage, theoryStartLine, theoryEndPage, thtoryEndLine, actionBarTitle);
+			int speechStartIndex = playRecord.getInt("startMediaIndex", -1);
+			int speechStartMs = playRecord.getInt("startMediaTime", -1);
+			int speechEndIndex = playRecord.getInt("endMediaIndex", -1);
+			int speechEndMs = playRecord.getInt("endMediaTime", -1);
+			int theoryStartPage = playRecord.getInt("theoryStartPage", -1);
+			int theoryStartLine = playRecord.getInt("theoryStartLine", -1);
+			int theoryEndPage = playRecord.getInt("theoryEndPage", -1);
+			int thtoryEndLine = playRecord.getInt("thtoryEndLine", -1);
+			// int = playRecord.getInt("regionIndex", -1);
+			actionBarTitle = playRecord.getString("title", "---");
+			playPosition=playRecord.getInt("playPosition", -1);
+			setRegionSec(speechStartIndex, speechStartMs, speechEndIndex, speechEndMs, theoryStartPage, theoryStartLine, theoryEndPage, thtoryEndLine, actionBarTitle);
 			}
 			else{
-				glRecord.dateStart=intent.getStringExtra("dateStart");
-				glRecord.dateEnd=intent.getStringExtra("dateEnd");
-				glRecord.speechPositionStart=intent.getStringExtra("speechPositionStart");
-				glRecord.speechPositionEnd=intent.getStringExtra("speechPositionEnd");
-				glRecord.totalTime=intent.getStringExtra("totalTime");
-				glRecord.theoryLineStart=intent.getStringExtra("theoryLineStart");
-				glRecord.theoryLineEnd=intent.getStringExtra("theoryLineEnd");
-				glRecord.subtitleLineStart=intent.getStringExtra("subtitleLineStart");
-				glRecord.subtitleLineEnd=intent.getStringExtra("subtitleLineEnd");
-				glRecord.desc=intent.getStringExtra("desc");
-				actionBarTitle=intent.getStringExtra("selectedDay");
-				
-				String sec[]=actionBarTitle.split("/");
-				actionBarTitle=getString(R.string.globalLamrimShortName)+": "+sec[1]+"/"+sec[2];
-				String regionInfo[]=glRecord.desc.split("……");
-				regionStartInfo=regionInfo[0].trim();
-				regionEndInfo=regionInfo[1].trim();
-				Log.d(getClass().getName(),"Get data: "+glRecord);
-				setRegionSec(glRecord.speechPositionStart, glRecord.speechPositionEnd, glRecord.theoryLineStart, glRecord.theoryLineEnd, 0, actionBarTitle);
-				
-				playPosition=GLamrimSect[0][1];
+			glRecord.dateStart=intent.getStringExtra("dateStart");
+			glRecord.dateEnd=intent.getStringExtra("dateEnd");
+			glRecord.speechPositionStart=intent.getStringExtra("speechPositionStart");
+			glRecord.speechPositionEnd=intent.getStringExtra("speechPositionEnd");
+			glRecord.totalTime=intent.getStringExtra("totalTime");
+			glRecord.theoryLineStart=intent.getStringExtra("theoryLineStart");
+			glRecord.theoryLineEnd=intent.getStringExtra("theoryLineEnd");
+			glRecord.subtitleLineStart=intent.getStringExtra("subtitleLineStart");
+			glRecord.subtitleLineEnd=intent.getStringExtra("subtitleLineEnd");
+			glRecord.desc=intent.getStringExtra("desc");
+			actionBarTitle=intent.getStringExtra("selectedDay");
+
+			String sec[]=actionBarTitle.split("/");
+			actionBarTitle=getString(R.string.globalLamrimShortName)+": "+sec[1]+"/"+sec[2];
+			String regionInfo[]=glRecord.desc.split("……");
+			regionStartInfo=regionInfo[0].trim();
+			regionEndInfo=regionInfo[1].trim();
+			Log.d(getClass().getName(),"Get data: "+glRecord);
+			setRegionSec(glRecord.speechPositionStart, glRecord.speechPositionEnd, glRecord.theoryLineStart, glRecord.theoryLineEnd, 0, actionBarTitle);
+
+			playPosition=GLamrimSect[0][1];
 			}
-			
+
 			GLamrimSectIndex=0;
 			mediaIndex = GLamrimSect[0][0];
-			
+
 			Log.d(getClass().getName(), "Set mediaIndex="+mediaIndex+", play position="+GLamrimSect[0][0]);
-			
+
 			record.putInt("regionIndex", 0);
 			record.putInt("mediaIndex", GLamrimSect[0][0]);
 			record.putInt("playPosition", playPosition);
 			record.commit();
-			
+
 			editor.putInt("playMode", playMode);
 			editor.commit();
-			
+
 			mpController.reset();
 			break;
 			
@@ -1998,10 +2002,15 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 
 		Log.d(funcLeave, "Leave onActivityResult");
 	}
-	
+
 	Thread startPlayThread=null;
 	Object startPlayKey=new Object();
 	public boolean startPlay(final int mediaIndex) {
+		if(mediaIndex == -1){
+			Util.showErrorPopupWindow(LamrimReaderActivity.this, "偵測到錯誤參數，放棄載入音檔。", 1000);
+			GaLogger.sendException("PLAY_EXCEPTION: the media index is -1", new ArrayIndexOutOfBoundsException(), true);
+			return false;
+		}
 		// This avoid the unlimit loop that reload last state on onResume -> file not exist -> SpeechMenuActivity -> showDownloadDialog -> disallow -> onResume ... so on.
 		File f = fsm.getLocalMediaFile(mediaIndex);
 		if (f == null || !f.exists()) {
@@ -2038,7 +2047,8 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						setSubtitleViewMode(SUBTITLE_MODE);
 						setSubtitleViewText(getString(R.string.dlgDescPrepareSpeech));
 						Log.d(logTag,Thread.currentThread().getName()+" setDataSource.");
-						mpController.setDataSource(getApplicationContext(),	mediaIndex);
+						//mpController.setDataSource(getApplicationContext(),	mediaIndex);
+						mpController.setDataSource(LamrimReaderActivity.this,	mediaIndex);
 					} catch (IllegalArgumentException e) {
 						setSubtitleViewText(getString(R.string.errIAEwhileSetPlayerSrc));
 						GaLogger.sendEvent("error", "player_error",	"IllegalArgumentException", null);
@@ -2605,25 +2615,23 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		Log.d(logTag,"Call startPlay from startRegionPlay");
 		startPlay(mediaIndex);
 	}
+	
 	private void setRegionSec(String speechPositionStart, String speechPositionEnd, String theoryLineStart, String theoryLineEnd, int GLamrimSectIndex, String title){
 		final int[] theoryStart=GlRecord.getTheoryStrToInt(glRecord.theoryLineStart);// {page,line}
 		int[] theoryEnd=GlRecord.getTheoryStrToInt(glRecord.theoryLineEnd);// {page,line}
 		int[] speechStart=GlRecord.getSpeechStrToInt(glRecord.speechPositionStart);// {speechIndex, TimeMs}
 		int[] speechEnd=GlRecord.getSpeechStrToInt(glRecord.speechPositionEnd);// {speechIndex, TimeMs}
-		
+
 		Log.d(getClass().getName(),"Parse result: Theory: P"+theoryStart[0]+"L"+ theoryStart[1]+" ~ P"+theoryEnd[0]+"L"+theoryEnd[1]);
 		Log.d(getClass().getName(),"Parse result: Speech: "+speechStart[0]+":"+ Util.getMsToHMS(speechStart[1])+" ~ "+speechEnd[0]+":"+ Util.getMsToHMS(speechEnd[1]));
 
-		setRegionSec(speechStart[0], speechStart[1], speechEnd[0], speechEnd[1], theoryStart[0],  theoryStart[1], theoryEnd[0], theoryEnd[1], title);
-	}
+		setRegionSec(speechStart[0], speechStart[1], speechEnd[0], speechEnd[1], theoryStart[0], theoryStart[1], theoryEnd[0], theoryEnd[1], title);
+		}
 	
-	private void setRegionSec(int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, final int theoryStartPage, final int theoryStartLine, int theoryEndPage, int thtoryEndLine, String title){
+	private void setRegionSec(int speechStartIndex, int speechStartMs, int speechEndIndex, int speechEndMs, final int theoryStartPage, final int theoryStartLine, int theoryEndPage, int theoryEndLine, String title){
 		Log.d(getClass().getName(),"Set region[0]: startIndex="+speechStartIndex+", startMs="+ speechStartMs+", speechEndIndex="+speechEndIndex+", endMs="+speechEndMs);
 		
 		actionBarTitle=title;
-//		ActionBar actionBar=getSupportActionBar();
-		//if(actionBar != null)actionBar.setTitle(actionBarTitle);
-//		if(actionBar != null)actionBar.setTitle(title);
 		
 		if(speechStartIndex == speechEndIndex){
 			Log.d(getClass().getName(),"Set region[0]: startIndex="+speechStartIndex+", startMs="+ speechStartMs+", endMs="+speechEndMs+"; region[1]: -1, -1, -1");
@@ -2653,7 +2661,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		theoryHighlightRegion[0]=theoryStartPage;
 		theoryHighlightRegion[1]=theoryStartLine;
 		theoryHighlightRegion[2]=theoryEndPage;
-		theoryHighlightRegion[3]=thtoryEndLine;
+		theoryHighlightRegion[3]=theoryEndLine;
 
 		// Set theory mount point.
 		synchronized(bookViewMountPointKey){
@@ -2672,7 +2680,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 		record.putInt("theoryStartPage", theoryStartPage);
 		record.putInt("theoryStartLine", theoryStartLine);
 		record.putInt("theoryEndPage", theoryEndPage);
-		record.putInt("thtoryEndLine", thtoryEndLine);
+		record.putInt("thtoryEndLine", theoryEndLine);
 		record.putString("title", title);
 		record.commit();
 	}
@@ -3181,6 +3189,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			record.commit();
 			
 			Log.d(logTag,"Call startPlay from glModePrevNextListener");
+			mediaIndex=GLamrimSect[GLamrimSectIndex][0];
 			startPlay(GLamrimSect[GLamrimSectIndex][0]);
 		}
 		
@@ -3251,6 +3260,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 			getSupportActionBar().setTitle(actionBarTitle);
 			mpController.reset();
 			Log.d(logTag,"Call startPlay from normalModePrevNextListener");
+			mediaIndex=index;
 			startPlay(index);
 		}
 		

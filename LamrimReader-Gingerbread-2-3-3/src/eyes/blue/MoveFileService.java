@@ -47,6 +47,7 @@ public class MoveFileService extends IntentService {
 		powerManager=(PowerManager) getSystemService(Context.POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
 		
+		
 		ArrayList<String> srcDirs=intent.getStringArrayListExtra("srcDirs");
 		String destDir=intent.getStringExtra("destDir");
 		File destFile=new File(destDir);

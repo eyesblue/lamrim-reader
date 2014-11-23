@@ -189,6 +189,7 @@ public class StorageManageActivity extends Activity {
 				Intent intent = new Intent(StorageManageActivity.this,	MoveFileService.class);
 				intent.putStringArrayListExtra("srcDirs", srcList);
 				intent.putExtra("destDir",path);
+				
 				Log.d(getClass().getName(),	"Start move file service.");
 				
 				// While user press the move button that mean the path is specified.

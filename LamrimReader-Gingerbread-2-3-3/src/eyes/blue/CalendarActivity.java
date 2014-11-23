@@ -168,6 +168,7 @@ public class CalendarActivity extends SherlockActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		String menuStr=item.getTitle().toString();
 		if(menuStr.startsWith(getString(R.string.downloadSchedule))){
+			Log.d(getClass().getName(),"dialogShowing = "+dialogShowing);
 			if (dialogShowing)return true;
 			dialogShowing = true;
 			new Thread(new Runnable() {
@@ -568,12 +569,13 @@ public class CalendarActivity extends SherlockActivity {
 			respCode = response.getStatusLine().getStatusCode();
 			if (respCode != HttpStatus.SC_OK) {
 				httpclient.getConnectionManager().shutdown();
-				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
-						getString(R.string.dlgDescDownloadFail));
+				Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView), getString(R.string.dlgDescDownloadFail));
 				try{
 					downloadPDialog.dismiss();
+					dialogShowing = false;
 				}catch(Exception e){e.printStackTrace();}	// Don't force close if problem here.
-				return false;
+					dialogShowing = false;
+					return false;
 			}
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
@@ -581,7 +583,10 @@ public class CalendarActivity extends SherlockActivity {
 			e.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing()){
+				downloadPDialog.dismiss();
+				dialogShowing = false;
+			}
 			return false;
 		}
 
@@ -600,14 +605,20 @@ public class CalendarActivity extends SherlockActivity {
 			e2.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing()){
+				downloadPDialog.dismiss();
+				dialogShowing = false;
+			}
 			return false;
 		} catch (IOException e2) {
 			httpclient.getConnectionManager().shutdown();
 			e2.printStackTrace();
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing()){
+				downloadPDialog.dismiss();
+				dialogShowing = false;
+			}
 			return false;
 		}
 
@@ -620,6 +631,12 @@ public class CalendarActivity extends SherlockActivity {
 			fos = new FileOutputStream(tmpFile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			GaLogger.sendException("Can't create temp file.", e, true);
+			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),"無法建立暫存檔，請檢查磁碟空間是否足夠。");
+			if(downloadPDialog.isShowing()){
+				downloadPDialog.dismiss();
+				dialogShowing = false;
+			}
 			return false;
 		}
 
@@ -644,13 +661,13 @@ public class CalendarActivity extends SherlockActivity {
 				is.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
-				return false;
+//				return false;
 			}
 			try {
 				fos.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
-				return false;
+//				return false;
 			}
 			tmpFile.delete();
 			e.printStackTrace();
@@ -658,7 +675,11 @@ public class CalendarActivity extends SherlockActivity {
 					+ ": IOException happen while download media.");
 			Util.showErrorPopupWindow(CalendarActivity.this, findViewById(R.id.rootView),
 					getString(R.string.dlgDescDownloadFail));
-			if(downloadPDialog.isShowing())downloadPDialog.dismiss();
+			if(downloadPDialog.isShowing()){
+				downloadPDialog.dismiss();
+				dialogShowing = false;
+			}
+			
 			return false;
 		}
 

@@ -125,7 +125,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				    	break;
 				    }
 				     
-					GaLogger.sendException("MediaPlayer_Error: mpState="+mpState+", what="+whatStr+", extra="+extraStr, new Exception(), true);
+					GaLogger.sendException("MediaPlayer_Error: mpState="+mpState+", what="+whatStr+"("+what+"), extra="+extraStr+"("+extra+")", new Exception(), true);
 					return false;
 				}
 			});
@@ -503,19 +503,21 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			try{
 				if(android.os.Build.VERSION.SDK_INT >= 16){
 					Log.d(logTag,"Build version ("+android.os.Build.VERSION.SDK_INT+") over 16, set media with "+speechFile.getAbsolutePath());
-					mediaPlayer.setDataSource(speechFile.getAbsolutePath());
+					String src=speechFile.getAbsolutePath();
+					mediaPlayer.setDataSource(src);
 				}
 				else {
 					Log.d(logTag,"Build version ("+android.os.Build.VERSION.SDK_INT+") under 16, set media with "+Uri.fromFile(speechFile));
-					mediaPlayer.setDataSource(context, Uri.fromFile(speechFile));
+					Uri srcUri=Uri.fromFile(speechFile);
+					mediaPlayer.setDataSource(context, srcUri);
 				}
 			}
 			catch(IllegalArgumentException iae){
-				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), iae, true);
+				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), iae, true);
 				if(!setDataSrcByFD(context, speechFile))return;
 			}
 			catch(IOException ioe){
-				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), ioe, true);
+				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), ioe, true);
 				if(!setDataSrcByFD(context, speechFile))return;
 			}
 			mpState=MP_INITED;
@@ -539,8 +541,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		if(!hasErr)return true;
-		Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀或儲存空間已滿，若確定非上述問題，請回報開發者您的機型無法正常播放音檔。");
-		GaLogger.sendException("Can't setDataSource by FileDescriptor way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+speechFile.getAbsolutePath(), e, true);
+		Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀，請試著重新下載此音檔，若確定非上述問題，請回報開發者您的機型無法正常播放音檔。");
+		GaLogger.sendException("Can't setDataSource by FileDescriptor way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), e, true);
 		return false;
 	}
 
