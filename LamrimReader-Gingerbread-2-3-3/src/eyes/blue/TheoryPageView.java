@@ -280,6 +280,7 @@ public class TheoryPageView extends TextView {
 	@Override
     protected void onDraw(Canvas canvas)
     {
+		if(canvas == null)return;
 		super.onDraw(canvas);
 		int pointSize=(int) (getTextSize()/7);
 		int yShift=(int) (getTextSize()/5);

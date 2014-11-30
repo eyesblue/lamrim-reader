@@ -301,6 +301,11 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * */
 	public int getCurrentPosition() {
 
+		/*
+		 * Here will throw NullPointerException while player control panel try to read current position after reset.
+		 * */
+		if(mpState == MP_IDLE || mediaPlayer == null)return 0;
+		
 		synchronized(mediaPlayerKey){
 			try{
 				return mediaPlayer.getCurrentPosition();
@@ -395,6 +400,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				Log.d(getClass().getName(),"Get reset after reset command, skip this reset command.");
 				return;
 			}
+			if(mpState == MP_INITING)
+				GaLogger.sendException("Reset media at loading file stage, mpState="+mpState+", mediaPlayer="+mediaPlayer, new Exception(), true);
 		}
 		
 		if(subtitleTimer!=null){
@@ -519,6 +526,9 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			catch(IOException ioe){
 				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), ioe, true);
 				if(!setDataSrcByFD(context, speechFile))return;
+			}catch(Exception e){
+				GaLogger.sendException("Error happen while load media, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), e, true);
+				Util.showErrorPopupWindow(activity, anchorView, "讀取音檔失敗，請重新嘗試。");
 			}
 			mpState=MP_INITED;
 			mediaPlayer.prepare();
