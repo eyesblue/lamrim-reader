@@ -330,12 +330,13 @@ public class StorageManageActivity extends Activity {
 				}
 				
 				// Write file test
-				if(!f.exists()){
-					f.mkdir();
-					if(!f.exists() || !f.canWrite()){
+				f.mkdir();
+				// The kitkat can read external area, but not write.
+				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+					if((!f.exists() || !f.canRead())){
 						AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 						builder.setTitle("權限錯誤");
-						builder.setMessage("您所指定的儲存目錄無法建立或無寫入權限！請重新選擇。");
+						builder.setMessage("您所指定的儲存目錄無法建立或無讀取權限！請重新選擇。");
 						builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
 							@Override
 							public void onClick(DialogInterface dialog,	int which) {
@@ -348,12 +349,8 @@ public class StorageManageActivity extends Activity {
 					}
 				}
 				else{
-					f=new File(f.getAbsolutePath()+File.separator+"WRITE_TEXT.txt");
-					Log.d(getClass().getName(),"Check is write in user specification location: "+f.getAbsolutePath());
-					try {
-						f.createNewFile();
-						f.delete();
-					} catch (IOException e) {
+					if(!f.exists() || !f.canWrite())
+					{
 						AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 						builder.setTitle("權限錯誤");
 						builder.setMessage("您所指定的儲存位置無法寫入！請重新選擇。");
@@ -372,8 +369,23 @@ public class StorageManageActivity extends Activity {
 				editor.putBoolean(getString(R.string.isUseThirdDir), true);
 				editor.putString(getString(R.string.userSpecifySpeechDir), filePathInput.getText().toString());
 				editor.commit();
-
-				finish();
+				
+				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
+					builder.setTitle("無法自動補檔警告");
+					builder.setMessage("您的系統為Kitkat(4.4)版，由於系統限制，外部目錄僅能讀取，無法自動補檔，請確認該目錄中包含所有音檔。");
+					builder.setPositiveButton(getString(R.string.dlgOk), new DialogInterface.OnClickListener (){
+						@Override
+						public void onClick(DialogInterface dialog,	int which) {
+							try{
+								dialog.dismiss();
+								finish();
+							}catch(Exception e){e.printStackTrace();}
+						}});
+					builder.create().show();
+				}
+				else
+					finish();
 			}});
 		
 		radioMgnType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){

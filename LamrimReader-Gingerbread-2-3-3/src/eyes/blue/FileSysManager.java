@@ -160,6 +160,10 @@ public class FileSysManager {
         		if(!subDir.exists())subDir.mkdirs();
         	}
         	
+        	boolean hasCheckedOlderSubtitle=runtime.getBoolean(context.getString(R.string.checkSubtitleV20141127), false);
+        	if(!hasCheckedOlderSubtitle)
+        		deleteOlderSubtitle();
+        	
 /*        	// Move old files(LamrimReader/{audio,subtitle,theory} to new direct(廣論App/{audio,subtitle,theory}).
         	File oldDirRoot=new File(srcRoot[INTERNAL]+File.separator+dirs[0]).getParentFile().getParentFile();
         	Log.d("FileSysManager","Pkg dir: "+oldDirRoot.getAbsolutePath());
@@ -172,6 +176,26 @@ public class FileSysManager {
         	}
 */		}
         
+        private void deleteOlderSubtitle(){
+        	new Thread(new Runnable(){
+				@Override
+				public void run() {
+					long date=1417216380000L;// 2014/11/28 23:13
+		        	for(int i=0;i<SpeechData.name.length;i++){
+		        		File f=getLocalSubtitleFile(i);
+		        		if(f==null || !f.exists())continue;
+		        		if(f.lastModified()<date){
+		        			Log.d("FileSysManager","Delete Older subtitle "+SpeechData.getSubtitleName(i));
+		        			f.delete();
+		        		}
+		        	}
+		        	
+		        	SharedPreferences.Editor editor=runtime.edit();
+		        	editor.putBoolean(context.getString(R.string.checkSubtitleV20141127), true);
+		        	editor.commit();
+		        	
+				}}).start();
+        }
         /*
          * The location of media file is [PackageDir]\[AppName](LamrimReader)\Audio
          * If the file exist, return the exist file no matter internal or external,
@@ -244,12 +268,12 @@ public class FileSysManager {
         public File getLocalSubtitleFile(int i){
         	File extF=null, intF=null;
         	if(isExtMemWritable() && srcRoot[EXTERNAL] != null){
-        		Log.d(getClass().getName(),"srcRoot[external]="+srcRoot[EXTERNAL]);
+/*        		Log.d(getClass().getName(),"srcRoot[external]="+srcRoot[EXTERNAL]);
         		Log.d(getClass().getName(),"context="+context);
         		Log.d(getClass().getName(),"subtitleDirName="+context.getString(R.string.subtitleDirName));
         		Log.d(getClass().getName(),"SpeechData.getSubtitleName(i)="+SpeechData.getSubtitleName(i));
         		Log.d(getClass().getName(),"context.getString(R.string.defSubtitleType)="+context.getString(R.string.defSubtitleType));
-        		
+*/        		
         		extF= new File(srcRoot[EXTERNAL]+File.separator+context.getString(R.string.subtitleDirName)+File.separator+SpeechData.getSubtitleName(i)+"."+context.getString(R.string.defSubtitleType));
         		if(extF.exists())return extF;
         	}

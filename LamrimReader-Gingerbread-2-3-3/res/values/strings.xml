@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Temp tag -->
+    <string name="checkSubtitleV20141127">checkSubtitleV20141127</string>
+    
     <!-- Runtime options -->
     <string name="runtimeStateFile">runtime</string>
     <string name="speechModeRecordFile">speechMode</string>

@@ -23,6 +23,13 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$173
+  % Version 1.3.34
+  _ 2014-12-17
+	* 補足LR-061A字幕25分21.378秒位置以後的廣論/字幕對應表。
+	* 因應Android4.4版系統限制，App無法寫入外部儲存空間，當您於[選擇音檔] -> [儲存管理] -> [使用者指定目錄] 中選取外部目錄後，廣論App僅檢查該目錄讀取權限不檢查寫入權限，並顯示唯讀警告，小於Android4.4版的系統將維持檢查寫入狀態。
+	* 自動刪除不適用的舊版本字幕。
+
 $172
   % Version 1.3.33
   _ 2014-11-28

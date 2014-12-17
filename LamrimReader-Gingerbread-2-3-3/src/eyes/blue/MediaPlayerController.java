@@ -124,8 +124,13 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				    	extraStr="MEDIA_ERROR_TIMED_OUT";
 				    	break;
 				    }
-				     
-					GaLogger.sendException("MediaPlayer_Error: mpState="+mpState+", what="+whatStr+"("+what+"), extra="+extraStr+"("+extra+")", new Exception(), true);
+				    
+				    /*
+				     * -38: No such operation, it will happen while user fire load another media event, the media player has reseted,
+				     *      but the MediaPlayer control panel still try to get information from the media player.
+				     * */
+				    if(what!=-38)
+				    	GaLogger.sendException("MediaPlayer_Error: mpState="+mpState+", what="+whatStr+"("+what+"), extra="+extraStr+"("+extra+")", new Exception(), true);
 					return false;
 				}
 			});
