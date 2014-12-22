@@ -91,8 +91,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.TranslateAnimation;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -100,19 +98,14 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.MediaController;
-import android.widget.NumberPicker;
 import android.widget.PopupWindow;
-import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
-import android.widget.Scroller;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.SimpleAdapter;
@@ -122,7 +115,6 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.MapBuilder;
 import com.winsontan520.wversionmanager.library.WVersionManager;
@@ -1607,7 +1599,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				loadFromCreate = false;
 				return;
 			}
-				
+			
 			startRegionPlay(playRecord.getInt("startMediaIndex", -1),
 					playRecord.getInt("startMediaTime", -1),
 					playRecord.getInt("endMediaIndex", -1),
@@ -1616,7 +1608,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					playRecord.getInt("theoryStartLine", -1),
 					playRecord.getInt("theoryEndPage", -1),
 					playRecord.getInt("thtoryEndLine", -1),
-					playRecord.getInt("regionIndex", -1),
+					playRecord.getInt("regionIndex", 0),
 					playRecord.getString("title", "---")
 					);
 		}

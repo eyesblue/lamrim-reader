@@ -210,7 +210,7 @@ public class FileSysManager {
         	if(useThirdDir && userSpecDir!=null){
         		specFile=new File(userSpecDir+File.separator+SpeechData.name[i]);
         		// Test is exist and readable.
-        		if(specFile.exists()){
+        		if(specFile.exists() && specFile.canRead()){
         			Log.d(logTag,Thread.currentThread().getName()+": the media file exist in user specification location: "+specFile.getAbsolutePath());
         			return specFile;
         		}
@@ -229,8 +229,10 @@ public class FileSysManager {
 
     		
     		// Test is user specify locate writable.
-    		if(useThirdDir && (new File(userSpecDir)).exists()){
-    			return specFile;
+    		if(useThirdDir){
+    			File dir=new File(userSpecDir);
+    			if(dir.exists() && dir.canWrite())
+    				return specFile;
     		}
     		// Check is there enough space for save the file
     		int reserv=context.getResources().getIntArray(R.array.mediaFileSize)[i];

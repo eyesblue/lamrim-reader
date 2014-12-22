@@ -419,7 +419,7 @@ public class SpeechMenuActivity extends SherlockActivity {
 				for(int i=start;i<end;i++){
 					File speech=fsm.getLocalMediaFile(i);
 					File subtitle=fsm.getLocalSubtitleFile(i);
-					boolean me=(speech!=null && speech.exists());
+					boolean me=(speech!=null && speech.exists() && speech.canRead());
 					boolean se=(subtitle!=null && subtitle.exists());
 //					Log.d(getClass().getName(), "Set flags of "+SpeechData.getNameId(i)+": is speech exist: "+me+", is subtitle exist: "+se);
 					synchronized(speechFlags){

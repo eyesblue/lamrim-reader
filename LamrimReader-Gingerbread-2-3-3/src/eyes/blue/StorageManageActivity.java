@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +22,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -272,17 +274,24 @@ public class StorageManageActivity extends Activity {
 		btnChoicePath.setOnClickListener(new View.OnClickListener (){
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(getBaseContext(), FileDialogActivity.class);
-				intent.putExtra(FileDialogActivity.TITLE, "請選擇存放目錄");
-                intent.putExtra(FileDialogActivity.START_PATH, "/sdcard");
+/*				if(Build.VERSION.SDK_INT >= 21){
+					Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+				    startActivityForResult(intent, 1);
+				}
+				else{
+*/					
+					Intent intent = new Intent(getBaseContext(), FileDialogActivity.class);
+					intent.putExtra(FileDialogActivity.TITLE, "請選擇存放目錄");
+                	intent.putExtra(FileDialogActivity.START_PATH, "/sdcard");
                 
-                //can user select directories or not
-                intent.putExtra(FileDialogActivity.CAN_SELECT_DIR, true);
+                	//can user select directories or not
+                	intent.putExtra(FileDialogActivity.CAN_SELECT_DIR, true);
                 
-                //alternatively you can set file filter
-                //intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "png" });
+                	//alternatively you can set file filter
+                	//intent.putExtra(FileDialog.FORMAT_FILTER, new String[] { "png" });
                 
-                startActivityForResult(intent, 0);
+                	startActivityForResult(intent, 0);
+//				}
 			}});
 		
 		btnOk.setOnClickListener(new View.OnClickListener (){
@@ -330,9 +339,9 @@ public class StorageManageActivity extends Activity {
 				}
 				
 				// Write file test
-				f.mkdir();
+				f.mkdir();//- add for android 5.0 support -
 				// The kitkat can read external area, but not write.
-				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+				if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
 					if((!f.exists() || !f.canRead())){
 						AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 						builder.setTitle("權限錯誤");
@@ -370,7 +379,7 @@ public class StorageManageActivity extends Activity {
 				editor.putString(getString(R.string.userSpecifySpeechDir), filePathInput.getText().toString());
 				editor.commit();
 				
-				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+				if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
 					AlertDialog.Builder builder = new AlertDialog.Builder(StorageManageActivity.this);
 					builder.setTitle("無法自動補檔警告");
 					builder.setMessage("您的系統為Kitkat(4.4)版，由於系統限制，外部目錄僅能讀取，無法自動補檔，請確認該目錄中包含所有音檔。");
@@ -526,10 +535,29 @@ public class StorageManageActivity extends Activity {
 	
 	
 	public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-		if (resultCode != Activity.RESULT_OK || requestCode != 0 || data == null) return;
+		if (resultCode != Activity.RESULT_OK || data == null) return;
 
-		final String filePath = data.getStringExtra(FileDialogActivity.RESULT_PATH);
-
+		switch(requestCode){
+		case 0:
+			final String filePath = data.getStringExtra(FileDialogActivity.RESULT_PATH);
+			filePathInput.postDelayed(new Runnable(){
+				@Override
+				public void run() {
+					filePathInput.setText(filePath);
+				}},500);
+			break;
+		case 1:
+			final Uri treeUri = data.getData();
+	        final DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUri);
+	        
+	        filePathInput.postDelayed(new Runnable(){
+				@Override
+				public void run() {
+					filePathInput.setText(pickedDir.getUri().getPath());
+				}},500);
+	        break;
+		}
+/*		
 		// Avoid EditText bug,  the EditText will not change to the new value without the thread.
 		new Thread(new Runnable(){
 			@Override
@@ -544,23 +572,8 @@ public class StorageManageActivity extends Activity {
 						}});
 					
 				} catch (InterruptedException e) {e.printStackTrace();}
-
-/*				
-				String oldPath=runtime.getString(getString(R.string.userSpecifySpeechDir),FileSysManager.getSysDefMediaDir());
-				// Path not change.
-				if(filePath.equals(oldPath))return;
-				File[] intFiles=FileSysManager.getMediaFileList(FileSysManager.INTERNAL);
-				File[] extFiles=FileSysManager.getMediaFileList(FileSysManager.EXTERNAL);
-				if((intFiles.length+extFiles.length) == 0) return;
-				
-				
-				runOnUiThread(new Runnable(){
-					@Override
-					public void run() {
-						showAskMoveToSpecifyDialog(filePath);
-					}});
-*/			}}).start();
-		
+			}}).start();
+	*/	
     }
 	
 	private void showAskMoveToSpecifyDialog(final String path) {
