@@ -305,6 +305,7 @@ public class SpeechMenuActivity extends SherlockActivity {
 		int resource[]=b.getIntArray("index");
 		if(resource == null || resource.length<=0){
 			Log.e(getClass().getName(),"Start SpeechMenuActivity with download command, but no media index extras, skip download.");
+			GaLogger.sendException("Start SpeechMenuActivity with download command, but no media index extras, skip download.", new Exception(), true);
 			return;
 		}
 		downloadSrc(resource);

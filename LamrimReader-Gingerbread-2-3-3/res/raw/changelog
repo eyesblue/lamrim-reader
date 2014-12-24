@@ -23,6 +23,12 @@
   	<div class='title'><p><a href="http://www.facebook.com/lamrimreader">執行問題反應區</a></p></div>
   	<div class='title'><p><a href="http://lamrimreader.eyes-blue.com/">計畫首頁</a></p></div>
 
+$175
+  % Version 1.3.36
+  _ 2014-12-24
+	* 調整亮色系文字標記顏色，以利區別論文/字幕對應顏色。
+	* 修正載入全廣/區段進度時，因載回錯誤參數而強制關閉錯誤。
+	
 $174
   % Version 1.3.35
   _ 2014-12-22

@@ -1600,6 +1600,9 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 				return;
 			}
 			
+			int regionIndex=playRecord.getInt("regionIndex", 0);
+			if(regionIndex==-1)regionIndex=0;
+			
 			startRegionPlay(playRecord.getInt("startMediaIndex", -1),
 					playRecord.getInt("startMediaTime", -1),
 					playRecord.getInt("endMediaIndex", -1),
@@ -1608,7 +1611,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					playRecord.getInt("theoryStartLine", -1),
 					playRecord.getInt("theoryEndPage", -1),
 					playRecord.getInt("thtoryEndLine", -1),
-					playRecord.getInt("regionIndex", 0),
+					regionIndex,
 					playRecord.getString("title", "---")
 					);
 		}
