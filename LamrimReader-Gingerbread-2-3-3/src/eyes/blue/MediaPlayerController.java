@@ -405,8 +405,10 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				Log.d(getClass().getName(),"Get reset after reset command, skip this reset command.");
 				return;
 			}
-			if(mpState == MP_INITING)
-				GaLogger.sendException("Reset media at loading file stage, mpState="+mpState+", mediaPlayer="+mediaPlayer, new Exception(), true);
+			if(mpState == MP_INITING){
+				GaLogger.sendException("Reset media at loading file stage, skip reset, mpState="+mpState+", mediaPlayer="+mediaPlayer, new Exception(), true);
+				return;
+			}
 		}
 		
 		if(subtitleTimer!=null){
@@ -525,7 +527,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 				}
 			}
 			catch(IllegalArgumentException iae){
-				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), iae, true);
+				GaLogger.sendException("SetDataSource in an invalid state, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), iae, true);
 				if(!setDataSrcByFD(context, speechFile))return;
 			}
 			catch(IOException ioe){
@@ -534,6 +536,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}catch(Exception e){
 				GaLogger.sendException("Error happen while load media, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), e, true);
 				Util.showErrorPopupWindow(activity, anchorView, "讀取音檔失敗，請重新嘗試。");
+				return;
 			}
 			mpState=MP_INITED;
 			mediaPlayer.prepare();

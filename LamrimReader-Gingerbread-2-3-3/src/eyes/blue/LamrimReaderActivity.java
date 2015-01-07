@@ -638,10 +638,10 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 										}
 										
 										bookMap[index]=new int[4];
-										bookMap[index][0]=mediaBookMaps[i][2];
-										bookMap[index][1]=mediaBookMaps[i][3];
-										bookMap[index][2]=mediaBookMaps[i][4];
-										bookMap[index][3]=mediaBookMaps[i][5];
+										bookMap[index][0]=mediaBookMaps[i][BookMap.PAGE];
+										bookMap[index][1]=mediaBookMaps[i][BookMap.LINE];
+										bookMap[index][2]=mediaBookMaps[i][BookMap.WORD];
+										bookMap[index][3]=mediaBookMaps[i][BookMap.LENGTH];
 									}
 								
 									int last[]=null;
@@ -2861,7 +2861,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 	private void showRenderModeWarring(){
 		AlertDialog.Builder builderSingle =new AlertDialog.Builder(this).setTitle("警告").setIcon(android.R.drawable.ic_dialog_alert)
 				.setMessage("此模式畫面上沒有選單按鍵！\n必須透過\"按住圖片\"才能叫出選單。\n重開廣論App後會回到正常模式。");
-		builderSingle.setPositiveButton("我發誓我有讀懂!", null);
+		builderSingle.setPositiveButton("確定", null);
 		builderSingle.setCancelable(false);
 		builderSingle.show();
 	}
