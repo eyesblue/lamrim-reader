@@ -905,6 +905,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 					@Override
 					public boolean onSingleTapConfirmed(MotionEvent e) {
 						Log.d(logTag, "SubtitleView been clicked, Show media plyaer control panel.");
+						if(mpController == null) return false;
 						if (mpController.getMediaPlayerState() >= MediaPlayerController.MP_PREPARED){
 							mpController.showControllerView(LamrimReaderActivity.this);
 							showMediaController();
@@ -2057,7 +2058,7 @@ public class LamrimReaderActivity extends SherlockFragmentActivity{
 						GaLogger.sendEvent("error", "player_error",	"IllegalStateException", null);
 						e.printStackTrace();
 					} catch (IOException e) {
-						setSubtitleViewText(getString(R.string.errIOEwhileSetPlayerSrc));
+						setSubtitleViewText(String.format(getString(R.string.errIOEwhileSetPlayerSrc),SpeechData.getNameId(mediaIndex)));
 						GaLogger.sendEvent("error", "player_error", "IOException",null);
 						e.printStackTrace();
 					}

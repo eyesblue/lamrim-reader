@@ -113,7 +113,7 @@
     <string name="errIAEwhileSetPlayerSrc">開啟語音檔時發生參數錯誤!</string>
     <string name="errSEwhileSetPlayerSrc">開啟語音檔時發生安全性錯誤!</string>
     <string name="errISEwhileSetPlayerSrc">開啟語音檔時發生撥放器狀態錯誤!</string>
-    <string name="errIOEwhileSetPlayerSrc">開啟語音檔時發生輸出入錯誤!</string>
+    <string name="errIOEwhileSetPlayerSrc">無法正常讀取音檔，請檢查音檔是否損毀，請試著重新下載[%1$s]音檔。</string>
     <string name="errISEwhilePrepPlayer">準備語音檔時發生撥放器狀態錯誤!</string>
     <string name="errIOEwhilePrepPlayer">準備語音檔時發生輸出入錯誤!</string>
     <string name="inputTitleHint">請輸入標題！</string>

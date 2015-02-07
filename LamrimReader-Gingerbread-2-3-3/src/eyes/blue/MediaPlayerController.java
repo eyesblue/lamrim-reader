@@ -478,10 +478,7 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 	 * Set data source of MediaPlayer, and parse the file of subtitle if exist.
 	 * */
 	public void setDataSource(Context context,int index) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException{
-		if(mediaPlayer==null){
-			GaLogger.sendException("MediaPlayerController.setDataSource(): The MediaPlayer become null, memory free = "+Util.getMemInfo(activity)+"M", new Exception(), false);
-			createMediaPlayer();
-		}
+		
 		final File subtitleFile=fsm.getLocalSubtitleFile(index);
 		File speechFile=fsm.getLocalMediaFile(index);
 		
@@ -514,6 +511,11 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			Log.d(logTag,"Set media player data source in stage: "+mpState+", file: "+ Uri.fromFile(speechFile));
 			if(mpState != MP_IDLE)reset();
 			mpState=MP_INITING;
+			if(mediaPlayer==null){
+				GaLogger.sendException("MediaPlayerController.setDataSource(): The MediaPlayer become null, memory free = "+Util.getMemInfo(activity)+"M", new Exception(), false);
+				createMediaPlayer();
+			}
+			
 			try{
 				if(android.os.Build.VERSION.SDK_INT >= 16){
 					Log.d(logTag,"Build version ("+android.os.Build.VERSION.SDK_INT+") over 16, set media with "+speechFile.getAbsolutePath());
@@ -528,14 +530,21 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 			}
 			catch(IllegalArgumentException iae){
 				GaLogger.sendException("SetDataSource in an invalid state, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), iae, true);
-				if(!setDataSrcByFD(context, speechFile))return;
+				if(!setDataSrcByFD(context, speechFile)){
+					createMediaPlayer();
+					return;
+				}
 			}
 			catch(IOException ioe){
 				GaLogger.sendException("Can't setDataSource by normal way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), ioe, true);
-				if(!setDataSrcByFD(context, speechFile))return;
+				if(!setDataSrcByFD(context, speechFile)){
+					createMediaPlayer();
+					return;
+				}
 			}catch(Exception e){
 				GaLogger.sendException("Error happen while load media, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), e, true);
 				Util.showErrorPopupWindow(activity, anchorView, "讀取音檔失敗，請重新嘗試。");
+				createMediaPlayer();
 				return;
 			}
 			mpState=MP_INITED;
@@ -559,7 +568,8 @@ public class MediaPlayerController implements MediaControllerView.MediaPlayerCon
 		}
 		
 		if(!hasErr)return true;
-		Util.showErrorPopupWindow(activity, anchorView, "無法正常讀取音檔，請檢查音檔是否損毀，請試著重新下載此音檔，若確定非上述問題，請回報開發者您的機型無法正常播放音檔。");
+//		String errStr="無法正常讀取音檔，請檢查音檔是否損毀，請試著重新下載此音檔，若確定非上述問題，請回報開發者您的機型無法正常播放音檔。";
+//		Util.showErrorPopupWindow(activity, anchorView, errStr);
 		GaLogger.sendException("Can't setDataSource by FileDescriptor way, mpState="+mpState+", mediaPlayer="+mediaPlayer+", context="+context+", speechFile="+speechFile+", is speech file exist="+((speechFile!=null)?speechFile.exists():"speechFile is null.")+", Uri="+Uri.fromFile(speechFile).toString(), e, true);
 		return false;
 	}
