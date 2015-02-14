@@ -98,7 +98,8 @@ public class MediaControllerView extends FrameLayout {
     private ImageButton         mNextButton;
     private ImageButton         mPrevButton;
     private ImageButton         mFullscreenButton;
-    private Handler             mHandler = new MessageHandler(this);
+    //private Handler             mHandler = new MessageHandler(this);
+    private Handler             mHandler;
    
     private boolean                     isPrevBtnEnable=false;
     private boolean                     isNextBtnEnable=false;
@@ -112,6 +113,8 @@ public class MediaControllerView extends FrameLayout {
         mUseFastForward = true;
         mFromXml = true;
        
+        mHandler = new MessageHandler(this);
+        
         Log.i(TAG, TAG);
     }
 
@@ -119,6 +122,8 @@ public class MediaControllerView extends FrameLayout {
         super(context);
         mContext = context;
         mUseFastForward = useFastForward;
+        
+        mHandler = new MessageHandler(this);
        
         Log.i(TAG, TAG);
     }
